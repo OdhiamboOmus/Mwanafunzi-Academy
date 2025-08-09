@@ -1,0 +1,62 @@
+name: Mwanafunzi Academy
+description: "Kenyas top learning platform"
+publish_to: 'none' 
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+# 🚨 FIREBASE-OPTIMIZED SIZE STRATEGY 🚨
+# TODO: FIREBASE IS ESSENTIAL - Use it smartly to minimize size impact
+# TODO: ONLY add Firebase packages you actually need (each adds 1-3MB)
+# TODO: Use 'flutter pub deps' to see dependency tree
+# TODO: Firebase packages to consider: firebase_core, cloud_firestore, firebase_auth
+# TODO: AVOID heavy Firebase packages: firebase_storage, firebase_messaging unless critical
+# TODO: For images: Use WebP format, compress aggressively  
+# TODO: For icons: Use Material icons only (already included)
+# TODO: For fonts: Avoid custom fonts or use subset fonts only
+# TODO: For state management: Use built-in setState, avoid Provider/Bloc/Riverpod
+# TODO: For HTTP: Use Firebase Functions instead of additional HTTP packages
+# TODO: ALWAYS run 'flutter build apk --analyze-size' after adding dependencies
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Removed cupertino_icons to save space - we'll use Material icons only
+  
+  # 🔥 ESSENTIAL FIREBASE PACKAGES (Accept ~6-10MB total size cost)
+  firebase_core: ^3.8.0
+  cloud_firestore: ^5.6.0  
+  firebase_auth: ^5.3.3
+  
+  # TODO: ADD MORE FIREBASE PACKAGES ONLY IF CRITICAL
+  # firebase_storage: ^12.4.0  # Only if file uploads needed
+  # firebase_messaging: ^15.2.0  # Only if push notifications needed
+  
+  # TODO: AVOID NON-FIREBASE PACKAGES WHEN POSSIBLE
+  # TODO: Use Firebase Functions instead of HTTP packages
+  # TODO: Use Firestore instead of local databases
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  
+  # TODO: ASSETS OPTIMIZATION
+  # TODO: Compress all images to WebP format
+  # TODO: Use vector graphics (SVG) when possible
+  # TODO: Remove unused assets regularly
+  # TODO: Use asset variants for different screen densities sparingly
+  # assets:
+  #   - assets/images/
+  
+  # TODO: FONTS OPTIMIZATION  
+  # TODO: Avoid custom fonts if possible (saves 1-3MB each)
+  # TODO: If custom fonts needed, use font subsetting
+  # fonts:
+
+  
