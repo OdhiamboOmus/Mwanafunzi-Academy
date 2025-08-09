@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 // 🚨 CRITICAL SIZE OPTIMIZATION TODOS 🚨
 // TODO: AVOID importing entire packages - import specific classes only
@@ -11,7 +12,11 @@ import 'package:flutter/material.dart';
 // TODO: AVOID heavy widgets: ListView.builder for large lists, complex animations
 // TODO: Test app size after every major feature addition
 
-void main() => runApp(const MwanafunziAcademyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const MwanafunziAcademyApp());
+}
 
 class MwanafunziAcademyApp extends StatelessWidget {
   const MwanafunziAcademyApp({super.key});

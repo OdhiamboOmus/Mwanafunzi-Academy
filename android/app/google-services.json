@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "891072146319",
+    "project_id": "mwanafunzi-academy",
+    "storage_bucket": "mwanafunzi-academy.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:891072146319:android:1921b1c9b52efeedbd79fa",
+        "android_client_info": {
+          "package_name": "com.example.mwanafunziacademy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZXalVZffcvxyy01Kl8KWxylZOllHuFu0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
