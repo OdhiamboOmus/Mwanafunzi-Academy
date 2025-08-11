@@ -76,7 +76,7 @@ class _SignUpTypeSelectorState extends State<SignUpTypeSelector> {
       child: GestureDetector(
         onTap: () => widget.onTypeChanged(type),
         child: Container(
-          height: 56,
+          height: 48,
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           decoration: BoxDecoration(
             color: isSelected ? AppConstants.brandColor : const Color(0xFFF9FAFB),

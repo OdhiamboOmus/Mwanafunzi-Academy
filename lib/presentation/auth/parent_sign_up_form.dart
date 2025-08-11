@@ -4,6 +4,7 @@ import '../../core/constants.dart';
 import '../shared/validators.dart';
 import '../shared/widgets.dart';
 import '../shared/error_handler.dart';
+import '../shared/toast_service.dart';
 
 // Parent sign up form following Flutter Lite rules (<120 lines)
 class ParentSignUpForm extends StatefulWidget {
@@ -143,12 +144,7 @@ class _ParentSignUpFormState extends State<ParentSignUpForm> {
       }
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastService.showError(context, errorMessage);
       }
     } finally {
       setState(() => _isLoading = false);

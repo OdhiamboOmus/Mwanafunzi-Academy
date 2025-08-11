@@ -81,7 +81,11 @@ class _SignInScreenState extends State<SignInScreen> {
           ),
           child: Text(
             'Sign In',
-            style: GoogleFonts.sora(fontWeight: FontWeight.w600),
+            style: GoogleFonts.sora(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
           ),
         ),
       ),
@@ -97,7 +101,11 @@ class _SignInScreenState extends State<SignInScreen> {
           ),
           child: Text(
             'Sign Up',
-            style: GoogleFonts.sora(color: const Color(0xFF6B7280)),
+            style: GoogleFonts.sora(
+              fontSize: 16,
+              color: const Color(0xFF6B7280),
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ),

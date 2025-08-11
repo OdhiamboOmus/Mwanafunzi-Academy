@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../data/repositories/user_repository.dart';
 import '../../core/constants.dart';
 import '../shared/error_handler.dart';
+import '../shared/notification_service.dart';
 
 // Sign-in business logic service following Flutter Lite rules
 class SignInLogic {
@@ -34,7 +35,7 @@ class SignInLogic {
     } catch (e) {
       if (context.mounted) {
         final errorMessage = ErrorHandler.getAuthErrorMessage(e.toString());
-        ErrorHandler.showErrorDialog(context, 'Sign In Failed', errorMessage);
+        NotificationService().showErrorMessage(context, errorMessage);
       }
     }
   }

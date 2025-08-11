@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants.dart';
 import '../shared/form_widgets.dart';
 import '../shared/form_builders.dart';
+import '../shared/data_constants.dart';
 
 // Teacher signup step 2: Professional Information (<100 lines)
 class TeacherStep2Form extends StatefulWidget {
@@ -73,7 +74,7 @@ class _TeacherStep2FormState extends State<TeacherStep2Form> {
         ),
         const SizedBox(height: 8),
         FutureBuilder<List<String>>(
-          future: AppConstants.loadSubjects(),
+          future: Future.value(DataConstants.subjects),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -128,32 +129,42 @@ class _TeacherStep2FormState extends State<TeacherStep2Form> {
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
-        FormBuilder.buildCountyConstituencyDropdowns(
-          selectedCounty: _getSelectedCounty(),
-          selectedConstituency: _getSelectedConstituency(),
-          onCountyChanged: (county) {
-            if (county != null) {
-              // Store just the county initially, constituency will be selected separately
-              widget.onConstituencyChanged(county);
+        FutureBuilder<Map<String, List<String>>>(
+          future: Future.value(DataConstants.constituencies),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
             }
-          },
-          onConstituencyChanged: (constituency) {
-            if (constituency != null) {
-              // Store county,constituency format
-              final county = _getSelectedCounty();
-              widget.onConstituencyChanged('$county,$constituency');
+            if (snapshot.hasError) {
+              return Text('Error loading constituencies: ${snapshot.error}');
             }
-          },
-          validator: (value) {
-            if (value == null) {
-              return 'Please select your area of operation';
-            }
-            return null;
+            return FormBuilder.buildCountyConstituencyDropdowns(
+              selectedCounty: _getSelectedCounty(),
+              selectedConstituency: _getSelectedConstituency(),
+              onCountyChanged: (county) {
+                if (county != null) {
+                  widget.onConstituencyChanged(county);
+                }
+              },
+              onConstituencyChanged: (constituency) {
+                if (constituency != null) {
+                  final county = _getSelectedCounty();
+                  widget.onConstituencyChanged('$county,$constituency');
+                }
+              },
+              validator: (value) {
+                if (value == null) {
+                  return 'Please select your area of operation';
+                }
+                return null;
+              },
+            );
           },
         ),
       ],
     );
   }
+
 
   String? _getSelectedCounty() {
     if (widget.selectedConstituency == null) return null;
@@ -170,6 +181,4 @@ class _TeacherStep2FormState extends State<TeacherStep2Form> {
     }
     return null; // Only county selected, no constituency yet
   }
-
-
 }

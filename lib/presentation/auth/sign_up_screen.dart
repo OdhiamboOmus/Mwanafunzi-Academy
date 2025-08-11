@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../data/repositories/user_repository.dart';
 import '../../core/constants.dart';
 import '../shared/error_handler.dart';
+import '../shared/notification_service.dart';
 import 'sign_up_type_selector.dart';
 import 'sign_up_form.dart';
 
@@ -77,7 +78,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     children: [
       Expanded(
         child: Container(
-          height: 48,
+          height: 40,
           decoration: BoxDecoration(
             color: const Color(0xFFF9FAFB),
             borderRadius: BorderRadius.circular(12),
@@ -104,7 +105,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       const SizedBox(width: 12),
       Expanded(
         child: Container(
-          height: 48,
+          height: 40,
           decoration: BoxDecoration(
             color: AppConstants.brandColor,
             borderRadius: BorderRadius.circular(12),
@@ -185,11 +186,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  void _showSuccessMessage(String userType) => ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text('Account created for $userType!'),
-      backgroundColor: AppConstants.brandColor,
-    ),
+  void _showSuccessMessage(String userType) => NotificationService().showSuccessMessage(
+    context,
+    'Account created for $userType!',
   );
 
   void _showErrorMessage(String error) {

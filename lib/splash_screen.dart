@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'core/constants.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -33,10 +32,11 @@ class _SplashScreenState extends State<SplashScreen> {
               shape: BoxShape.circle,
               color: Color(0x1A50E801), // AppConstants.brandColor with 10% opacity
             ),
-            child: const Icon(
-              Icons.school,
-              size: 60,
-              color: AppConstants.brandColor,
+            child: const ClipOval(
+              child: Image(
+                image: AssetImage('assets/logo.jpeg'),
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           const SizedBox(height: 24),

@@ -4,7 +4,7 @@ running my applications on my device use this command
  $env:JAVA_HOME = "C:\Program Files\Java\jdk-22"; flutter run -d 042673706I006643 
 
  Also this command works
-  $env:JAVA_HOME = "C:\Program Files\Java\jdk-22"; 
+$env:JAVA_HOME = "C:\Program Files\Java\jdk-22"; 
 flutter attach -d 042672596J002254
 
 This command to install it in the phone adb install build\app\outputs\flutter-apk\app-debug.apk

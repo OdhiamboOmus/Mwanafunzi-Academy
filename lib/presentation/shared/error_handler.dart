@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'toast_service.dart';
 
 // Error handling utility following Flutter Lite rules
 class ErrorHandler {
@@ -69,14 +70,9 @@ class ErrorHandler {
     );
   }
 
-  // Show network error snackbar
+  // Show network error toast
   static void showNetworkError(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Network error. Please check your connection.'),
-        backgroundColor: Colors.red,
-      ),
-    );
+    ToastService.showError(context, 'Network error. Please check your connection.');
   }
 
   // Show loading indicator with message

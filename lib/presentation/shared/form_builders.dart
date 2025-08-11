@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants.dart';
+import 'data_constants.dart';
 
 // Common form building patterns following Flutter Lite rules
 class FormBuilder {
@@ -29,7 +30,7 @@ class FormBuilder {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         const SizedBox(height: AppConstants.defaultPadding),
         ...children,
       ],
@@ -46,7 +47,7 @@ class FormBuilder {
     return Column(
       children: [
         FutureBuilder<List<String>>(
-          future: AppConstants.loadCounties(),
+          future: Future.value(DataConstants.constituencies.keys.toList()..sort()),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -79,7 +80,7 @@ class FormBuilder {
         ),
         if (selectedCounty != null)
           FutureBuilder<List<String>>(
-            future: AppConstants.getConstituenciesForCounty(selectedCounty),
+            future: Future.value(DataConstants.constituencies[selectedCounty] ?? []),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -114,7 +115,7 @@ class FormBuilder {
     String? Function(String?)? validator,
   }) {
     return FutureBuilder<List<String>>(
-      future: AppConstants.loadSubjects(),
+      future: Future.value(DataConstants.subjects),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const CircularProgressIndicator();
         return buildDropdown<String>(

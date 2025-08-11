@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'constants.dart';
 import 'form_widgets.dart';
+import 'data_constants.dart';
 
 // Migration helpers for existing forms to use shared utilities
 // This file helps transition from custom _buildFormField methods to shared FormField widget
@@ -72,7 +73,7 @@ class FormMigrationHelpers {
     String? Function(String?)? validator,
   }) {
     return FutureBuilder<List<String>>(
-      future: _getAllConstituencies(),
+      future: Future.value(_getAllConstituenciesSync()),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Padding(
@@ -93,18 +94,18 @@ class FormMigrationHelpers {
     );
   }
 
-  // Helper method to get all constituencies from the new JSON structure
-  static Future<List<String>> _getAllConstituencies() async {
-    final constituenciesMap = await AppConstants.loadConstituencies();
+  // Helper method to get all constituencies from DataConstants (synchronous)
+  static List<String> _getAllConstituenciesSync() {
     final allConstituencies = <String>[];
     
-    for (final countyConstituencies in constituenciesMap.values) {
+    for (final countyConstituencies in DataConstants.constituencies.values) {
       allConstituencies.addAll(countyConstituencies);
     }
     
     allConstituencies.sort();
     return allConstituencies;
   }
+
 
   // Helper for subjects dropdown
   static Widget buildSubjectsDropdown({
@@ -113,7 +114,7 @@ class FormMigrationHelpers {
     String? Function(List<String>?)? validator,
   }) {
     return FutureBuilder<List<String>>(
-      future: AppConstants.loadSubjects(),
+      future: Future.value(DataConstants.subjects),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Padding(

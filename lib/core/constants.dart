@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import '../presentation/shared/data_constants.dart';
 
 // Consolidated app constants following Flutter Lite rules
 class AppConstants {
@@ -35,59 +36,51 @@ class AppConstants {
     'Sunday',
   ];
 
-  // JSON asset paths
-  static const String subjectsJsonPath = 'assets/data/subjects.json';
-  static const String constituenciesJsonPath =
-      'assets/data/constituencies.json';
-
-  // Load subjects from JSON
+  // Load subjects using DataConstants
   static Future<List<String>> loadSubjects() async {
-    try {
-      final String response = await rootBundle.loadString(subjectsJsonPath);
-      final List<dynamic> data = json.decode(response);
-      return data.cast<String>();
-    } catch (e) {
-      print('Error loading subjects: $e');
-      return ['Mathematics', 'English', 'Kiswahili', 'Science']; // Fallback
-    }
+    return Future.value(DataConstants.subjects);
   }
 
-  // Load counties from constituencies JSON (counties are the keys)
+  // Load counties from DataConstants (counties are the keys)
   static Future<List<String>> loadCounties() async {
-    try {
-      final constituencies = await loadConstituencies();
-      return constituencies.keys.toList()..sort();
-    } catch (e) {
-      print('Error loading counties: $e');
-      return ['Nairobi', 'Kiambu', 'Nakuru', 'Mombasa']; // Fallback
-    }
+    final counties = DataConstants.constituencies.keys.toList()..sort();
+    return Future.value(counties);
   }
 
-  // Load constituencies from JSON (organized by county)
+  // Load constituencies using DataConstants
   static Future<Map<String, List<String>>> loadConstituencies() async {
-    try {
-      final String response = await rootBundle.loadString(
-        constituenciesJsonPath,
-      );
-      final Map<String, dynamic> data = json.decode(response);
-      return data.map((key, value) => MapEntry(key, List<String>.from(value)));
-    } catch (e) {
-      print('Error loading constituencies: $e');
-      return {
-        'Nairobi': ['Westlands', 'Starehe', 'Langata'],
-        'Kiambu': ['Kiambu', 'Ruiru', 'Thika Town'],
-      }; // Fallback
-    }
+    return Future.value(DataConstants.constituencies);
   }
 
   // Get constituencies for a specific county
   static Future<List<String>> getConstituenciesForCounty(String county) async {
+    final constituencies = DataConstants.constituencies[county] ?? [];
+    return Future.value(constituencies);
+  }
+
+  // Legacy method for backward compatibility (deprecated)
+  @Deprecated('Use DataConstants directly or AppConstants.loadSubjects() instead')
+  static Future<List<String>> loadSubjectsLegacy() async {
     try {
-      final constituencies = await loadConstituencies();
-      return constituencies[county] ?? [];
+      final String response = await rootBundle.loadString('assets/data/subjects.json');
+      final List<dynamic> data = json.decode(response);
+      return data.cast<String>();
     } catch (e) {
-      print('Error loading constituencies for county: $e');
-      return [];
+      // Error loading subjects silently - fallback to static data
+      return Future.value(DataConstants.subjects);
+    }
+  }
+
+  // Legacy method for backward compatibility (deprecated)
+  @Deprecated('Use DataConstants directly or AppConstants.loadConstituencies() instead')
+  static Future<Map<String, List<String>>> loadConstituenciesLegacy() async {
+    try {
+      final String response = await rootBundle.loadString('assets/data/constituencies.json');
+      final Map<String, dynamic> data = json.decode(response);
+      return data.map((key, value) => MapEntry(key, List<String>.from(value)));
+    } catch (e) {
+      // Error loading constituencies silently - fallback to static data
+      return Future.value(DataConstants.constituencies);
     }
   }
 }

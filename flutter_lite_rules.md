@@ -38,12 +38,14 @@
 - Heavy UI component libraries
 - Multiple image handling packages
 - Unused or "nice-to-have" packages
+- Heavy logging packages (use print() or custom lightweight logger instead)
 
 ### Before Adding ANY Dependency
 1. Does this significantly improve core user experience?
 2. What's the exact size impact? (Document it)
 3. Can existing Flutter widgets achieve 80% of this functionality?
 4. Is there a lighter alternative?
+5. For logging: Can we use built-in print() or debugPrint() instead of heavy logger packages?
 
 ## 🎨 UI/UX Standards
 
@@ -62,6 +64,7 @@
 - Maximum 1MB total asset budget per application
 - Reserve SVG only for complex custom icons or brand assets where Material Icons don't exist
 - Never use SVG for simple icons that Material Icons already provides
+- For logging: Use built-in print() or debugPrint() for development, remove or conditionally compile for production
 
 ## ⚡ Performance Standards
 
@@ -166,6 +169,7 @@ For Feature-Rich Apps (15-20MB target):
 - Regular code reviews focusing on size impact
 - Use const constructors wherever possible
 - Minimize widget rebuilds with proper key usage
+- Prefer print() or debugPrint() over logger packages for minimal size impact
 
 ### Testing Requirements
 - Test on low-end devices regularly
@@ -223,3 +227,24 @@ For Feature-Rich Apps (15-20MB target):
 ---
 
 **Remember: Simple, fast, and lightweight applications provide better user experiences than feature-heavy, slow applications.**
+
+## 📝 Logging Strategy for Flutter Lite
+
+### Logging Options by Size Impact:
+- **print() / debugPrint()**: 0KB size impact (built-in Dart/Flutter functions)
+- **Custom simple logger**: 0KB size impact (just functions, no dependencies)
+- **log package (dart:log)**: ~50KB size impact (official Dart package)
+- **logger package**: ~100KB+ size impact (third-party with advanced features)
+
+### Recommended Logging Approach:
+- **Development**: Use print() or debugPrint() with conditional compilation
+- **Production**: Remove logging or use silent error handling
+- **Flutter Lite apps**: Avoid all logging packages, use built-in functions only
+- **Critical apps**: Use log package if advanced logging is absolutely necessary
+
+### Logging Best Practices:
+- Never use print() in production code without conditional compilation
+- Avoid logger packages for Flutter Lite due to size impact
+- Use kDebugMode to conditionally compile logging statements
+- For error handling, use silent fallback instead of console output
+- Consider custom simple logger for consistent logging format without dependencies

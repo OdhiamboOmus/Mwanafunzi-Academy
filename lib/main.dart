@@ -1,14 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'splash_screen.dart';
-import 'presentation/auth/sign_in_screen.dart';
-import 'presentation/auth/sign_up_screen.dart';
-import 'presentation/auth/forgot_password_screen.dart';
-import 'presentation/auth/admin_login_screen.dart';
-import 'presentation/admin/admin_home_screen.dart';
-import 'presentation/student/student_home_screen.dart';
-import 'presentation/parent/parent_home_screen.dart';
-import 'presentation/teacher/teacher_home_screen.dart';
+import 'routes.dart';
 
 // 🚨 CRITICAL SIZE OPTIMIZATION TODOS 🚨
 // TODO: AVOID importing entire packages - import specific classes only
@@ -34,18 +27,7 @@ class MwanafunziAcademyApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
     title: 'Mwanafunzi Academy',
     home: const SplashScreen(),
-    routes: _buildRoutes,
+    routes: AppRoutes.routes,
     debugShowCheckedModeBanner: false,
   );
-
-  Map<String, WidgetBuilder> get _buildRoutes => {
-    '/sign-in': (context) => const SignInScreen(),
-    '/sign-up': (context) => const SignUpScreen(),
-    '/forgot-password': (context) => const ForgotPasswordScreen(),
-    '/admin-login': (context) => const AdminLoginScreen(),
-    '/admin-home': (context) => const AdminHomeScreen(),
-    '/student-home': (context) => const StudentHomeScreen(),
-    '/parent-home': (context) => const ParentHomeScreen(),
-    '/teacher-home': (context) => const TeacherHomeScreen(),
-  };
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../data/repositories/user_repository.dart';
-import '../../core/constants.dart';
+import '../shared/grade_selector_widget.dart';
+import '../shared/lesson_cards_widget.dart';
+import '../shared/competition_cards_widget.dart';
+import '../shared/bottom_navigation_widget.dart';
 
 // Student home screen following Flutter Lite rules (<150 lines)
 class StudentHomeScreen extends StatefulWidget {
@@ -13,8 +16,10 @@ class StudentHomeScreen extends StatefulWidget {
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
   final UserRepository _userRepository = UserRepository();
   String _studentName = 'Loading...';
-  String _schoolName = 'Loading...';
+  String _selectedGrade = '';
   bool _isLoading = true;
+  int _selectedBottomNavIndex = 0;
+  bool _isRefreshing = false;
 
   @override
   void initState() {
@@ -23,154 +28,194 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: Colors.white,
+    appBar: AppBar(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Student Dashboard',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
+      elevation: 0,
+      title: const Text(
+        'Student Dashboard',
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Colors.black,
         ),
-        centerTitle: true,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(AppConstants.defaultPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      centerTitle: true,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh, color: Color(0xFF50E801)),
+          onPressed: _refreshData,
+        ),
+      ],
+    ),
+    body: _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : RefreshIndicator(
+            onRefresh: _refreshData,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isTablet = constraints.maxWidth > 600;
+                return Column(
+                  children: [
+                    // Welcome Section
+                    _buildWelcomeSection(),
+                    const SizedBox(height: 16),
+                    
+                    // Grade Selector
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isTablet ? 24 : 16,
+                      ),
+                      child: GradeSelectorWidget(
+                        selectedGrade: _selectedGrade,
+                        onGradeChanged: (grade) => setState(() => _selectedGrade = grade),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Lesson Cards
+                    Expanded(
+                      child: ListView(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isTablet ? 24 : 16,
+                        ),
+                        children: [
+                          const LessonCardsWidget(selectedGrade: ''),
+                          const SizedBox(height: 32),
+                          const CompetitionCardsWidget(),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+    bottomNavigationBar: BottomNavigationWidget(
+      selectedIndex: _selectedBottomNavIndex,
+      onTabChanged: (index) => setState(() => _selectedBottomNavIndex = index),
+    ),
+  );
+
+  Widget _buildWelcomeSection() => LayoutBuilder(
+    builder: (context, constraints) {
+      final isTablet = constraints.maxWidth > 600;
+      return Container(
+        margin: EdgeInsets.all(isTablet ? 24 : 16),
+        padding: EdgeInsets.all(isTablet ? 24 : 16),
+        decoration: BoxDecoration(
+          color: const Color(0x1A50E801),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Welcome Back, $_studentName!',
+              style: TextStyle(
+                fontSize: isTablet ? 28 : 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Continue your learning journey',
+              style: TextStyle(
+                fontSize: 16,
+                color: Color(0xFF6B7280),
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (isTablet)
+              Row(
                 children: [
-                  // Welcome Section
-                  _buildWelcomeSection(),
-                  const SizedBox(height: 32),
-                  
-                  // Quick Actions
-                  const Text(
-                    'Quick Actions',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
+                  Expanded(
+                    child: _buildQuickLink(
+                      title: 'Leaderboard',
+                      icon: Icons.leaderboard,
+                      onTap: () {},
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  
-                  // Action Cards
-                  _buildActionCard(
-                    title: 'My Courses',
-                    icon: Icons.school,
-                    onTap: () {},
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildQuickLink(
+                      title: 'My Ranking',
+                      icon: Icons.emoji_events,
+                      onTap: () {},
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  _buildActionCard(
-                    title: 'Assignments',
-                    icon: Icons.assignment,
-                    onTap: () {},
+                ],
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildQuickLink(
+                      title: 'Leaderboard',
+                      icon: Icons.leaderboard,
+                      onTap: () {},
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  _buildActionCard(
-                    title: 'Grades',
-                    icon: Icons.grade,
-                    onTap: () {},
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildQuickLink(
+                      title: 'My Ranking',
+                      icon: Icons.emoji_events,
+                      onTap: () {},
+                    ),
                   ),
                 ],
               ),
-            ),
-    );
-  }
+          ],
+        ),
+      );
+    },
+  );
 
-  Widget _buildWelcomeSection() {
-    return Container(
-      padding: const EdgeInsets.all(AppConstants.defaultPadding),
-      decoration: BoxDecoration(
-        color: AppConstants.brandColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Welcome Back, $_studentName!',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '$_schoolName - Continue your learning journey',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionCard({
+  Widget _buildQuickLink({
     required String title,
     required IconData icon,
     required VoidCallback onTap,
-  }) {
-    return GestureDetector(
+  }) => Expanded(
+    child: GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+          borderRadius: BorderRadius.circular(8),
         ),
-        child: Row(
+        child: Column(
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppConstants.brandColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: AppConstants.brandColor,
-                size: 24,
-              ),
+            Icon(
+              icon,
+              color: const Color(0xFF50E801),
+              size: 20,
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Colors.black,
               ),
+              textAlign: TextAlign.center,
             ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.grey),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
 
   Future<void> _loadUserData() async {
     try {
       final user = _userRepository.getCurrentUser();
       if (user != null) {
-        // In a real app, you would fetch this data from Firestore
-        // For now, we'll use placeholder data
         setState(() {
-          _studentName = 'Student Name'; // This would come from Firestore
-          _schoolName = 'Mwanafunzi Academy'; // This would come from Firestore
+          _studentName = 'Student Name';
           _isLoading = false;
         });
       }
@@ -178,9 +223,31 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading user data: ${e.toString()}')),
-      );
+    }
+  }
+
+  @override
+  void dispose() {
+    // Clean up any controllers if needed
+    super.dispose();
+  }
+
+  Future<void> _refreshData() async {
+    if (_isRefreshing) return;
+    
+    setState(() {
+      _isRefreshing = true;
+      _isLoading = true;
+    });
+
+    await Future.delayed(const Duration(seconds: 1));
+    
+    await _loadUserData();
+    
+    if (mounted) {
+      setState(() {
+        _isRefreshing = false;
+      });
     }
   }
 }

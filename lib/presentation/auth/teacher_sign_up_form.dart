@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../data/repositories/user_repository.dart';
 import '../../core/constants.dart';
 import '../shared/error_handler.dart';
+import '../shared/toast_service.dart';
 import 'teacher_step1_form.dart';
 import 'teacher_step2_form.dart';
 import 'teacher_step3_form.dart';
@@ -229,9 +230,7 @@ class _TeacherSignUpFormState extends State<TeacherSignUpForm> {
 
   Future<void> _submitForm() async {
     if (!_validateCurrentStep()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all required fields'), backgroundColor: Colors.red),
-      );
+      ToastService.showError(context, 'Please fill all required fields');
       return;
     }
 
@@ -290,12 +289,7 @@ class _TeacherSignUpFormState extends State<TeacherSignUpForm> {
       }
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastService.showError(context, errorMessage);
       }
     } finally {
       setState(() => _isLoading = false);
