@@ -78,6 +78,46 @@
 - Cache only essential data
 - Implement proper loading states
 
+### Navigation Optimization
+```dart
+// Use simple Navigator.push for lightweight navigation
+Navigator.push(context, MaterialPageRoute(builder: (context) => NextScreen()));
+
+// Always dispose controllers in StatefulWidget
+@override
+void dispose() {
+  _controller.dispose();
+  super.dispose();
+}
+
+// Use const constructors for static widgets
+const MyWidget({Key? key}) : super(key: key);
+```
+
+### Performance-Critical Code Patterns
+```dart
+// Efficient list building for large datasets
+ListView.builder(
+  itemCount: items.length,
+  itemBuilder: (context, index) => const ListTile(...),
+);
+
+// Lazy loading with pagination
+class LazyList extends StatefulWidget {
+  @override
+  _LazyListState createState() => _LazyListState();
+}
+
+// Minimize rebuilds with proper keys
+ListView.builder(
+  key: const ValueKey('main_list'),
+  itemBuilder: (context, index) => ListTile(
+    key: ValueKey(items[index].id),
+    ...
+  ),
+);
+```
+
 ## 🗄️ Data Strategy
 
 ### Local Storage

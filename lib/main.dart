@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'splash_screen.dart';
+import 'presentation/auth/sign_in_screen.dart';
+import 'presentation/auth/sign_up_screen.dart';
+import 'presentation/auth/forgot_password_screen.dart';
+import 'presentation/auth/admin_login_screen.dart';
+import 'presentation/admin/admin_home_screen.dart';
+import 'presentation/student/student_home_screen.dart';
+import 'presentation/parent/parent_home_screen.dart';
+import 'presentation/teacher/teacher_home_screen.dart';
 
 // 🚨 CRITICAL SIZE OPTIMIZATION TODOS 🚨
 // TODO: AVOID importing entire packages - import specific classes only
@@ -22,46 +31,21 @@ class MwanafunziAcademyApp extends StatelessWidget {
   const MwanafunziAcademyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Mwanafunzi Academy',
-      home: HomePage(),
-      debugShowCheckedModeBanner: false,
-      // TODO: Avoid custom themes to save space
-      // TODO: Use default Material colors and typography
-    );
-  }
-}
+  Widget build(BuildContext context) => MaterialApp(
+    title: 'Mwanafunzi Academy',
+    home: const SplashScreen(),
+    routes: _buildRoutes,
+    debugShowCheckedModeBanner: false,
+  );
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      // TODO: Avoid AppBar if not needed (saves space)
-      // TODO: Use basic layout widgets only
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Mwanafunzi Academy',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Kenya\'s Top Learning Platform',
-              style: TextStyle(fontSize: 16),
-            ),
-            // TODO: Add your features here
-            // TODO: Remember to check size impact of each addition
-          ],
-        ),
-      ),
-    );
-  }
+  Map<String, WidgetBuilder> get _buildRoutes => {
+    '/sign-in': (context) => const SignInScreen(),
+    '/sign-up': (context) => const SignUpScreen(),
+    '/forgot-password': (context) => const ForgotPasswordScreen(),
+    '/admin-login': (context) => const AdminLoginScreen(),
+    '/admin-home': (context) => const AdminHomeScreen(),
+    '/student-home': (context) => const StudentHomeScreen(),
+    '/parent-home': (context) => const ParentHomeScreen(),
+    '/teacher-home': (context) => const TeacherHomeScreen(),
+  };
 }
