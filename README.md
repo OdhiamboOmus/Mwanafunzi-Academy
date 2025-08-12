@@ -1,21 +1,4 @@
 # Mwanafunzi Academy
-running my applications on my device use this command
-
- $env:JAVA_HOME = "C:\Program Files\Java\jdk-22"; flutter run -d 042673706I006643 
-
- Also this command works
-$env:JAVA_HOME = "C:\Program Files\Java\jdk-22"; 
-flutter attach -d 042672596J002254
-
-This command to install it in the phone adb install build\app\outputs\flutter-apk\app-debug.apk
-
-command that has actually worked
-$env:JAVA_HOME = "C:\Program Files\Java\jdk-22"; flutter run -d 042672596J002254 --no-build
-
-Option 4: Manual install + Hot reload
-
-Install APK manually: adb install -r build\app\outputs\flutter-apk\app-debug.apk
-Then run: flutter attach -d 042672596J002254
 
 lib/
 ├── core/
@@ -46,5 +29,9 @@ lib/
 │
 └── main.dart
 
+install wireless ADB and run the command
 
+adb connect <phone ip>:5555
+flutter attach -d <phone ip>:5555 and this is after looking for your ip address in the phone settings
 
+$env:JAVA_HOME="C:\Program Files\Java\jdk-22"; flutter build apk --debug

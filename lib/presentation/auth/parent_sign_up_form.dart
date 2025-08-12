@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../data/repositories/user_repository.dart';
 import '../../core/constants.dart';
 import '../shared/validators.dart';
 import '../shared/widgets.dart';
@@ -27,7 +26,6 @@ class _ParentSignUpFormState extends State<ParentSignUpForm> {
   final _studentContactController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final UserRepository _userRepository = UserRepository();
 
   bool _isLoading = false;
 
@@ -115,25 +113,20 @@ class _ParentSignUpFormState extends State<ParentSignUpForm> {
     setState(() => _isLoading = true);
 
     try {
-      final parent = await _userRepository.createParentUser(
-        email: _parentContactController.text.trim(),
-        password: _passwordController.text,
-        fullName: _parentNameController.text.trim(),
-        contactMethod: 'email',
-        contactValue: _parentContactController.text.trim(),
-        studentName: _studentNameController.text.trim(),
-        studentContact: _studentContactController.text.trim().isNotEmpty ? _studentContactController.text.trim() : null,
-      );
+      // Form should only collect data, NOT create user
+      // The user creation should be handled by the sign-up screen
+      print('🔍 DEBUG: Parent form validation successful, passing data to sign-up screen');
 
       widget.onSubmit({
         'userType': AppConstants.userTypeParent,
         'parentName': _parentNameController.text.trim(),
         'parentContact': _parentContactController.text.trim(),
         'studentName': _studentNameController.text.trim(),
-        'studentContact': _studentContactController.text.trim(),
+        'studentContact': _studentContactController.text.trim().isNotEmpty ? _studentContactController.text.trim() : null,
         'password': _passwordController.text,
-        'parent': parent.toMap(),
       });
+      
+      print('🔍 DEBUG: Parent form data submitted successfully');
     } catch (e) {
       String errorMessage = 'An error occurred. Please try again.';
       

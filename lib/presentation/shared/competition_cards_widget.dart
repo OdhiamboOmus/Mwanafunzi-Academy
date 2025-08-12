@@ -65,7 +65,7 @@ class CompetitionCardsWidget extends StatelessWidget {
                             size: 24,
                           ),
                           const SizedBox(width: 8),
-                          Expanded(
+                          Flexible(
                             child: Text(
                               competition.title,
                               style: const TextStyle(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../data/repositories/user_repository.dart';
 import '../../core/constants.dart';
 import '../shared/error_handler.dart';
 import '../shared/toast_service.dart';
@@ -24,7 +23,6 @@ class _TeacherSignUpFormState extends State<TeacherSignUpForm> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
   bool _isLoading = false;
-  final UserRepository _userRepository = UserRepository();
 
   // Step 1 data
   final _nameController = TextEditingController();
@@ -250,19 +248,9 @@ class _TeacherSignUpFormState extends State<TeacherSignUpForm> {
     setState(() => _isLoading = true);
 
     try {
-      final teacher = await _userRepository.createTeacherUser(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        fullName: _nameController.text.trim(),
-        gender: _selectedGender,
-        age: int.parse(_ageController.text),
-        subjects: _selectedSubjects,
-        areaOfOperation: _selectedConstituency!,
-        tscNumber: _tscController.text.trim().isEmpty ? null : _tscController.text.trim(),
-        phone: _mainPhoneController.text.trim(),
-        availability: _availabilityController.text.trim(),
-        price: double.parse(_priceController.text),
-      );
+      // Form should only collect data, NOT create user
+      // The user creation should be handled by the sign-up screen
+      print('🔍 DEBUG: Teacher form validation successful, passing data to sign-up screen');
 
       widget.onSubmit({
         'userType': AppConstants.userTypeTeacher,
@@ -277,8 +265,9 @@ class _TeacherSignUpFormState extends State<TeacherSignUpForm> {
         'availability': _availabilityController.text.trim(),
         'email': _emailController.text.trim(),
         'password': _passwordController.text,
-        'teacher': teacher.toMap(),
       });
+      
+      print('🔍 DEBUG: Teacher form data submitted successfully');
     } catch (e) {
       String errorMessage = 'An error occurred. Please try again.';
       

@@ -4,6 +4,7 @@ plugins {
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
+    id("kotlin-parcelize")
 }
 
 android {
@@ -29,6 +30,9 @@ android {
         targetSdk = 34   // Latest Android 14
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        
+        // Add multiDex support for larger apps
+        multiDexEnabled = true
     }
 
     buildTypes {

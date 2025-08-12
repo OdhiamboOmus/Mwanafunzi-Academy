@@ -27,16 +27,25 @@ class UserRepository {
     required String contactValue,
   }) async {
     try {
+      print('🔍 DEBUG: Starting student user creation for email: $email');
+      
       // Create user with Firebase Auth
+      print('🔍 DEBUG: Attempting Firebase Auth creation...');
       User? user = await _authService.createUserWithEmailAndPassword(
         email: email,
         password: password,
         userType: AppConstants.userTypeStudent,
       );
+      print('🔍 DEBUG: Auth creation result: ${user?.uid ?? "null"}');
 
       if (user == null) {
+        print('❌ DEBUG: Auth creation returned null user');
         throw Exception('Failed to create student account');
       }
+
+      print('🔍 DEBUG: Auth successful, now saving to Firestore...');
+      print('🔍 DEBUG: User ID: ${user.uid}');
+      print('🔍 DEBUG: Data to save - fullName: $fullName, schoolName: $schoolName, contactMethod: $contactMethod, contactValue: $contactValue');
 
       // Save user data to Firestore
       await _firestoreService.createStudentData(
@@ -46,6 +55,8 @@ class UserRepository {
         contactMethod: contactMethod,
         contactValue: contactValue,
       );
+
+      print('✅ DEBUG: Firestore save completed successfully');
 
       return StudentModel(
         id: user.uid,
@@ -57,6 +68,8 @@ class UserRepository {
         userType: AppConstants.userTypeStudent,
       );
     } catch (e) {
+      print('❌ DEBUG: Error in createStudentUser: ${e.toString()}');
+      print('❌ DEBUG: Error type: ${e.runtimeType}');
       throw Exception('Failed to create student user: ${e.toString()}');
     }
   }
@@ -308,8 +321,13 @@ class UserRepository {
   // Send password reset email
   Future<void> sendPasswordResetEmail(String email) async {
     try {
+      print('🔍 DEBUG: UserRepository - sendPasswordResetEmail called');
+      print('🔍 DEBUG: Email: $email');
+      
       await _authService.sendPasswordResetEmail(email);
+      print('🔍 DEBUG: UserRepository - Password reset email processed successfully');
     } catch (e) {
+      print('❌ DEBUG: UserRepository error in sendPasswordResetEmail: ${e.toString()}');
       throw Exception('Failed to send password reset email: ${e.toString()}');
     }
   }

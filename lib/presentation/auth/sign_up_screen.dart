@@ -136,51 +136,64 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void _handleUserTypeChange(String userType) => setState(() => _selectedUserType = userType);
 
   void _handleFormSubmit(Map<String, dynamic> formData) async {
+    print('🔍 DEBUG: SignUpScreen - _handleFormSubmit called');
+    print('🔍 DEBUG: Received formData: $formData');
+    
     try {
       await _handleUserCreation(formData);
+      print('🔍 DEBUG: User creation successful, showing success message');
       _showSuccessMessage(formData['userType']);
       _navigateToHomeScreen(formData['userType']);
     } catch (e) {
+      print('❌ DEBUG: Error in _handleFormSubmit: ${e.toString()}');
+      print('❌ DEBUG: Error type: ${e.runtimeType}');
       _showErrorMessage(e.toString());
     }
   }
 
   Future<void> _handleUserCreation(Map<String, dynamic> formData) async {
+    print('🔍 DEBUG: SignUpScreen - _handleUserCreation called');
+    print('🔍 DEBUG: Form data: $formData');
+    
     switch (formData['userType']) {
       case AppConstants.userTypeStudent:
+        print('🔍 DEBUG: Creating student user...');
         await _userRepository.createStudentUser(
-          email: formData['email'],
-          password: formData['password'],
-          fullName: formData['fullName'],
-          schoolName: formData['schoolName'],
-          contactMethod: formData['contactMethod'],
-          contactValue: formData['contactValue'],
+          email: formData['contact'] ?? formData['email'] ?? '',
+          password: formData['password'] ?? '',
+          fullName: formData['name'] ?? formData['fullName'] ?? '',
+          schoolName: formData['school'] ?? formData['schoolName'] ?? '',
+          contactMethod: 'email',
+          contactValue: formData['contact'] ?? formData['email'] ?? '',
         );
         break;
       case AppConstants.userTypeParent:
+        print('🔍 DEBUG: Creating parent user...');
+        print('🔍 DEBUG: Email for parent: ${formData['parentContact'] ?? formData['contact'] ?? formData['email'] ?? ''}');
         await _userRepository.createParentUser(
-          email: formData['email'],
-          password: formData['password'],
-          fullName: formData['fullName'],
-          contactMethod: formData['contactMethod'],
-          contactValue: formData['contactValue'],
-          studentName: formData['studentName'],
-          studentContact: formData['studentContact'],
+          email: formData['parentContact'] ?? formData['contact'] ?? formData['email'] ?? '',
+          password: formData['password'] ?? '',
+          fullName: formData['parentName'] ?? formData['fullName'] ?? '',
+          contactMethod: 'email',
+          contactValue: formData['parentContact'] ?? formData['contact'] ?? formData['email'] ?? '',
+          studentName: formData['studentName'] ?? '',
+          studentContact: formData['studentContact'] ?? '',
         );
         break;
       case AppConstants.userTypeTeacher:
+        print('🔍 DEBUG: Creating teacher user...');
         await _userRepository.createTeacherUser(
-          email: formData['email'],
-          password: formData['password'],
-          fullName: formData['fullName'],
-          gender: formData['gender'],
-          age: formData['age'],
-          subjects: formData['subjects'],
-          areaOfOperation: formData['areaOfOperation'],
-          tscNumber: formData['tscNumber'],
-          phone: formData['mainPhone'],
-          availability: formData['availability'],
-          price: formData['pricePerWeek'],
+          email: formData['email'] ?? '',
+          password: formData['password'] ?? '',
+          fullName: formData['fullName'] ?? '',
+          gender: formData['gender'] ?? '',
+          age: formData['age'] ?? 0,
+          subjects: formData['subjects'] ?? [],
+          areaOfOperation: formData['areaOfOperation'] ?? '',
+          tscNumber: formData['tscNumber'] ?? '',
+          phone: formData['mainPhone'] ?? formData['phone'] ?? '',
+          availability: formData['availability'] ?? '',
+          price: formData['price'] ?? formData['pricePerWeek'] ?? 0.0,
         );
         break;
     }
@@ -192,7 +205,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
   );
 
   void _showErrorMessage(String error) {
-    final errorMessage = ErrorHandler.getAuthErrorMessage(error.contains('FirebaseException') ? error.split(']')[1].trim() : error);
+    print('❌ DEBUG: _showErrorMessage called with: $error');
+    
+    String errorMessage;
+    if (error.contains('FirebaseException')) {
+      try {
+        errorMessage = ErrorHandler.getAuthErrorMessage(error.split(']')[1].trim());
+      } catch (e) {
+        errorMessage = 'Firebase error: ${error.toString()}';
+      }
+    } else if (error.contains('Exception')) {
+      errorMessage = error.toString().replaceFirst('Exception: ', '');
+    } else {
+      errorMessage = error;
+    }
+    
+    print('🔍 DEBUG: Final error message: $errorMessage');
     ErrorHandler.showErrorDialog(context, 'Error', errorMessage);
   }
 

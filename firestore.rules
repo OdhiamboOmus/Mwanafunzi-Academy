@@ -1,29 +1,14 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow authenticated users to read/write their own data
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Allow authenticated users to read/write their own student data
-    match /students/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Allow authenticated users to read/write their own parent data
-    match /parents/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Allow authenticated users to read/write their own teacher data
-    match /teachers/{userId} {
+    // Allow authenticated users to read/write their own data in hierarchical structure
+    match /users/{userType}/users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
     // Allow admins to read all data (set custom claims for admins)
     match /{document=**} {
-      allow read, write: if request.auth != null && 
+      allow read, write: if request.auth != null &&
         request.auth.token.admin == true;
     }
   }

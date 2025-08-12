@@ -58,41 +58,44 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Widget _buildForm() => Form(
     key: _formKey,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 24),
-        Text(
-          'Forgot your password?',
-          style: GoogleFonts.sora(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF1F2937),
+    child: SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 24),
+          Text(
+            'Forgot your password?',
+            style: GoogleFonts.sora(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1F2937),
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Enter your email address and we\'ll send you a link to reset your password.',
-          style: GoogleFonts.sora(
-            fontSize: 14,
-            color: const Color(0xFF6B7280),
-            height: 1.5,
+          const SizedBox(height: 8),
+          Text(
+            'Enter your email address and we\'ll send you a link to reset your password.',
+            style: GoogleFonts.sora(
+              fontSize: 14,
+              color: const Color(0xFF6B7280),
+              height: 1.5,
+            ),
           ),
-        ),
-        const SizedBox(height: 32),
-        CustomFormField(
-          labelText: 'Email Address',
-          controller: _emailController,
-          keyboardType: TextInputType.emailAddress,
-          validator: Validators.validateEmail,
-        ),
-        const SizedBox(height: 24),
-        BrandButton(
-          text: 'Send Reset Link',
-          onPressed: _submitForm,
-          isLoading: _isLoading,
-        ),
-      ],
+          const SizedBox(height: 32),
+          CustomFormField(
+            labelText: 'Email Address',
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            validator: Validators.validateEmail,
+          ),
+          const SizedBox(height: 24),
+          BrandButton(
+            text: 'Send Reset Link',
+            onPressed: _submitForm,
+            isLoading: _isLoading,
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
     ),
   );
 
@@ -154,14 +157,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await _userRepository.sendPasswordResetEmail(
-        _emailController.text.trim(),
-      );
+      final email = _emailController.text.trim();
+      print('🔍 DEBUG: Sending password reset email to: $email');
+      
+      await _userRepository.sendPasswordResetEmail(email);
+      print('🔍 DEBUG: Password reset email sent successfully');
 
       if (mounted) {
         setState(() => _emailSent = true);
       }
     } catch (e) {
+      print('❌ DEBUG: Error sending password reset email: ${e.toString()}');
       if (mounted) {
         final errorMessage = ErrorHandler.getAuthErrorMessage(e.toString());
         ErrorHandler.showErrorDialog(context, 'Error', errorMessage);

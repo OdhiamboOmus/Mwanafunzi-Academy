@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../data/repositories/user_repository.dart';
 import '../../core/constants.dart';
 import '../shared/validators.dart';
 import '../shared/widgets.dart';
@@ -29,7 +28,6 @@ class _SignUpFormState extends State<SignUpForm> {
   final _contactController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final UserRepository _userRepository = UserRepository();
 
   bool _isLoading = false;
 
@@ -47,7 +45,11 @@ class _SignUpFormState extends State<SignUpForm> {
   Widget build(BuildContext context) {
     switch (widget.userType) {
       case AppConstants.userTypeParent:
-        return ParentSignUpForm(onSubmit: (data) => _handleFormSubmit(data.cast<String, String>()));
+        return ParentSignUpForm(onSubmit: (data) {
+          print('🔍 DEBUG: Parent form data received: $data');
+          print('🔍 DEBUG: Data types: ${data.map((k, v) => MapEntry(k, v.runtimeType))}');
+          return _handleFormSubmit(data.cast<String, dynamic>());
+        });
       case AppConstants.userTypeTeacher:
         return TeacherSignUpForm(onSubmit: _handleTeacherFormSubmit);
       default:
@@ -99,10 +101,19 @@ class _SignUpFormState extends State<SignUpForm> {
   }
 
   void _submitForm() async {
-    if (!_formKey.currentState!.validate()) return;
+    print('🔍 DEBUG: Sign up form submission started');
+    print('🔍 DEBUG: Email: ${_contactController.text.trim()}');
+    print('🔍 DEBUG: Full Name: ${_nameController.text.trim()}');
+    print('🔍 DEBUG: School: ${_schoolController.text.trim()}');
+    
+    if (!_formKey.currentState!.validate()) {
+      print('❌ DEBUG: Form validation failed');
+      return;
+    }
 
     // Check network connectivity
     if (!await ErrorHandler.hasNetworkConnection()) {
+      print('❌ DEBUG: Network connection check failed');
       if (mounted) {
         ErrorHandler.showNetworkError(context);
       }
@@ -112,14 +123,9 @@ class _SignUpFormState extends State<SignUpForm> {
     setState(() => _isLoading = true);
 
     try {
-      final student = await _userRepository.createStudentUser(
-        email: _contactController.text.trim(),
-        password: _passwordController.text,
-        fullName: _nameController.text.trim(),
-        schoolName: _schoolController.text.trim(),
-        contactMethod: 'email', // EmailPhoneToggle handles this
-        contactValue: _contactController.text.trim(),
-      );
+      // Form should only collect data, NOT create user
+      // The user creation should be handled by the sign-up screen
+      print('🔍 DEBUG: Form validation successful, passing data to sign-up screen');
 
       widget.onSubmit({
         'userType': widget.userType,
@@ -127,9 +133,13 @@ class _SignUpFormState extends State<SignUpForm> {
         'school': _schoolController.text.trim(),
         'contact': _contactController.text.trim(),
         'password': _passwordController.text,
-        'student': student.toMap(),
       });
+      
+      print('🔍 DEBUG: Form data submitted successfully');
     } catch (e) {
+      print('❌ DEBUG: Error in _submitForm: ${e.toString()}');
+      print('❌ DEBUG: Error type: ${e.runtimeType}');
+      
       String errorMessage = 'An error occurred. Please try again.';
       
       if (e.toString().contains('FirebaseAuthException')) {
@@ -151,7 +161,7 @@ class _SignUpFormState extends State<SignUpForm> {
     }
   }
 
-  void _handleFormSubmit(Map<String, String> formData) {
+  void _handleFormSubmit(Map<String, dynamic> formData) {
     widget.onSubmit(formData);
   }
 

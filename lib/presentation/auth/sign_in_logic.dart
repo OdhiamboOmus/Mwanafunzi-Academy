@@ -45,59 +45,111 @@ class SignInLogic {
       // Check user type by looking in each collection
       final userType = await _getUserType(userId);
       
+      print('🔍 DEBUG: User type detection for userId: $userId');
+      print('🔍 DEBUG: Detected user type: $userType');
+      
       if (!context.mounted) return;
 
       switch (userType) {
         case AppConstants.userTypeStudent:
+          print('🔍 DEBUG: Navigating to student-home');
           Navigator.pushReplacementNamed(context, '/student-home');
           break;
         case AppConstants.userTypeParent:
+          print('🔍 DEBUG: Navigating to parent-home');
           Navigator.pushReplacementNamed(context, '/parent-home');
           break;
         case AppConstants.userTypeTeacher:
+          print('🔍 DEBUG: Navigating to teacher-home');
           Navigator.pushReplacementNamed(context, '/teacher-home');
           break;
         case AppConstants.userTypeAdmin:
+          print('🔍 DEBUG: Navigating to admin-home');
           Navigator.pushReplacementNamed(context, '/admin-home');
           break;
         default:
+          print('🔍 DEBUG: User type not found, defaulting to student-home');
           // Default to student if type not found
           Navigator.pushReplacementNamed(context, '/student-home');
       }
     } catch (e) {
+      print('❌ DEBUG: Error in _navigateBasedOnUserType: ${e.toString()}');
       // Default navigation on error
       if (context.mounted) {
+        print('🔍 DEBUG: Error occurred, defaulting to student-home');
         Navigator.pushReplacementNamed(context, '/student-home');
       }
     }
   }
 
   Future<String> _getUserType(String userId) async {
-    // Check each collection to determine user type
-    final collections = [
-      {'name': 'students', 'type': AppConstants.userTypeStudent},
-      {'name': 'parents', 'type': AppConstants.userTypeParent},
-      {'name': 'teachers', 'type': AppConstants.userTypeTeacher},
-      {'name': 'admins', 'type': AppConstants.userTypeAdmin},
-    ];
-
-    for (final collection in collections) {
-      try {
-        final doc = await _firestore
-            .collection(collection['name']!)
-            .doc(userId)
-            .get();
-        
-        if (doc.exists) {
-          return collection['type']!;
-        }
-      } catch (e) {
-        // Continue checking other collections
-        continue;
+    // Check each collection to determine user type using hierarchical structure
+    print('🔍 DEBUG: Checking user type for userId: $userId');
+    
+    try {
+      // Check parents collection
+      print('🔍 DEBUG: Checking parents collection');
+      final parentDoc = await _firestore
+          .collection('users')
+          .doc('parents')
+          .collection('users')
+          .doc(userId)
+          .get();
+      
+      if (parentDoc.exists) {
+        print('🔍 DEBUG: User found in parents collection');
+        return AppConstants.userTypeParent;
       }
+      
+      // Check students collection
+      print('🔍 DEBUG: Checking students collection');
+      final studentDoc = await _firestore
+          .collection('users')
+          .doc('students')
+          .collection('users')
+          .doc(userId)
+          .get();
+      
+      if (studentDoc.exists) {
+        print('🔍 DEBUG: User found in students collection');
+        return AppConstants.userTypeStudent;
+      }
+      
+      // Check teachers collection
+      print('🔍 DEBUG: Checking teachers collection');
+      final teacherDoc = await _firestore
+          .collection('users')
+          .doc('teachers')
+          .collection('users')
+          .doc(userId)
+          .get();
+      
+      if (teacherDoc.exists) {
+        print('🔍 DEBUG: User found in teachers collection');
+        return AppConstants.userTypeTeacher;
+      }
+      
+      // Check admins collection
+      print('🔍 DEBUG: Checking admins collection');
+      final adminDoc = await _firestore
+          .collection('users')
+          .doc('admins')
+          .collection('users')
+          .doc(userId)
+          .get();
+      
+      if (adminDoc.exists) {
+        print('🔍 DEBUG: User found in admins collection');
+        return AppConstants.userTypeAdmin;
+      }
+      
+      print('🔍 DEBUG: User not found in any collection, defaulting to student');
+      return AppConstants.userTypeStudent;
+      
+    } catch (e) {
+      print('❌ DEBUG: Error checking user collections: ${e.toString()}');
+      // Default to student on error
+      return AppConstants.userTypeStudent;
     }
-
-    // Default to student if not found in any collection
-    return AppConstants.userTypeStudent;
   }
 }

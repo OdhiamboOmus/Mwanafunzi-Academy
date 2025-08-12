@@ -4,7 +4,7 @@ import '../../core/constants.dart';
 
 // Form-specific widgets following Flutter Lite rules
 
-class CustomFormField extends StatelessWidget {
+class CustomFormField extends StatefulWidget {
   final String labelText;
   final String? Function(String?)? validator;
   final TextEditingController controller;
@@ -25,12 +25,25 @@ class CustomFormField extends StatelessWidget {
   });
 
   @override
+  State<CustomFormField> createState() => _CustomFormFieldState();
+}
+
+class _CustomFormFieldState extends State<CustomFormField> {
+  bool _obscureText = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _obscureText = widget.obscureText;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          labelText,
+          widget.labelText,
           style: GoogleFonts.sora(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -39,11 +52,11 @@ class CustomFormField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         TextFormField(
-          controller: controller,
-          obscureText: obscureText,
-          keyboardType: keyboardType,
-          maxLength: maxLength,
-          validator: validator,
+          controller: widget.controller,
+          obscureText: _obscureText,
+          keyboardType: widget.keyboardType,
+          maxLength: widget.maxLength,
+          validator: widget.validator,
           style: GoogleFonts.sora(
             fontSize: 16,
             color: const Color(0xFF1F2937),
@@ -66,10 +79,17 @@ class CustomFormField extends StatelessWidget {
           color: const Color(0xFF9CA3AF),
           size: 20,
         ),
-        suffixIcon: obscureText ? const Icon(
-          Icons.visibility_off_outlined,
-          color: Color(0xFF9CA3AF),
-          size: 20,
+        suffixIcon: widget.obscureText ? IconButton(
+          icon: Icon(
+            _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            color: const Color(0xFF9CA3AF),
+            size: 20,
+          ),
+          onPressed: () {
+            setState(() {
+              _obscureText = !_obscureText;
+            });
+          },
         ) : null,
         filled: true,
         fillColor: const Color(0xFFF9FAFB),
@@ -82,25 +102,25 @@ class CustomFormField extends StatelessWidget {
       );
 
   String _getHintText() {
-    if (labelText.toLowerCase().contains('name')) return 'Enter your full name';
-    if (labelText.toLowerCase().contains('email')) return 'Enter your email';
-    if (labelText.toLowerCase().contains('password')) return 'Enter your password';
-    if (labelText.toLowerCase().contains('confirm')) return 'Confirm your password';
-    if (labelText.toLowerCase().contains('phone')) return 'Enter your phone number';
-    if (labelText.toLowerCase().contains('school')) return 'Enter your school name';
-    return 'Enter ${labelText.toLowerCase()}';
+    if (widget.labelText.toLowerCase().contains('name')) return 'Enter your full name';
+    if (widget.labelText.toLowerCase().contains('email')) return 'Enter your email';
+    if (widget.labelText.toLowerCase().contains('password')) return 'Enter your password';
+    if (widget.labelText.toLowerCase().contains('confirm')) return 'Confirm your password';
+    if (widget.labelText.toLowerCase().contains('phone')) return 'Enter your phone number';
+    if (widget.labelText.toLowerCase().contains('school')) return 'Enter your school name';
+    return 'Enter ${widget.labelText.toLowerCase()}';
   }
 
   IconData _getIconForField() {
-    if (labelText.toLowerCase().contains('name')) return Icons.person_outline;
-    if (labelText.toLowerCase().contains('email')) return Icons.email_outlined;
-    if (labelText.toLowerCase().contains('password')) return Icons.lock_outline;
-    if (labelText.toLowerCase().contains('phone')) return Icons.phone_outlined;
-    if (labelText.toLowerCase().contains('school')) return Icons.school_outlined;
-    if (labelText.toLowerCase().contains('age')) return Icons.cake_outlined;
-    if (labelText.toLowerCase().contains('tsc')) return Icons.badge_outlined;
-    if (labelText.toLowerCase().contains('rate') || labelText.toLowerCase().contains('price')) return Icons.attach_money_outlined;
-    if (labelText.toLowerCase().contains('time') || labelText.toLowerCase().contains('availability')) return Icons.schedule_outlined;
+    if (widget.labelText.toLowerCase().contains('name')) return Icons.person_outline;
+    if (widget.labelText.toLowerCase().contains('email')) return Icons.email_outlined;
+    if (widget.labelText.toLowerCase().contains('password')) return Icons.lock_outline;
+    if (widget.labelText.toLowerCase().contains('phone')) return Icons.phone_outlined;
+    if (widget.labelText.toLowerCase().contains('school')) return Icons.school_outlined;
+    if (widget.labelText.toLowerCase().contains('age')) return Icons.cake_outlined;
+    if (widget.labelText.toLowerCase().contains('tsc')) return Icons.badge_outlined;
+    if (widget.labelText.toLowerCase().contains('rate') || widget.labelText.toLowerCase().contains('price')) return Icons.attach_money_outlined;
+    if (widget.labelText.toLowerCase().contains('time') || widget.labelText.toLowerCase().contains('availability')) return Icons.schedule_outlined;
     return Icons.edit_outlined;
   }
 

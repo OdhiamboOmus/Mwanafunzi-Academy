@@ -56,38 +56,41 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final isTablet = constraints.maxWidth > 600;
-                return Column(
-                  children: [
-                    // Welcome Section
-                    _buildWelcomeSection(),
-                    const SizedBox(height: 16),
-                    
-                    // Grade Selector
-                    Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isTablet ? 24 : 16,
-                      ),
-                      child: GradeSelectorWidget(
-                        selectedGrade: _selectedGrade,
-                        onGradeChanged: (grade) => setState(() => _selectedGrade = grade),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    
-                    // Lesson Cards
-                    Expanded(
-                      child: ListView(
+                return SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Welcome Section
+                      _buildWelcomeSection(),
+                      const SizedBox(height: 16),
+                      
+                      // Grade Selector
+                      Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: isTablet ? 24 : 16,
                         ),
-                        children: [
-                          const LessonCardsWidget(selectedGrade: ''),
-                          const SizedBox(height: 32),
-                          const CompetitionCardsWidget(),
-                        ],
+                        child: GradeSelectorWidget(
+                          selectedGrade: _selectedGrade,
+                          onGradeChanged: (grade) => setState(() => _selectedGrade = grade),
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 24),
+                      
+                      // Lesson Cards
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isTablet ? 24 : 16,
+                        ),
+                        child: Column(
+                          children: [
+                            const LessonCardsWidget(selectedGrade: ''),
+                            const SizedBox(height: 32),
+                            const CompetitionCardsWidget(),
+                            const SizedBox(height: 32),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
@@ -132,6 +135,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               Row(
                 children: [
                   Expanded(
+                    flex: 1,
                     child: _buildQuickLink(
                       title: 'Leaderboard',
                       icon: Icons.leaderboard,
@@ -140,6 +144,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
+                    flex: 1,
                     child: _buildQuickLink(
                       title: 'My Ranking',
                       icon: Icons.emoji_events,
@@ -152,6 +157,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               Row(
                 children: [
                   Expanded(
+                    flex: 1,
                     child: _buildQuickLink(
                       title: 'Leaderboard',
                       icon: Icons.leaderboard,
@@ -160,6 +166,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
+                    flex: 1,
                     child: _buildQuickLink(
                       title: 'My Ranking',
                       icon: Icons.emoji_events,
@@ -178,34 +185,32 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     required String title,
     required IconData icon,
     required VoidCallback onTap,
-  }) => Expanded(
-    child: GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: const Color(0xFF50E801),
-              size: 20,
+  }) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            color: const Color(0xFF50E801),
+            size: 20,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
             ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Colors.black,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     ),
   );
