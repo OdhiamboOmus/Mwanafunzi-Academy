@@ -250,7 +250,7 @@ class _TeacherSignUpFormState extends State<TeacherSignUpForm> {
     try {
       // Form should only collect data, NOT create user
       // The user creation should be handled by the sign-up screen
-      print('🔍 DEBUG: Teacher form validation successful, passing data to sign-up screen');
+      debugPrint('🔍 DEBUG: Teacher form validation successful, passing data to sign-up screen');
 
       widget.onSubmit({
         'userType': AppConstants.userTypeTeacher,
@@ -267,7 +267,7 @@ class _TeacherSignUpFormState extends State<TeacherSignUpForm> {
         'password': _passwordController.text,
       });
       
-      print('🔍 DEBUG: Teacher form data submitted successfully');
+      debugPrint('🔍 DEBUG: Teacher form data submitted successfully');
     } catch (e) {
       String errorMessage = 'An error occurred. Please try again.';
       

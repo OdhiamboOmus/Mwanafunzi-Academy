@@ -5,6 +5,7 @@ import 'presentation/auth/forgot_password_screen.dart';
 import 'presentation/auth/admin_login_screen.dart';
 import 'presentation/admin/admin_home_screen.dart';
 import 'presentation/student/student_home_screen.dart';
+import 'presentation/student/settings_screen.dart';
 import 'presentation/parent/parent_home_screen.dart';
 import 'presentation/teacher/teacher_home_screen.dart';
 
@@ -15,6 +16,7 @@ class AppRoutes {
   static const String adminLogin = '/admin-login';
   static const String adminHome = '/admin-home';
   static const String studentHome = '/student-home';
+  static const String settings = '/settings';
   static const String parentHome = '/parent-home';
   static const String teacherHome = '/teacher-home';
 
@@ -25,6 +27,7 @@ class AppRoutes {
     adminLogin: (context) => const AdminLoginScreen(),
     adminHome: (context) => const AdminHomeScreen(),
     studentHome: (context) => const StudentHomeScreen(),
+    settings: (context) => const SettingsScreen(),
     parentHome: (context) => const ParentHomeScreen(),
     teacherHome: (context) => const TeacherHomeScreen(),
   };

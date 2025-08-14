@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart' show debugPrint;
 import '../../core/constants.dart';
 
 // Firestore database service following Flutter Lite rules
@@ -12,6 +13,14 @@ class FirestoreService {
   CollectionReference get _parents => _users.doc('parents').collection('users');
   CollectionReference get _students => _users.doc('students').collection('users');
   CollectionReference get _teachers => _users.doc('teachers').collection('users');
+
+  // Parent-child linking collections
+  CollectionReference get _parentLinks => _firestore.collection('parentLinks');
+  CollectionReference get _audit => _firestore.collection('audit');
+
+  // Lesson collections
+  CollectionReference get _lessonsMeta => _firestore.collection('lessonsMeta');
+  DocumentReference get _lessonsMetaDoc => _lessonsMeta.doc('grades');
 
   // Get appropriate collection based on user type
   CollectionReference _getUserCollection(String userType) {
@@ -165,9 +174,9 @@ class FirestoreService {
     required String contactValue,
   }) async {
     try {
-      print('🔍 DEBUG: Firestore - createStudentData called');
-      print('🔍 DEBUG: User ID: $userId');
-      print('🔍 DEBUG: Data to save - fullName: $fullName, schoolName: $schoolName, contactMethod: $contactMethod, contactValue: $contactValue');
+      debugPrint('🔍 DEBUG: Firestore - createStudentData called');
+      debugPrint('🔍 DEBUG: User ID: $userId');
+      debugPrint('🔍 DEBUG: Data to save - fullName: $fullName, schoolName: $schoolName, contactMethod: $contactMethod, contactValue: $contactValue');
       
       // Use hierarchical structure: users/students/users/{userId}
       final studentCollection = _students;
@@ -176,7 +185,7 @@ class FirestoreService {
       final existingDoc = await studentCollection.doc(userId).get();
       
       if (existingDoc.exists) {
-        print('🔍 DEBUG: Student document already exists, updating...');
+        debugPrint('🔍 DEBUG: Student document already exists, updating...');
         await studentCollection.doc(userId).update({
           'fullName': fullName,
           'schoolName': schoolName,
@@ -186,7 +195,7 @@ class FirestoreService {
           'updatedAt': FieldValue.serverTimestamp(),
         });
       } else {
-        print('🔍 DEBUG: Creating new student document...');
+        debugPrint('🔍 DEBUG: Creating new student document...');
         await studentCollection.doc(userId).set({
           'email': '', // Will be set by auth service
           'userType': 'student',
@@ -200,10 +209,10 @@ class FirestoreService {
         });
       }
       
-      print('✅ DEBUG: Firestore student data save completed');
+      debugPrint('✅ DEBUG: Firestore student data save completed');
     } catch (e) {
-      print('❌ DEBUG: Firestore error in createStudentData: ${e.toString()}');
-      print('❌ DEBUG: Error type: ${e.runtimeType}');
+      debugPrint('❌ DEBUG: Firestore error in createStudentData: ${e.toString()}');
+      debugPrint('❌ DEBUG: Error type: ${e.runtimeType}');
       throw Exception('Failed to create student data: ${e.toString()}');
     }
   }
@@ -218,8 +227,8 @@ class FirestoreService {
     String? studentContact,
   }) async {
     try {
-      print('🔍 DEBUG: Firestore - createParentData called');
-      print('🔍 DEBUG: User ID: $userId');
+      debugPrint('🔍 DEBUG: Firestore - createParentData called');
+      debugPrint('🔍 DEBUG: User ID: $userId');
       
       // Use hierarchical structure: users/parents/users/{userId}
       final parentCollection = _parents;
@@ -228,7 +237,7 @@ class FirestoreService {
       final existingDoc = await parentCollection.doc(userId).get();
       
       if (existingDoc.exists) {
-        print('🔍 DEBUG: Parent document already exists, updating...');
+        debugPrint('🔍 DEBUG: Parent document already exists, updating...');
         await parentCollection.doc(userId).update({
           'fullName': fullName,
           'contactMethod': contactMethod,
@@ -239,7 +248,7 @@ class FirestoreService {
           'updatedAt': FieldValue.serverTimestamp(),
         });
       } else {
-        print('🔍 DEBUG: Creating new parent document...');
+        debugPrint('🔍 DEBUG: Creating new parent document...');
         await parentCollection.doc(userId).set({
           'email': '', // Will be set by auth service
           'userType': 'parent',
@@ -254,10 +263,10 @@ class FirestoreService {
         });
       }
       
-      print('✅ DEBUG: Firestore parent data save completed');
+      debugPrint('✅ DEBUG: Firestore parent data save completed');
     } catch (e) {
-      print('❌ DEBUG: Firestore error in createParentData: ${e.toString()}');
-      print('❌ DEBUG: Error type: ${e.runtimeType}');
+      debugPrint('❌ DEBUG: Firestore error in createParentData: ${e.toString()}');
+      debugPrint('❌ DEBUG: Error type: ${e.runtimeType}');
       throw Exception('Failed to create parent data: ${e.toString()}');
     }
   }
@@ -277,8 +286,8 @@ class FirestoreService {
     required String email,
   }) async {
     try {
-      print('🔍 DEBUG: Firestore - createTeacherData called');
-      print('🔍 DEBUG: User ID: $userId');
+      debugPrint('🔍 DEBUG: Firestore - createTeacherData called');
+      debugPrint('🔍 DEBUG: User ID: $userId');
       
       // Use hierarchical structure: users/teachers/users/{userId}
       final teacherCollection = _teachers;
@@ -287,7 +296,7 @@ class FirestoreService {
       final existingDoc = await teacherCollection.doc(userId).get();
       
       if (existingDoc.exists) {
-        print('🔍 DEBUG: Teacher document already exists, updating...');
+        debugPrint('🔍 DEBUG: Teacher document already exists, updating...');
         await teacherCollection.doc(userId).update({
           'fullName': fullName,
           'gender': gender,
@@ -302,7 +311,7 @@ class FirestoreService {
           'updatedAt': FieldValue.serverTimestamp(),
         });
       } else {
-        print('🔍 DEBUG: Creating new teacher document...');
+        debugPrint('🔍 DEBUG: Creating new teacher document...');
         await teacherCollection.doc(userId).set({
           'email': email,
           'userType': 'teacher',
@@ -321,10 +330,10 @@ class FirestoreService {
         });
       }
       
-      print('✅ DEBUG: Firestore teacher data save completed');
+      debugPrint('✅ DEBUG: Firestore teacher data save completed');
     } catch (e) {
-      print('❌ DEBUG: Firestore error in createTeacherData: ${e.toString()}');
-      print('❌ DEBUG: Error type: ${e.runtimeType}');
+      debugPrint('❌ DEBUG: Firestore error in createTeacherData: ${e.toString()}');
+      debugPrint('❌ DEBUG: Error type: ${e.runtimeType}');
       throw Exception('Failed to create teacher data: ${e.toString()}');
     }
   }
@@ -336,8 +345,8 @@ class FirestoreService {
     required String email,
   }) async {
     try {
-      print('🔍 DEBUG: Firestore - createAdminData called');
-      print('🔍 DEBUG: User ID: $userId');
+      debugPrint('🔍 DEBUG: Firestore - createAdminData called');
+      debugPrint('🔍 DEBUG: User ID: $userId');
       
       // Use hierarchical structure: users/admins/users/{userId}
       final adminCollection = _users.doc('admins').collection('users');
@@ -352,10 +361,10 @@ class FirestoreService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
       
-      print('✅ DEBUG: Firestore admin data save completed');
+      debugPrint('✅ DEBUG: Firestore admin data save completed');
     } catch (e) {
-      print('❌ DEBUG: Firestore error in createAdminData: ${e.toString()}');
-      print('❌ DEBUG: Error type: ${e.runtimeType}');
+      debugPrint('❌ DEBUG: Firestore error in createAdminData: ${e.toString()}');
+      debugPrint('❌ DEBUG: Error type: ${e.runtimeType}');
       throw Exception('Failed to create admin data: ${e.toString()}');
     }
   }
@@ -367,6 +376,192 @@ class FirestoreService {
       return doc.get('profileCompleted') ?? false;
     } catch (e) {
       throw Exception('Failed to check profile completion: ${e.toString()}');
+    }
+  }
+
+  // Lesson management methods
+  /// Get lessons metadata for a specific grade
+  Future<QuerySnapshot> getLessonsForGrade(String grade) async {
+    try {
+      return await _lessonsMeta
+          .doc('grades')
+          .collection(grade)
+          .get();
+    } catch (e) {
+      throw Exception('Failed to get lessons for grade $grade: ${e.toString()}');
+    }
+  }
+
+  /// Get lesson metadata by grade and lesson ID
+  Future<DocumentSnapshot> getLessonById(String grade, String lessonId) async {
+    try {
+      return await _lessonsMeta
+          .doc('grades')
+          .collection(grade)
+          .doc(lessonId)
+          .get();
+    } catch (e) {
+      throw Exception('Failed to get lesson $lessonId for grade $grade: ${e.toString()}');
+    }
+  }
+
+  /// Get all lessons metadata (admin function)
+  Future<DocumentSnapshot> getAllLessonsMeta() async {
+    try {
+      return await _lessonsMetaDoc.get();
+    } catch (e) {
+      throw Exception('Failed to get all lessons metadata: ${e.toString()}');
+    }
+  }
+
+  /// Update lesson metadata
+  Future<void> updateLessonMetadata({
+    required String grade,
+    required String lessonId,
+    required Map<String, dynamic> updates,
+  }) async {
+    try {
+      await _lessonsMeta
+          .doc('grades')
+          .collection(grade)
+          .doc(lessonId)
+          .update({
+        ...updates,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to update lesson metadata: ${e.toString()}');
+    }
+  }
+
+  /// Create lesson metadata
+  Future<void> createLessonMetadata({
+    required String grade,
+    required String lessonId,
+    required Map<String, dynamic> lessonData,
+  }) async {
+    try {
+      await _lessonsMeta
+          .doc('grades')
+          .collection(grade)
+          .doc(lessonId)
+          .set({
+        ...lessonData,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to create lesson metadata: ${e.toString()}');
+    }
+  }
+
+  // Parent-child linking methods
+  /// Create a parent-child link
+  Future<void> createParentLink({
+    required String linkId,
+    required String parentId,
+    required String childId,
+    required String status,
+    String? createdByIp,
+  }) async {
+    try {
+      await _parentLinks.doc(linkId).set({
+        'linkId': linkId,
+        'parentId': parentId,
+        'childId': childId,
+        'status': status,
+        'createdAt': FieldValue.serverTimestamp(),
+        'createdByIp': createdByIp,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to create parent link: ${e.toString()}');
+    }
+  }
+
+  /// Get parent links for a specific parent
+  Future<QuerySnapshot> getParentLinks({required String parentId}) async {
+    try {
+      return await _parentLinks
+          .where('parentId', isEqualTo: parentId)
+          .where('status', isEqualTo: 'linked_by_parent')
+          .get();
+    } catch (e) {
+      throw Exception('Failed to get parent links: ${e.toString()}');
+    }
+  }
+
+  /// Get a specific parent link by ID
+  Future<DocumentSnapshot> getParentLinkById(String linkId) async {
+    try {
+      return await _parentLinks.doc(linkId).get();
+    } catch (e) {
+      throw Exception('Failed to get parent link: ${e.toString()}');
+    }
+  }
+
+  /// Update parent link status
+  Future<void> updateParentLinkStatus({
+    required String linkId,
+    required String status,
+  }) async {
+    try {
+      await _parentLinks.doc(linkId).update({
+        'status': status,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to update parent link status: ${e.toString()}');
+    }
+  }
+
+  /// Log parent action for audit trail
+  Future<void> logParentAction({
+    required String parentId,
+    required String action,
+    required String targetUserId,
+    required String targetUserName,
+    required Map<String, dynamic> details,
+    String? ipAddress,
+  }) async {
+    try {
+      await _audit.doc('parentActions').collection('actions').add({
+        'parentId': parentId,
+        'action': action,
+        'targetUserId': targetUserId,
+        'targetUserName': targetUserName,
+        'details': details,
+        'ipAddress': ipAddress,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to log parent action: ${e.toString()}');
+    }
+  }
+
+  /// Get child comment activity (pre-computed)
+  Future<DocumentSnapshot?> getChildCommentActivity({required String childId}) async {
+    try {
+      return await _firestore
+          .collection('childCommentActivity')
+          .doc(childId)
+          .get();
+    } catch (e) {
+      // Return null if document doesn't exist or there's an error
+      return null;
+    }
+  }
+
+  /// Get users by IDs
+  Future<List<DocumentSnapshot>> getUsersByIds(List<String> userIds) async {
+    try {
+      if (userIds.isEmpty) return [];
+      
+      // Get users from all collections
+      final futures = userIds.map((id) => getUserById(id)).toList();
+      return await Future.wait(futures);
+    } catch (e) {
+      throw Exception('Failed to get users by IDs: ${e.toString()}');
     }
   }
 }

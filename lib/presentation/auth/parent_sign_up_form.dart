@@ -115,7 +115,7 @@ class _ParentSignUpFormState extends State<ParentSignUpForm> {
     try {
       // Form should only collect data, NOT create user
       // The user creation should be handled by the sign-up screen
-      print('🔍 DEBUG: Parent form validation successful, passing data to sign-up screen');
+      debugPrint('🔍 DEBUG: Parent form validation successful, passing data to sign-up screen');
 
       widget.onSubmit({
         'userType': AppConstants.userTypeParent,
@@ -126,7 +126,7 @@ class _ParentSignUpFormState extends State<ParentSignUpForm> {
         'password': _passwordController.text,
       });
       
-      print('🔍 DEBUG: Parent form data submitted successfully');
+      debugPrint('🔍 DEBUG: Parent form data submitted successfully');
     } catch (e) {
       String errorMessage = 'An error occurred. Please try again.';
       

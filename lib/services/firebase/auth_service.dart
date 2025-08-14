@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart' show debugPrint;
 
 // Firebase Authentication service following Flutter Lite rules
 class AuthService {
@@ -11,9 +12,9 @@ class AuthService {
     required String userType,
   }) async {
     try {
-      print('🔍 DEBUG: AuthService - createUserWithEmailAndPassword called');
-      print('🔍 DEBUG: Email: $email');
-      print('🔍 DEBUG: User Type: $userType');
+      debugPrint('🔍 DEBUG: AuthService - createUserWithEmailAndPassword called');
+      debugPrint('🔍 DEBUG: Email: $email');
+      debugPrint('🔍 DEBUG: User Type: $userType');
       
       // Check if user already exists with this email
       try {
@@ -23,13 +24,13 @@ class AuthService {
         );
         
         if (signInResult.user != null) {
-          print('🔍 DEBUG: User already exists with email: $email');
+          debugPrint('🔍 DEBUG: User already exists with email: $email');
           // User exists, return existing user
           return signInResult.user;
         }
       } catch (e) {
         // User doesn't exist, continue with account creation
-        print('🔍 DEBUG: User does not exist, creating new account...');
+        debugPrint('🔍 DEBUG: User does not exist, creating new account...');
       }
       
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
@@ -37,18 +38,18 @@ class AuthService {
         password: password,
       );
       
-      print('🔍 DEBUG: Auth creation successful');
-      print('🔍 DEBUG: User ID: ${userCredential.user?.uid}');
-      print('🔍 DEBUG: User email: ${userCredential.user?.email}');
+      debugPrint('🔍 DEBUG: Auth creation successful');
+      debugPrint('🔍 DEBUG: User ID: ${userCredential.user?.uid}');
+      debugPrint('🔍 DEBUG: User email: ${userCredential.user?.email}');
       
       // Update user profile with custom claims
       await userCredential.user?.updateDisplayName(userType);
-      print('🔍 DEBUG: Display name updated to: $userType');
+      debugPrint('🔍 DEBUG: Display name updated to: $userType');
       
       return userCredential.user;
     } catch (e) {
-      print('❌ DEBUG: AuthService error: ${e.toString()}');
-      print('❌ DEBUG: Error type: ${e.runtimeType}');
+      debugPrint('❌ DEBUG: AuthService error: ${e.toString()}');
+      debugPrint('❌ DEBUG: Error type: ${e.runtimeType}');
       throw _handleAuthError(e);
     }
   }
@@ -107,13 +108,13 @@ class AuthService {
   // Send password reset email
   Future<void> sendPasswordResetEmail(String email) async {
     try {
-      print('🔍 DEBUG: AuthService - sendPasswordResetEmail called');
-      print('🔍 DEBUG: Email: $email');
+      debugPrint('🔍 DEBUG: AuthService - sendPasswordResetEmail called');
+      debugPrint('🔍 DEBUG: Email: $email');
       
       await _auth.sendPasswordResetEmail(email: email);
-      print('🔍 DEBUG: Password reset email sent successfully');
+      debugPrint('🔍 DEBUG: Password reset email sent successfully');
     } catch (e) {
-      print('❌ DEBUG: AuthService error in sendPasswordResetEmail: ${e.toString()}');
+      debugPrint('❌ DEBUG: AuthService error in sendPasswordResetEmail: ${e.toString()}');
       throw _handleAuthError(e);
     }
   }

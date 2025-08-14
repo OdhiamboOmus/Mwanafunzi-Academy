@@ -46,8 +46,8 @@ class _SignUpFormState extends State<SignUpForm> {
     switch (widget.userType) {
       case AppConstants.userTypeParent:
         return ParentSignUpForm(onSubmit: (data) {
-          print('🔍 DEBUG: Parent form data received: $data');
-          print('🔍 DEBUG: Data types: ${data.map((k, v) => MapEntry(k, v.runtimeType))}');
+          debugPrint('🔍 DEBUG: Parent form data received: $data');
+          debugPrint('🔍 DEBUG: Data types: ${data.map((k, v) => MapEntry(k, v.runtimeType))}');
           return _handleFormSubmit(data.cast<String, dynamic>());
         });
       case AppConstants.userTypeTeacher:
@@ -101,19 +101,19 @@ class _SignUpFormState extends State<SignUpForm> {
   }
 
   void _submitForm() async {
-    print('🔍 DEBUG: Sign up form submission started');
-    print('🔍 DEBUG: Email: ${_contactController.text.trim()}');
-    print('🔍 DEBUG: Full Name: ${_nameController.text.trim()}');
-    print('🔍 DEBUG: School: ${_schoolController.text.trim()}');
+    debugPrint('🔍 DEBUG: Sign up form submission started');
+    debugPrint('🔍 DEBUG: Email: ${_contactController.text.trim()}');
+    debugPrint('🔍 DEBUG: Full Name: ${_nameController.text.trim()}');
+    debugPrint('🔍 DEBUG: School: ${_schoolController.text.trim()}');
     
     if (!_formKey.currentState!.validate()) {
-      print('❌ DEBUG: Form validation failed');
+      debugPrint('❌ DEBUG: Form validation failed');
       return;
     }
 
     // Check network connectivity
     if (!await ErrorHandler.hasNetworkConnection()) {
-      print('❌ DEBUG: Network connection check failed');
+      debugPrint('❌ DEBUG: Network connection check failed');
       if (mounted) {
         ErrorHandler.showNetworkError(context);
       }
@@ -125,7 +125,7 @@ class _SignUpFormState extends State<SignUpForm> {
     try {
       // Form should only collect data, NOT create user
       // The user creation should be handled by the sign-up screen
-      print('🔍 DEBUG: Form validation successful, passing data to sign-up screen');
+      debugPrint('🔍 DEBUG: Form validation successful, passing data to sign-up screen');
 
       widget.onSubmit({
         'userType': widget.userType,
@@ -135,10 +135,10 @@ class _SignUpFormState extends State<SignUpForm> {
         'password': _passwordController.text,
       });
       
-      print('🔍 DEBUG: Form data submitted successfully');
+      debugPrint('🔍 DEBUG: Form data submitted successfully');
     } catch (e) {
-      print('❌ DEBUG: Error in _submitForm: ${e.toString()}');
-      print('❌ DEBUG: Error type: ${e.runtimeType}');
+      debugPrint('❌ DEBUG: Error in _submitForm: ${e.toString()}');
+      debugPrint('❌ DEBUG: Error type: ${e.runtimeType}');
       
       String errorMessage = 'An error occurred. Please try again.';
       

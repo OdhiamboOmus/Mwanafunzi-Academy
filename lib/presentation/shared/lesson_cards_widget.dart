@@ -1,156 +1,135 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'lesson_card_item.dart';
 
-class LessonCardsWidget extends StatelessWidget {
+// Lesson cards widget following Flutter Lite rules (<150 lines)
+class LessonCardsWidget extends StatefulWidget {
   final String selectedGrade;
 
-  const LessonCardsWidget({
-    super.key,
-    required this.selectedGrade,
-  });
+  const LessonCardsWidget({super.key, required this.selectedGrade});
+
+  @override
+  State<LessonCardsWidget> createState() => _LessonCardsWidgetState();
+}
+
+class _LessonCardsWidgetState extends State<LessonCardsWidget> {
+  final PageController _pageController = PageController(viewportFraction: 0.85);
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Text(
-          'Your Lessons',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
-        ),
-      ),
-      const SizedBox(height: 8),
-      SizedBox(
-        height: 200,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          physics: const BouncingScrollPhysics(),
-          itemCount: _getLessonCards().length,
-          itemBuilder: (context, index) {
-            final card = _getLessonCards()[index];
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              width: 280,
-              margin: const EdgeInsets.only(right: 12),
-              child: Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            card.icon,
-                            color: const Color(0xFF50E801),
-                            size: 24,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              card.subject,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        card.description,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF6B7280),
-                          height: 1.4,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '${card.lessonCount} lessons',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF6B7280),
-                            ),
-                          ),
-                          Text(
-                            card.duration,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF6B7280),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      LinearProgressIndicator(
-                        value: card.progress,
-                        backgroundColor: const Color(0xFFE5E7EB),
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF50E801),
-                        ),
-                        minHeight: 4,
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 36,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            HapticFeedback.lightImpact();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF50E801),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'Continue Learning',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Continue Learning',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+            // Scroll indicator dots
+            Row(
+              children: List.generate(
+                _getLessonCards().length > 5 ? 5 : _getLessonCards().length,
+                (index) => Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: index == _currentPage % 5
+                        ? const Color(0xFF50E801)
+                        : const Color(0xFFE5E7EB),
+                    shape: BoxShape.circle,
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          ],
         ),
+      ),
+      const SizedBox(height: 8),
+      // Premium scrollable cards with visual cues
+      Stack(
+        children: [
+          SizedBox(
+            height: 220,
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) => setState(() => _currentPage = index),
+              itemCount: _getLessonCards().length,
+              itemBuilder: (context, index) => LessonCardItem(
+                card: _getLessonCards()[index],
+                selectedGrade: widget.selectedGrade,
+              ),
+            ),
+          ),
+          // Left scroll indicator
+          if (_currentPage > 0)
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: 20,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [Colors.white.withValues(alpha: 0.8), Colors.transparent],
+                  ),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.chevron_left,
+                    color: Color(0xFF50E801),
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
+          // Right scroll indicator
+          if (_currentPage < _getLessonCards().length - 1)
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: 20,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerRight,
+                    end: Alignment.centerLeft,
+                    colors: [Colors.white.withValues(alpha: 0.8), Colors.transparent],
+                  ),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.chevron_right,
+                    color: Color(0xFF50E801),
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     ],
   );
 
   List<LessonCardData> _getLessonCards() {
-    // Generate infinite-like lesson cards based on selected grade
     final baseCards = [
-      LessonCardData(
+      const LessonCardData(
         subject: 'Mathematics',
         description: 'Master algebra, geometry, and calculus concepts',
         lessonCount: 24,
@@ -158,7 +137,7 @@ class LessonCardsWidget extends StatelessWidget {
         progress: 0.65,
         icon: Icons.calculate,
       ),
-      LessonCardData(
+      const LessonCardData(
         subject: 'English',
         description: 'Improve grammar, vocabulary, and writing skills',
         lessonCount: 18,
@@ -166,7 +145,7 @@ class LessonCardsWidget extends StatelessWidget {
         progress: 0.40,
         icon: Icons.menu_book,
       ),
-      LessonCardData(
+      const LessonCardData(
         subject: 'Science',
         description: 'Explore physics, chemistry, and biology',
         lessonCount: 30,
@@ -174,7 +153,7 @@ class LessonCardsWidget extends StatelessWidget {
         progress: 0.20,
         icon: Icons.science,
       ),
-      LessonCardData(
+      const LessonCardData(
         subject: 'Social Studies',
         description: 'Learn about history, geography, and culture',
         lessonCount: 20,
@@ -182,7 +161,7 @@ class LessonCardsWidget extends StatelessWidget {
         progress: 0.80,
         icon: Icons.public,
       ),
-      LessonCardData(
+      const LessonCardData(
         subject: 'Kiswahili',
         description: 'Develop language skills and cultural understanding',
         lessonCount: 16,
@@ -192,12 +171,11 @@ class LessonCardsWidget extends StatelessWidget {
       ),
     ];
 
-    // Add more cards to simulate infinite scrolling
     return List.generate(10, (index) {
       final originalIndex = index % baseCards.length;
       final originalCard = baseCards[originalIndex];
       return LessonCardData(
-        subject: '${originalCard.subject} ${index + 1}',
+        subject: originalCard.subject,
         description: originalCard.description,
         lessonCount: originalCard.lessonCount,
         duration: originalCard.duration,
@@ -206,22 +184,4 @@ class LessonCardsWidget extends StatelessWidget {
       );
     });
   }
-}
-
-class LessonCardData {
-  final String subject;
-  final String description;
-  final int lessonCount;
-  final String duration;
-  final double progress;
-  final IconData icon;
-
-  const LessonCardData({
-    required this.subject,
-    required this.description,
-    required this.lessonCount,
-    required this.duration,
-    required this.progress,
-    required this.icon,
-  });
 }

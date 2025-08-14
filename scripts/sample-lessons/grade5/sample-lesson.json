@@ -1,0 +1,57 @@
+{
+  "lessonId": "math_grade5_lesson1",
+  "title": "Introduction to Fractions",
+  "grade": "5",
+  "subject": "Mathematics",
+  "sections": [
+    {
+      "sectionId": "section_1",
+      "type": "content",
+      "title": "What are fractions?",
+      "content": "A fraction represents part of a whole. For example, if you have a pizza and you cut it into 4 equal slices, each slice is 1/4 of the whole pizza.",
+      "order": 1,
+      "media": ["fraction-pizza.webp"]
+    },
+    {
+      "sectionId": "section_2",
+      "type": "question",
+      "question": "Which fraction represents half of a whole?",
+      "options": ["1/4", "1/2", "3/4", "2/3"],
+      "correctAnswer": 1,
+      "explanation": "1/2 means one part out of two equal parts. If you cut something into 2 equal pieces, each piece is half of the whole.",
+      "order": 2
+    },
+    {
+      "sectionId": "section_3",
+      "type": "content",
+      "title": "Numerator and Denominator",
+      "content": "In a fraction like 3/4:\n- The top number (3) is called the numerator - it tells us how many parts we have\n- The bottom number (4) is called the denominator - it tells us how many equal parts the whole is divided into",
+      "order": 3
+    },
+    {
+      "sectionId": "section_4",
+      "type": "question",
+      "question": "In the fraction 2/5, what does the number 5 represent?",
+      "options": ["The number of parts we have", "The total number of equal parts", "The value of each part", "The whole number"],
+      "correctAnswer": 1,
+      "explanation": "In the fraction 2/5, the denominator (5) represents the total number of equal parts that the whole is divided into.",
+      "order": 4
+    },
+    {
+      "sectionId": "section_5",
+      "type": "content",
+      "title": "Equivalent Fractions",
+      "content": "Equivalent fractions are different fractions that represent the same value. For example, 1/2, 2/4, and 3/6 are all equivalent fractions because they all represent half of a whole.",
+      "order": 5
+    },
+    {
+      "sectionId": "section_6",
+      "type": "question",
+      "question": "Which of the following is equivalent to 1/2?",
+      "options": ["2/3", "3/6", "1/4", "2/5"],
+      "correctAnswer": 1,
+      "explanation": "3/6 is equivalent to 1/2 because both fractions represent the same value - half of a whole. You can see this by dividing both numerator and denominator by 3.",
+      "order": 6
+    }
+  ]
+}

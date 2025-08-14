@@ -136,28 +136,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void _handleUserTypeChange(String userType) => setState(() => _selectedUserType = userType);
 
   void _handleFormSubmit(Map<String, dynamic> formData) async {
-    print('🔍 DEBUG: SignUpScreen - _handleFormSubmit called');
-    print('🔍 DEBUG: Received formData: $formData');
+    debugPrint('🔍 DEBUG: SignUpScreen - _handleFormSubmit called');
+    debugPrint('🔍 DEBUG: Received formData: $formData');
     
     try {
       await _handleUserCreation(formData);
-      print('🔍 DEBUG: User creation successful, showing success message');
+      debugPrint('🔍 DEBUG: User creation successful, showing success message');
       _showSuccessMessage(formData['userType']);
       _navigateToHomeScreen(formData['userType']);
     } catch (e) {
-      print('❌ DEBUG: Error in _handleFormSubmit: ${e.toString()}');
-      print('❌ DEBUG: Error type: ${e.runtimeType}');
+      debugPrint('❌ DEBUG: Error in _handleFormSubmit: ${e.toString()}');
+      debugPrint('❌ DEBUG: Error type: ${e.runtimeType}');
       _showErrorMessage(e.toString());
     }
   }
 
   Future<void> _handleUserCreation(Map<String, dynamic> formData) async {
-    print('🔍 DEBUG: SignUpScreen - _handleUserCreation called');
-    print('🔍 DEBUG: Form data: $formData');
+    debugPrint('🔍 DEBUG: SignUpScreen - _handleUserCreation called');
+    debugPrint('🔍 DEBUG: Form data: $formData');
     
     switch (formData['userType']) {
       case AppConstants.userTypeStudent:
-        print('🔍 DEBUG: Creating student user...');
+        debugPrint('🔍 DEBUG: Creating student user...');
         await _userRepository.createStudentUser(
           email: formData['contact'] ?? formData['email'] ?? '',
           password: formData['password'] ?? '',
@@ -168,8 +168,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
         );
         break;
       case AppConstants.userTypeParent:
-        print('🔍 DEBUG: Creating parent user...');
-        print('🔍 DEBUG: Email for parent: ${formData['parentContact'] ?? formData['contact'] ?? formData['email'] ?? ''}');
+        debugPrint('🔍 DEBUG: Creating parent user...');
+        debugPrint('🔍 DEBUG: Email for parent: ${formData['parentContact'] ?? formData['contact'] ?? formData['email'] ?? ''}');
         await _userRepository.createParentUser(
           email: formData['parentContact'] ?? formData['contact'] ?? formData['email'] ?? '',
           password: formData['password'] ?? '',
@@ -181,7 +181,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         );
         break;
       case AppConstants.userTypeTeacher:
-        print('🔍 DEBUG: Creating teacher user...');
+        debugPrint('🔍 DEBUG: Creating teacher user...');
         await _userRepository.createTeacherUser(
           email: formData['email'] ?? '',
           password: formData['password'] ?? '',
@@ -205,7 +205,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   );
 
   void _showErrorMessage(String error) {
-    print('❌ DEBUG: _showErrorMessage called with: $error');
+    debugPrint('❌ DEBUG: _showErrorMessage called with: $error');
     
     String errorMessage;
     if (error.contains('FirebaseException')) {
@@ -220,7 +220,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       errorMessage = error;
     }
     
-    print('🔍 DEBUG: Final error message: $errorMessage');
+    debugPrint('🔍 DEBUG: Final error message: $errorMessage');
     ErrorHandler.showErrorDialog(context, 'Error', errorMessage);
   }
 

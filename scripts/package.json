@@ -1,0 +1,28 @@
+{
+  "name": "mwanafunzi-lesson-uploader",
+  "version": "1.0.0",
+  "description": "Batch upload script for section-based lesson content with Firebase Storage integration",
+  "main": "lesson-uploader.js",
+  "scripts": {
+    "start": "node lesson-uploader.js",
+    "test": "node test-validator.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.0.0",
+    "archiver": "^6.0.1",
+    "ajv": "^8.12.0",
+    "commander": "^11.1.0",
+    "chalk": "^4.1.2",
+    "fs-extra": "^10.1.0"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "firebase",
+    "storage",
+    "lessons",
+    "batch-upload",
+    "education"
+  ],
+  "author": "Mwanafunzi Academy",
+  "license": "MIT"
+}

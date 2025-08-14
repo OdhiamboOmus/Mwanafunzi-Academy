@@ -158,16 +158,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     try {
       final email = _emailController.text.trim();
-      print('🔍 DEBUG: Sending password reset email to: $email');
+      debugPrint('🔍 DEBUG: Sending password reset email to: $email');
       
       await _userRepository.sendPasswordResetEmail(email);
-      print('🔍 DEBUG: Password reset email sent successfully');
+      debugPrint('🔍 DEBUG: Password reset email sent successfully');
 
       if (mounted) {
         setState(() => _emailSent = true);
       }
     } catch (e) {
-      print('❌ DEBUG: Error sending password reset email: ${e.toString()}');
+      debugPrint('❌ DEBUG: Error sending password reset email: ${e.toString()}');
       if (mounted) {
         final errorMessage = ErrorHandler.getAuthErrorMessage(e.toString());
         ErrorHandler.showErrorDialog(context, 'Error', errorMessage);
