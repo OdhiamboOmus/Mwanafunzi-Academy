@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart' show debugPrint;
 
 // Firebase Authentication service following Flutter Lite rules
@@ -81,9 +82,19 @@ class AuthService {
         password: password,
       );
       
-      // Verify admin status through custom claims or user document
-      // This is a simplified version - in production, you'd verify admin status
-      // through Firebase custom claims or a separate admin collection
+      // Verify admin status through admin_users collection
+      // Check if user exists in admin_users collection
+      final adminDoc = await FirebaseFirestore.instance
+          .collection('admin_users')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+      
+      if (adminDoc.docs.isEmpty) {
+        // User is not an admin, sign them out and return null
+        await _auth.signOut();
+        return null;
+      }
       
       return userCredential.user;
     } catch (e) {

@@ -50,7 +50,6 @@ class ServiceManager {
   PerformanceReport getPerformanceReport() {
     final cacheMetrics = telemetryService.getCacheMetrics();
     final downloadAnalysis = telemetryService.getDownloadFrequencyAnalysis();
-    final perfSummary = performanceMonitor.getPerformanceSummary();
     final recommendations = performanceMonitor.getRecommendations();
     
     return PerformanceReport(

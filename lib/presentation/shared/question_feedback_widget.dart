@@ -16,7 +16,7 @@ class QuestionFeedbackWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isCorrect ? const Color(0xFF50E801).withOpacity(0.1) : const Color(0xFFEF4444).withOpacity(0.1),
+        color: isCorrect ? const Color(0xFF50E801).withValues(alpha: 0.1) : const Color(0xFFEF4444).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isCorrect ? const Color(0xFF50E801) : const Color(0xFFEF4444),

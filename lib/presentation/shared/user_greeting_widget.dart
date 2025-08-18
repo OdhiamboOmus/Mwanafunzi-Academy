@@ -29,7 +29,6 @@ class _UserGreetingWidgetState extends State<UserGreetingWidget> {
   String _motivationalMessage = 'Loading...';
   int _userPoints = 0;
   bool _isLoading = true;
-  bool _hasError = false;
 
   @override
   void initState() {
@@ -44,7 +43,6 @@ class _UserGreetingWidgetState extends State<UserGreetingWidget> {
 
     setState(() {
       _isLoading = true;
-      _hasError = false;
     });
 
     try {
@@ -69,7 +67,6 @@ class _UserGreetingWidgetState extends State<UserGreetingWidget> {
           _motivationalMessage = 'Keep learning and growing!';
           _userPoints = 0;
           _isLoading = false;
-          _hasError = true;
         });
       }
     }
@@ -84,7 +81,7 @@ class _UserGreetingWidgetState extends State<UserGreetingWidget> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -117,7 +114,7 @@ class _UserGreetingWidgetState extends State<UserGreetingWidget> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF50E801).withOpacity(0.1),
+                    color: const Color(0xFF50E801).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(

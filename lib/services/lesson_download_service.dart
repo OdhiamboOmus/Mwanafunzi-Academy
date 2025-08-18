@@ -275,7 +275,6 @@ class LessonDownloadService {
         // Remove gzip header (first 10 bytes typically contain metadata)
         if (compressedContent.length > 10) {
           // Extract the compressed data (after header, before trailer)
-          final compressedData = compressedContent.substring(10);
           
           // Simple decompression simulation for Flutter Lite
           // In a production app, you would implement proper gzip decompression

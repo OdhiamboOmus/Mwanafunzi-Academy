@@ -24,13 +24,43 @@ class SignInLogic {
     }
 
     try {
-      final user = await _userRepository.signInUser(
-        email: email,
-        password: password,
-      );
+      // Check if this is an admin login attempt
+      final isAdmin = await _userRepository.isAdminUser(email);
+      
+      if (isAdmin) {
+        // Admin login - use admin authentication
+        final user = await _userRepository.signInAdmin(
+          email: email,
+          password: password,
+        );
 
-      if (user != null && context.mounted) {
-        await _navigateBasedOnUserType(context, user.uid);
+        if (user != null && context.mounted) {
+          await _navigateBasedOnUserType(context, user.uid);
+        } else {
+          // Admin authentication failed
+          if (context.mounted) {
+            NotificationService().showErrorMessage(
+              context,
+              'Invalid admin credentials or access denied'
+            );
+          }
+        }
+      } else {
+        // Regular user login
+        final user = await _userRepository.signInUser(
+          email: email,
+          password: password,
+        );
+
+        if (user != null && context.mounted) {
+          await _navigateBasedOnUserType(context, user.uid);
+        } else {
+          // Regular user authentication failed
+          if (context.mounted) {
+            final errorMessage = ErrorHandler.getAuthErrorMessage('Invalid credentials');
+            NotificationService().showErrorMessage(context, errorMessage);
+          }
+        }
       }
     } catch (e) {
       if (context.mounted) {
@@ -82,6 +112,7 @@ class SignInLogic {
     }
   }
 
+  // Enhanced user type detection with admin_users collection check
   Future<String> _getUserType(String userId) async {
     // Check each collection to determine user type using hierarchical structure
     debugPrint('🔍 DEBUG: Checking user type for userId: $userId');
@@ -129,17 +160,29 @@ class SignInLogic {
         return AppConstants.userTypeTeacher;
       }
       
-      // Check admins collection
-      debugPrint('🔍 DEBUG: Checking admins collection');
+      // Check admin_users collection (new admin structure)
+      debugPrint('🔍 DEBUG: Checking admin_users collection');
       final adminDoc = await _firestore
+          .collection('admin_users')
+          .doc(userId)
+          .get();
+      
+      if (adminDoc.exists) {
+        debugPrint('🔍 DEBUG: User found in admin_users collection');
+        return AppConstants.userTypeAdmin;
+      }
+      
+      // Check legacy admins collection (for backward compatibility)
+      debugPrint('🔍 DEBUG: Checking legacy admins collection');
+      final legacyAdminDoc = await _firestore
           .collection('users')
           .doc('admins')
           .collection('users')
           .doc(userId)
           .get();
       
-      if (adminDoc.exists) {
-        debugPrint('🔍 DEBUG: User found in admins collection');
+      if (legacyAdminDoc.exists) {
+        debugPrint('🔍 DEBUG: User found in legacy admins collection');
         return AppConstants.userTypeAdmin;
       }
       
@@ -152,4 +195,5 @@ class SignInLogic {
       return AppConstants.userTypeStudent;
     }
   }
+
 }

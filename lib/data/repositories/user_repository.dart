@@ -249,6 +249,40 @@ class UserRepository {
     }
   }
 
+  // Check if user is admin
+  Future<bool> isAdminUser(String email) async {
+    try {
+      return await _firestoreService.isAdminUser(email);
+    } catch (e) {
+      debugPrint('❌ DEBUG: UserRepository error in isAdminUser: ${e.toString()}');
+      return false;
+    }
+  }
+
+  // Get admin user data
+  Future<DocumentSnapshot> getAdminData(String userId) async {
+    try {
+      return await _firestoreService.getAdminData(userId);
+    } catch (e) {
+      throw Exception('Failed to get admin data: ${e.toString()}');
+    }
+  }
+
+  // Update admin permissions
+  Future<void> updateAdminPermissions({
+    required String userId,
+    required List<String> permissions,
+  }) async {
+    try {
+      await _firestoreService.updateAdminPermissions(
+        userId: userId,
+        permissions: permissions,
+      );
+    } catch (e) {
+      throw Exception('Failed to update admin permissions: ${e.toString()}');
+    }
+  }
+
   // Sign out user
   Future<void> signOut() async {
     try {

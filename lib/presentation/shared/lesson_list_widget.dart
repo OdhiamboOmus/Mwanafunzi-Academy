@@ -185,6 +185,8 @@ class LessonListWidget extends StatelessWidget {
         builder: (context) => LessonContentScreen(
           lessonTitle: lesson.title,
           subject: 'Mathematics', // This could be passed from parent
+          lessonId: 'lesson_${lesson.title.replaceAll(' ', '_').toLowerCase()}', // Generate unique ID from title
+          sectionId: 'section_1', // Default section ID
           currentStep: 3,
           totalSteps: lesson.steps,
         ),

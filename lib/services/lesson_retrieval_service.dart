@@ -164,20 +164,6 @@ class LessonRetrievalService {
   }
 
 
-  /// Get lesson versions
-  Future<Map<String, String>> _getLessonVersions() async {
-    try {
-      final cached = await _storageService.getCachedData<Map<String, String>>(
-        key: _lessonVersionsKey,
-        fromJson: (json) => Map<String, String>.from(json),
-        ttlSeconds: null,
-      );
-      
-      return cached ?? {};
-    } catch (e) {
-      return {};
-    }
-  }
 
   /// Update lesson access time
   Future<void> _updateLessonAccessTime(String lessonId) async {

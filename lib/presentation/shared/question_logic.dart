@@ -2,6 +2,7 @@ import '../../services/question_service.dart';
 import '../../core/services/storage_service.dart';
 import '../../data/repositories/user_repository.dart';
 import '../../services/lesson_service_core.dart';
+import '../../services/firebase/firestore_service.dart';
 
 /// Logic handler for question widget operations
 class QuestionLogicHandler {
@@ -23,6 +24,7 @@ class QuestionLogicHandler {
     lessonService: LessonService(
       storageService: StorageService(),
       userRepository: UserRepository(),
+      firestoreService: FirestoreService(),
     ),
   );
 

@@ -6,10 +6,98 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Allow admins to read all data (set custom claims for admins)
-    match /{document=**} {
-      allow read, write: if request.auth != null &&
-        request.auth.token.admin == true;
+    // Admin users collection - only admins can read/write
+    match /admin_users/{adminId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Quiz collections - admins can write, students can read their grade
+    match /quizzes/{grade}/{subject}/{topic} {
+      allow read: if isAuthenticated() &&
+                     (isAdmin() || getUserGrade() == grade);
+      allow write: if isAdmin();
+    }
+    
+    // Quiz attempts - comprehensive rules for regular and competition attempts
+    match /quiz_attempts/{studentId}/{collectionType}/{attemptId} {
+      allow read: if isAuthenticated() &&
+                    (request.auth.uid == studentId ||
+                     isParentOfStudent(request.auth.uid, studentId) ||
+                     isAdmin());
+      allow write: if isAuthenticated() &&
+                    (request.auth.uid == studentId || isAdmin());
+    }
+    
+    // Student challenges - participants can read/write their challenges
+    match /student_challenges/{challengeId} {
+      allow read: if isAuthenticated() &&
+                    (isChallengeParticipant(challengeId, request.auth.uid) || isAdmin());
+      allow write: if isAuthenticated() &&
+                    (isChallengeParticipant(challengeId, request.auth.uid) || isAdmin());
+    }
+    
+    // School competitions - participants can read, admins can write
+    match /school_competitions/{competitionId} {
+      allow read: if isAuthenticated() &&
+                    (isSchoolCompetitionParticipant(competitionId, request.auth.uid) || isAdmin());
+      allow write: if isAdmin();
+    }
+    
+    // Lesson progress - students can read/write their own progress, parents can read linked children's progress
+    match /lesson_progress/{studentId} {
+      allow read: if isAuthenticated() &&
+                    (request.auth.uid == studentId ||
+                     isParentOfStudent(request.auth.uid, studentId) ||
+                     isAdmin());
+      allow write: if isAuthenticated() &&
+                    (request.auth.uid == studentId || isAdmin());
+    }
+    
+    // Lessons - admins can write, students can read their grade
+    match /lessonsMeta/{grade} {
+      allow read: if isAuthenticated() && (getUserGrade() == grade || isAdmin());
+      allow write: if isAdmin();
+    }
+    
+    // Parent-child linking for analytics
+    match /parentLinks/{parentId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == parentId;
+    }
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/admin_users/$(request.auth.uid));
+    }
+    
+    function getUserGrade() {
+      // Get user's grade from their student document
+      return get(/databases/$(database)/documents/users/students/users/$(request.auth.uid)).data.grade;
+    }
+    
+    function isChallengeParticipant(String challengeId, String userId) {
+      // Check if user is challenger or challenged in the challenge
+      return get(/databases/$(database)/documents/student_challenges/$(challengeId)).data.challenger.studentId == userId ||
+             get(/databases/$(database)/documents/student_challenges/$(challengeId)).data.challenged.studentId == userId;
+    }
+    
+    function isSchoolCompetitionParticipant(String competitionId, String userId) {
+      // Check if user is participating in the school competition
+      return get(/databases/$(database)/documents/school_competitions/$(competitionId)).data.participantSchools.any(
+        (participant) => participant.studentId == userId
+      );
+    }
+    
+    function isParentOfStudent(String parentId, String studentId) {
+      // Check if parent has linked to this student
+      return exists(/databases/$(database)/documents/parentLinks/$(parentId)) &&
+             get(/databases/$(database)/documents/parentLinks/$(parentId)).data.children.any(
+               (child) => child.studentId == studentId
+             );
     }
   }
 }

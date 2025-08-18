@@ -3,6 +3,7 @@ import 'package:mwanafunzi_academy/core/service_locator.dart';
 import 'package:mwanafunzi_academy/services/user_service.dart';
 import 'package:mwanafunzi_academy/services/settings_service.dart';
 import 'package:mwanafunzi_academy/services/progress_service.dart';
+import 'package:mwanafunzi_academy/presentation/student/leaderboard_screen.dart';
 
 // Settings screen following Flutter Lite rules (<150 lines)
 class SettingsScreen extends StatefulWidget {
@@ -199,6 +200,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
     margin: const EdgeInsets.symmetric(horizontal: 16),
     child: Column(
       children: [
+        _buildSettingOption(
+          icon: Icons.emoji_events,
+          title: 'Leaderboard',
+          subtitle: 'View individual and school rankings',
+          onTap: () async {
+            final user = await _userService.getCurrentUser();
+            if (user != null && mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LeaderboardScreen(
+                    studentId: user.id,
+                    studentName: user.name,
+                    school: 'Unknown School', // Default value since schoolName doesn't exist
+                  ),
+                ),
+              );
+            }
+          },
+        ),
+        const SizedBox(height: 12),
         _buildSettingOption(
           icon: Icons.notifications,
           title: 'Notifications',

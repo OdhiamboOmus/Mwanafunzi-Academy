@@ -37,6 +37,8 @@ dependencies:
   http: ^1.2.1
   equatable: ^2.0.5
   google_fonts: ^6.1.0
+  file_picker: ^6.1.1
+  connectivity_plus: ^6.1.5
   
   # TODO: ADD MORE FIREBASE PACKAGES ONLY IF CRITICAL
   # firebase_storage: ^12.4.0  # Only if file uploads needed

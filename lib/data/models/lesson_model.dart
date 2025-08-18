@@ -152,22 +152,28 @@ class LessonMeta {
 class LessonContent {
   final String lessonId;
   final String title;
+  final String subject;
+  final String topic;
   final List<LessonSection> sections;
 
   LessonContent({
     required this.lessonId,
     required this.title,
+    required this.subject,
+    required this.topic,
     required this.sections,
   });
 
   factory LessonContent.fromJson(Map<String, dynamic> json) {
     final sectionsJson = json['sections'] as List?;
-    final sections = sectionsJson?.map((section) => 
+    final sections = sectionsJson?.map((section) =>
         LessonSection.fromJson(section)).toList() ?? [];
 
     return LessonContent(
       lessonId: json['lessonId'] ?? '',
       title: json['title'] ?? '',
+      subject: json['subject'] ?? '',
+      topic: json['topic'] ?? '',
       sections: sections,
     );
   }
@@ -176,6 +182,8 @@ class LessonContent {
     return {
       'lessonId': lessonId,
       'title': title,
+      'subject': subject,
+      'topic': topic,
       'sections': sections.map((section) => section.toJson()).toList(),
     };
   }

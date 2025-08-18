@@ -343,20 +343,20 @@ class FirestoreService {
     required String userId,
     required String fullName,
     required String email,
+    List<String> permissions = const ['quiz_management', 'lesson_management'],
   }) async {
     try {
       debugPrint('🔍 DEBUG: Firestore - createAdminData called');
       debugPrint('🔍 DEBUG: User ID: $userId');
       
-      // Use hierarchical structure: users/admins/users/{userId}
-      final adminCollection = _users.doc('admins').collection('users');
+      // Use new admin_users collection structure
+      final adminCollection = _firestore.collection('admin_users');
       
       await adminCollection.doc(userId).set({
         'email': email,
-        'userType': 'admin',
+        'role': 'admin',
         'fullName': fullName,
-        'isAdmin': true,
-        'profileCompleted': true,
+        'permissions': permissions,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -366,6 +366,72 @@ class FirestoreService {
       debugPrint('❌ DEBUG: Firestore error in createAdminData: ${e.toString()}');
       debugPrint('❌ DEBUG: Error type: ${e.runtimeType}');
       throw Exception('Failed to create admin data: ${e.toString()}');
+    }
+  }
+
+  // Get admin user data from admin_users collection
+  Future<DocumentSnapshot> getAdminData(String userId) async {
+    try {
+      debugPrint('🔍 DEBUG: Firestore - getAdminData called');
+      debugPrint('🔍 DEBUG: User ID: $userId');
+      
+      final adminDoc = await _firestore
+          .collection('admin_users')
+          .doc(userId)
+          .get();
+      
+      debugPrint('✅ DEBUG: Firestore admin data retrieved successfully');
+      return adminDoc;
+    } catch (e) {
+      debugPrint('❌ DEBUG: Firestore error in getAdminData: ${e.toString()}');
+      debugPrint('❌ DEBUG: Error type: ${e.runtimeType}');
+      throw Exception('Failed to get admin data: ${e.toString()}');
+    }
+  }
+
+  // Update admin user permissions
+  Future<void> updateAdminPermissions({
+    required String userId,
+    required List<String> permissions,
+  }) async {
+    try {
+      debugPrint('🔍 DEBUG: Firestore - updateAdminPermissions called');
+      
+      await _firestore
+          .collection('admin_users')
+          .doc(userId)
+          .update({
+        'permissions': permissions,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      
+      debugPrint('✅ DEBUG: Firestore admin permissions updated successfully');
+    } catch (e) {
+      debugPrint('❌ DEBUG: Firestore error in updateAdminPermissions: ${e.toString()}');
+      debugPrint('❌ DEBUG: Error type: ${e.runtimeType}');
+      throw Exception('Failed to update admin permissions: ${e.toString()}');
+    }
+  }
+
+  // Check if user is admin by email
+  Future<bool> isAdminUser(String email) async {
+    try {
+      debugPrint('🔍 DEBUG: Firestore - isAdminUser called');
+      debugPrint('🔍 DEBUG: Email: $email');
+      
+      final adminDoc = await _firestore
+          .collection('admin_users')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+      
+      final isAdmin = adminDoc.docs.isNotEmpty;
+      debugPrint('🔍 DEBUG: Admin status check result: $isAdmin');
+      
+      return isAdmin;
+    } catch (e) {
+      debugPrint('❌ DEBUG: Firestore error in isAdminUser: ${e.toString()}');
+      return false;
     }
   }
 
@@ -562,6 +628,152 @@ class FirestoreService {
       return await Future.wait(futures);
     } catch (e) {
       throw Exception('Failed to get users by IDs: ${e.toString()}');
+    }
+  }
+
+  /// Lesson-quiz progress management methods
+  /// Get lesson progress document for a student
+  Future<DocumentSnapshot> getLessonProgress(String studentId) async {
+    try {
+      return await _firestore
+          .collection('lesson_progress')
+          .doc(studentId)
+          .get();
+    } catch (e) {
+      throw Exception('Failed to get lesson progress: ${e.toString()}');
+    }
+  }
+
+  /// Create or update lesson progress document
+  Future<void> createOrUpdateLessonProgress({
+    required String studentId,
+    required String grade,
+    required String subject,
+    required String topic,
+    required Map<String, dynamic> progressData,
+  }) async {
+    try {
+      await _firestore
+          .collection('lesson_progress')
+          .doc(studentId)
+          .set({
+        grade: {
+          subject: {
+            topic: FieldValue.arrayUnion([progressData]),
+          },
+        },
+        'lastUpdated': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      throw Exception('Failed to create/update lesson progress: ${e.toString()}');
+    }
+  }
+
+  /// Update lesson progress with quiz completion
+  Future<void> updateLessonProgressWithQuiz({
+    required String studentId,
+    required String grade,
+    required String subject,
+    required String topic,
+    required String lessonId,
+    required Map<String, dynamic> quizData,
+  }) async {
+    try {
+      final progressData = {
+        'lessonId': lessonId,
+        'quizCompleted': true,
+        'quizData': quizData,
+        'completedAt': FieldValue.serverTimestamp(),
+      };
+
+      await _firestore
+          .collection('lesson_progress')
+          .doc(studentId)
+          .update({
+        grade: {
+          subject: {
+            topic: FieldValue.arrayUnion([progressData]),
+          },
+        },
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to update lesson progress with quiz: ${e.toString()}');
+    }
+  }
+
+  /// Get lesson progress for a specific grade and subject
+  Future<Map<String, dynamic>> getLessonProgressByGradeSubject({
+    required String studentId,
+    required String grade,
+    required String subject,
+  }) async {
+    try {
+      final doc = await _firestore
+          .collection('lesson_progress')
+          .doc(studentId)
+          .get();
+
+      if (!doc.exists) {
+        return {};
+      }
+
+      final data = doc.data() as Map<String, dynamic>;
+      final gradeData = data[grade] as Map<String, dynamic>?;
+      
+      return gradeData?[subject] ?? {};
+    } catch (e) {
+      throw Exception('Failed to get lesson progress by grade/subject: ${e.toString()}');
+    }
+  }
+
+  /// Check if student has completed any lesson or quiz for a topic
+  Future<bool> hasCompletedLessonOrQuiz({
+    required String studentId,
+    required String grade,
+    required String subject,
+    required String topic,
+  }) async {
+    try {
+      final doc = await _firestore
+          .collection('lesson_progress')
+          .doc(studentId)
+          .get();
+
+      if (!doc.exists) {
+        return false;
+      }
+
+      final data = doc.data() as Map<String, dynamic>;
+      final gradeData = data[grade] as Map<String, dynamic>?;
+      
+      if (gradeData == null) {
+        return false;
+      }
+
+      final subjectData = gradeData[subject] as Map<String, dynamic>?;
+      
+      if (subjectData == null) {
+        return false;
+      }
+
+      final topicData = subjectData[topic] as List?;
+      
+      if (topicData == null) {
+        return false;
+      }
+
+      // Check if any entry indicates completion
+      return topicData.any((entry) {
+        if (entry is Map) {
+          return entry['lessonCompleted'] == true ||
+                 (entry['quizCompleted'] as bool?) == true;
+        }
+        return false;
+      });
+    } catch (e) {
+      debugPrint('❌ Error checking lesson/quiz completion: $e');
+      return false;
     }
   }
 }

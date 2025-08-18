@@ -25,7 +25,6 @@ class CommentService implements CommentServiceCore {
        _userRepository = userRepository {
     _firestoreService = CommentServiceFirestore(
       storageService: storageService,
-      commentService: this,
     );
   }
 

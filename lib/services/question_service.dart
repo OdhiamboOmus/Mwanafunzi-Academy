@@ -225,16 +225,6 @@ class QuestionService {
     }
   }
 
-  /// Get lesson content from lesson service
-  Future<LessonContent> _getLessonContent(String lessonId) async {
-    try {
-      return await _lessonService.getLessonContent(lessonId);
-    } catch (e) {
-      debugPrint('❌ QuestionService error in _getLessonContent: $e');
-      // Fallback to sample content
-      return _getSampleLessonContent(lessonId);
-    }
-  }
 
   /// Get sample lesson content as fallback
   LessonContent _getSampleLessonContent(String lessonId) {

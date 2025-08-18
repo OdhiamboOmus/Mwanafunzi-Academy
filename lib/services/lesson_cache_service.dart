@@ -146,21 +146,6 @@ class LessonCacheService {
     }
   }
 
-  /// Update lesson version
-  Future<void> _updateLessonVersion(String lessonId, String version) async {
-    try {
-      final versions = await _getLessonVersions();
-      versions[lessonId] = version;
-      
-      await _storageService.setCachedData(
-        key: 'lesson_versions',
-        data: versions,
-        toJson: (versions) => versions,
-      );
-    } catch (e) {
-      debugPrint('❌ Update lesson version error: $e');
-    }
-  }
 
   /// Remove corrupted lesson file
   Future<void> _removeCorruptedLessonFile(String lessonId) async {

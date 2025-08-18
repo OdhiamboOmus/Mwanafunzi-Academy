@@ -1,17 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 /// Comprehensive caching service for Flutter Lite compliance
 /// Implements aggressive caching with 24-hour cycles and performance monitoring
 class CachingService {
   static const String _cachePrefix = 'mwanafunzi_cache_';
-  static const String _telemetryPrefix = 'mwanafunzi_telemetry_';
-  
+
   /// Cache statistics for performance monitoring
   final CacheTelemetry _telemetry = CacheTelemetry();
-  
+
   /// Get cached data with aggressive 24-hour TTL for static content
   Future<T?> getCachedData<T>({
     required String key,
@@ -20,44 +18,45 @@ class CachingService {
     bool forceRefresh = false,
   }) async {
     final startTime = DateTime.now();
-    
+
     try {
       final cacheKey = '$_cachePrefix$key';
-      final telemetryKey = '$_telemetryPrefix$key';
-      
+
       // Record cache read attempt
       _telemetry.recordRead(key);
-      
+
       // For static content, use aggressive 24-hour TTL if not specified
-      final effectiveTtl = ttlSeconds ?? (key.contains('static') || key.contains('meta') ? 86400 : 3600);
-      
+      final effectiveTtl =
+          ttlSeconds ??
+          (key.contains('static') || key.contains('meta') ? 86400 : 3600);
+
       final cachedData = await _getStorageValue(cacheKey);
-      
+
       if (cachedData == null) {
         _telemetry.recordCacheMiss(key);
         return null;
       }
-      
+
       final jsonData = _decodeJson(cachedData) as Map<String, dynamic>;
-      
+
       // Check TTL if provided and not force refresh
       if (!forceRefresh && effectiveTtl > 0) {
         final cachedAt = jsonData['cachedAt'] as int?;
         final now = DateTime.now().millisecondsSinceEpoch;
-        
+
         if (cachedAt == null || (now - cachedAt) > (effectiveTtl * 1000)) {
           await _removeStorageValue(cacheKey); // Remove expired cache
           _telemetry.recordCacheMiss(key);
           return null;
         }
       }
-      
+
       _telemetry.recordCacheHit(key);
-      
+
       // Record read performance
       final readTime = DateTime.now().difference(startTime).inMilliseconds;
       _telemetry.recordReadPerformance(key, readTime);
-      
+
       return fromJson(jsonData['data']);
     } catch (e) {
       _telemetry.recordError(key, e.toString());
@@ -67,7 +66,7 @@ class CachingService {
       return null;
     }
   }
-  
+
   /// Set cached data with intelligent compression and metadata
   Future<bool> setCachedData<T>({
     required String key,
@@ -76,11 +75,13 @@ class CachingService {
     int? ttlSeconds,
   }) async {
     final startTime = DateTime.now();
-    
+
     try {
       final cacheKey = '$_cachePrefix$key';
-      final effectiveTtl = ttlSeconds ?? (key.contains('static') || key.contains('meta') ? 86400 : 3600);
-      
+      final effectiveTtl =
+          ttlSeconds ??
+          (key.contains('static') || key.contains('meta') ? 86400 : 3600);
+
       // Compress data by removing null values for smaller footprint
       final jsonData = {
         'data': _compressJson(toJson(data)),
@@ -88,22 +89,22 @@ class CachingService {
         'ttl': effectiveTtl,
         'version': '1.0',
       };
-      
+
       // Record write attempt
       _telemetry.recordWrite(key);
-      
+
       final success = await _setStorageValue(cacheKey, _encodeJson(jsonData));
-      
+
       if (success) {
         // Record write performance
         final writeTime = DateTime.now().difference(startTime).inMilliseconds;
         _telemetry.recordWritePerformance(key, writeTime);
-        
+
         // Update cache size tracking
         final dataSize = _encodeJson(jsonData).length;
         _telemetry.recordCacheSize(key, dataSize);
       }
-      
+
       return success;
     } catch (e) {
       _telemetry.recordError(key, e.toString());
@@ -113,7 +114,7 @@ class CachingService {
       return false;
     }
   }
-  
+
   /// Intelligent cache cleanup prioritizing frequently accessed content
   Future<int> performCacheCleanup({
     int maxCacheSizeMB = 50,
@@ -122,25 +123,26 @@ class CachingService {
     try {
       final allKeys = await _getAllCacheKeys();
       final cacheInfo = await _getCacheInfo(allKeys);
-      
+
       // Sort by access frequency (most accessed first)
       cacheInfo.sort((a, b) => b.accessCount.compareTo(a.accessCount));
-      
+
       int totalCleaned = 0;
       int totalSize = 0;
-      
+
       // Keep frequently accessed items, remove least recently used
       for (int i = cacheInfo.length - 1; i >= 0; i--) {
         final info = cacheInfo[i];
         totalSize += info.sizeBytes;
-        
+
         // Remove if over size limit or item limit
-        if (totalSize > (maxCacheSizeMB * 1024 * 1024) || cacheInfo.length - totalCleaned > maxItems) {
+        if (totalSize > (maxCacheSizeMB * 1024 * 1024) ||
+            cacheInfo.length - totalCleaned > maxItems) {
           await _removeStorageValue('$_cachePrefix${info.key}');
           totalCleaned++;
         }
       }
-      
+
       _telemetry.recordCleanup(totalCleaned, totalSize);
       return totalCleaned;
     } catch (e) {
@@ -150,23 +152,23 @@ class CachingService {
       return 0;
     }
   }
-  
+
   /// Get cache statistics for performance monitoring
   CacheStats getCacheStats() {
     return _telemetry.getStats();
   }
-  
+
   /// Clear all cache with telemetry
   Future<bool> clearAllCache() async {
     try {
       final allKeys = await _getAllCacheKeys();
       int clearedCount = 0;
-      
+
       for (final key in allKeys) {
         final success = await _removeStorageValue(key);
         if (success) clearedCount++;
       }
-      
+
       _telemetry.recordClear(clearedCount);
       return clearedCount == allKeys.length;
     } catch (e) {
@@ -176,13 +178,15 @@ class CachingService {
       return false;
     }
   }
-  
+
   /// Check if cache needs optimization
   bool needsOptimization() {
     final stats = _telemetry.getStats();
-    return stats.hitRate < 0.7 || stats.averageReadTime > 100 || stats.totalCacheSizeMB > 50;
+    return stats.hitRate < 0.7 ||
+        stats.averageReadTime > 100 ||
+        stats.totalCacheSizeMB > 50;
   }
-  
+
   /// Optimize cache based on usage patterns
   Future<void> optimizeCache() async {
     if (needsOptimization()) {
@@ -190,53 +194,56 @@ class CachingService {
       _telemetry.recordOptimization();
     }
   }
-  
+
   // Helper methods for storage operations
   // Abstract storage methods to be implemented by platform-specific services
   Future<String?> _getStorageValue(String key) {
     throw UnimplementedError('Storage service must be implemented');
   }
-  
+
   Future<bool> _setStorageValue(String key, String value) {
     throw UnimplementedError('Storage service must be implemented');
   }
-  
+
   Future<bool> _removeStorageValue(String key) {
     throw UnimplementedError('Storage service must be implemented');
   }
-  
+
   Future<List<String>> _getAllCacheKeys() {
     throw UnimplementedError('Storage service must be implemented');
   }
-  
+
   /// Get cache information for cleanup decisions
   Future<List<CacheInfo>> _getCacheInfo(List<String> allKeys) async {
     final cacheInfo = <CacheInfo>[];
-    
+
     for (final key in allKeys) {
       try {
         final cachedData = await _getStorageValue(key);
         if (cachedData != null) {
           final jsonData = _decodeJson(cachedData) as Map<String, dynamic>;
-          final accessCount = _telemetry._readCounts[key.replaceFirst(_cachePrefix, '')] ?? 0;
+          final accessCount =
+              _telemetry._readCounts[key.replaceFirst(_cachePrefix, '')] ?? 0;
           final sizeBytes = cachedData.length;
-          
-          cacheInfo.add(CacheInfo(
-            key: key.replaceFirst(_cachePrefix, ''),
-            sizeBytes: sizeBytes,
-            accessCount: accessCount,
-            lastAccessed: jsonData['cachedAt'] ?? 0,
-          ));
+
+          cacheInfo.add(
+            CacheInfo(
+              key: key.replaceFirst(_cachePrefix, ''),
+              sizeBytes: sizeBytes,
+              accessCount: accessCount,
+              lastAccessed: jsonData['cachedAt'] ?? 0,
+            ),
+          );
         }
       } catch (e) {
         // Skip corrupted cache entries
         continue;
       }
     }
-    
+
     return cacheInfo;
   }
-  
+
   // JSON helpers with error handling
   dynamic _decodeJson(String data) {
     try {
@@ -245,7 +252,7 @@ class CachingService {
       throw FormatException('Invalid JSON data: $e');
     }
   }
-  
+
   String _encodeJson(dynamic data) {
     try {
       return _safeJsonEncode(data);
@@ -253,22 +260,27 @@ class CachingService {
       throw FormatException('Invalid JSON encoding: $e');
     }
   }
-  
+
   // Compress JSON by removing null values
   dynamic _compressJson(dynamic data) {
     if (data is Map<String, dynamic>) {
-      return data.map((key, value) => MapEntry(key, value != null ? _compressJson(value) : null));
+      return data.map(
+        (key, value) =>
+            MapEntry(key, value != null ? _compressJson(value) : null),
+      );
     } else if (data is List) {
-      return data.map((item) => item != null ? _compressJson(item) : null).toList();
+      return data
+          .map((item) => item != null ? _compressJson(item) : null)
+          .toList();
     }
     return data;
   }
-  
+
   // Safe JSON decode with null safety
   dynamic _safeJsonDecode(String source) {
     return jsonDecode(source);
   }
-  
+
   // Safe JSON encode with null safety
   String _safeJsonEncode(Object? data) {
     return jsonEncode(data);
@@ -281,7 +293,7 @@ class CacheInfo {
   final int sizeBytes;
   final int accessCount;
   final int lastAccessed;
-  
+
   CacheInfo({
     required this.key,
     required this.sizeBytes,
@@ -302,7 +314,7 @@ class CacheStats {
   final Map<String, int> cacheSizes;
   final int cleanupCount;
   final int cleanupSizeBytes;
-  
+
   CacheStats({
     required this.totalReads,
     required this.totalWrites,
@@ -315,22 +327,22 @@ class CacheStats {
     required this.cleanupCount,
     required this.cleanupSizeBytes,
   });
-  
+
   double get hitRate {
     if (totalReads == 0) return 0.0;
     return cacheHits / totalReads;
   }
-  
+
   double get averageReadTime {
     if (readTimes.isEmpty) return 0.0;
     return readTimes.reduce((a, b) => a + b) / readTimes.length;
   }
-  
+
   double get averageWriteTime {
     if (writeTimes.isEmpty) return 0.0;
     return writeTimes.reduce((a, b) => a + b) / writeTimes.length;
   }
-  
+
   int get totalCacheSizeMB {
     if (cacheSizes.isEmpty) return 0;
     final totalBytes = cacheSizes.values.fold(0, (sum, size) => sum + size);
@@ -350,53 +362,52 @@ class CacheTelemetry {
   final Map<String, int> _cacheSizes = {};
   int _cleanupCount = 0;
   int _cleanupSizeBytes = 0;
-  int _optimizationCount = 0;
-  
+
   void recordRead(String key) {
     _readCounts[key] = (_readCounts[key] ?? 0) + 1;
   }
-  
+
   void recordWrite(String key) {
     _writeCounts[key] = (_writeCounts[key] ?? 0) + 1;
   }
-  
+
   void recordCacheHit(String key) {
     _hitCounts[key] = (_hitCounts[key] ?? 0) + 1;
   }
-  
+
   void recordCacheMiss(String key) {
     _missCounts[key] = (_missCounts[key] ?? 0) + 1;
   }
-  
+
   void recordError(String key, String error) {
     _errorCounts[key] = (_errorCounts[key] ?? 0) + 1;
   }
-  
+
   void recordReadPerformance(String key, int timeMs) {
     _readTimes.add(timeMs);
   }
-  
+
   void recordWritePerformance(String key, int timeMs) {
     _writeTimes.add(timeMs);
   }
-  
+
   void recordCacheSize(String key, int sizeBytes) {
     _cacheSizes[key] = sizeBytes;
   }
-  
+
   void recordCleanup(int itemsCleared, int sizeBytes) {
     _cleanupCount += itemsCleared;
     _cleanupSizeBytes += sizeBytes;
   }
-  
+
   void recordClear(int itemsCleared) {
     _cleanupCount += itemsCleared;
   }
-  
+
   void recordOptimization() {
-    _optimizationCount++;
+    _cleanupCount++;
   }
-  
+
   CacheStats getStats() {
     return CacheStats(
       totalReads: _readCounts.values.fold(0, (sum, count) => sum + count),

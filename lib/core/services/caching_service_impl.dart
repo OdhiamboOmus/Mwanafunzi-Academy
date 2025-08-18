@@ -8,7 +8,6 @@ import 'caching_service.dart';
 class CachingServiceImpl extends CachingService {
   static const String _cachePrefix = 'mwanafunzi_cache_';
   
-  @override
   Future<String?> _getStorageValue(String key) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -21,20 +20,6 @@ class CachingServiceImpl extends CachingService {
     }
   }
   
-  @override
-  Future<bool> _setStorageValue(String key, String value) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      return await prefs.setString(key, value);
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ CachingServiceImpl._setStorageValue error for $key: $e');
-      }
-      return false;
-    }
-  }
-  
-  @override
   Future<bool> _removeStorageValue(String key) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -47,7 +32,6 @@ class CachingServiceImpl extends CachingService {
     }
   }
   
-  @override
   Future<List<String>> _getAllCacheKeys() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -64,15 +48,12 @@ class CachingServiceImpl extends CachingService {
   Future<CacheStats> getDetailedCacheStats() async {
     try {
       final allKeys = await _getAllCacheKeys();
-      int totalSize = 0;
       int hitCount = 0;
       int missCount = 0;
       
       for (final key in allKeys) {
         final cachedData = await _getStorageValue(key);
         if (cachedData != null) {
-          totalSize += cachedData.length;
-          
           // Check if cache entry is valid (not expired)
           try {
             final jsonData = json.decode(cachedData) as Map<String, dynamic>;

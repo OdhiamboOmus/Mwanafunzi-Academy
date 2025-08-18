@@ -4,13 +4,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/services/storage_service.dart';
 import '../data/models/comment_model.dart';
-import 'comment_service_core.dart';
 
 /// Firestore operations for comment service
 class CommentServiceFirestore {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final StorageService _storageService;
-  final CommentServiceCore _commentService;
   
   static const String _commentsCollection = 'comments';
   static const String _commentsCachePrefix = 'comments_';
@@ -20,9 +18,7 @@ class CommentServiceFirestore {
 
   CommentServiceFirestore({
     required StorageService storageService,
-    required CommentServiceCore commentService,
-  }) : _storageService = storageService,
-       _commentService = commentService;
+  }) : _storageService = storageService;
 
   /// Fetch comments from Firestore for a specific section
   Future<List<Comment>> fetchCommentsFromFirestore(String lessonId, String sectionId) async {

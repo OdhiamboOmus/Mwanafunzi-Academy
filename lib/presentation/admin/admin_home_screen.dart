@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants.dart';
 import '../../data/repositories/user_repository.dart';
+import 'admin_performance_dashboard.dart';
 
 // Admin home screen following Flutter Lite rules (<120 lines)
 class AdminHomeScreen extends StatefulWidget {
@@ -28,6 +29,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             _buildDashboardGrid(),
             const SizedBox(height: 32),
             _buildQuickStats(),
+            const SizedBox(height: 32),
+            _buildPerformanceCard(),
           ],
         ),
       ),
@@ -154,6 +157,64 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           _buildStatRow('Active Today', 'Loading...', Icons.access_time),
           _buildStatRow('New This Week', 'Loading...', Icons.trending_up),
         ],
+      ),
+    ),
+  );
+
+  Widget _buildPerformanceCard() => Card(
+    elevation: 4,
+    child: InkWell(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const AdminPerformanceDashboard()),
+      ),
+      borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+      child: Padding(
+        padding: const EdgeInsets.all(AppConstants.defaultPadding),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.speed,
+                size: 24,
+                color: Colors.blue,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Performance Dashboard',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'View cache hit rates, Firebase costs, and optimization recommendations',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.grey,
+              size: 16,
+            ),
+          ],
+        ),
       ),
     ),
   );

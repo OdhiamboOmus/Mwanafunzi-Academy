@@ -3,6 +3,8 @@ import '../../data/repositories/user_repository.dart';
 import '../../core/service_locator.dart';
 import '../../data/models/child_summary_model.dart';
 import '../../services/parent_service.dart';
+import '../../services/firebase/parent_quiz_analytics_service.dart';
+import '../../data/models/quiz_model.dart';
 
 /// Business logic for ParentHomeScreen
 /// Following Flutter Lite rules with separation of concerns
@@ -15,16 +17,23 @@ class ParentHomeLogic {
   bool _isLoading = true;
   bool _isCheckingLinks = false;
   
+  // Quiz analytics data
+  Map<String, ChildQuizAnalytics> _childQuizAnalytics = {};
+  bool _isQuizAnalyticsLoading = false;
+  
   // Getters
   String get parentName => _parentName;
   List<ChildSummary> get linkedChildren => _linkedChildren;
   bool get isLoading => _isLoading;
   bool get isCheckingLinks => _isCheckingLinks;
+  bool get isQuizAnalyticsLoading => _isQuizAnalyticsLoading;
+  Map<String, ChildQuizAnalytics> get childQuizAnalytics => _childQuizAnalytics;
   
   /// Initialize and load user data
   Future<void> initialize() async {
     await _loadUserData();
     await checkLinkedChildren();
+    await _loadQuizAnalytics();
   }
   
   /// Load user data
@@ -195,5 +204,46 @@ class ParentHomeLogic {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Viewing comments for ${child.childName}')),
     );
+  }
+  
+  /// Load quiz analytics for all linked children
+  Future<void> _loadQuizAnalytics() async {
+    if (_linkedChildren.isEmpty) return;
+    
+    try {
+      _isQuizAnalyticsLoading = true;
+      
+      final analyticsData = <String, ChildQuizAnalytics>{};
+      
+      for (final child in _linkedChildren) {
+        try {
+          final analytics = await ParentQuizAnalyticsService.getChildQuizAnalytics(child.childId);
+          analyticsData[child.childId] = analytics;
+        } catch (e) {
+          // If analytics fail, create empty analytics
+          analyticsData[child.childId] = ChildQuizAnalytics(
+            totalQuizzesTaken: 0,
+            averageScore: 0.0,
+            topicsCompleted: [],
+            recentAttempts: [],
+            subjectPerformance: {},
+            strongestTopics: [],
+            weakestTopics: [],
+          );
+        }
+      }
+      
+      _childQuizAnalytics = analyticsData;
+    } catch (e) {
+      // Error handling - keep empty analytics
+      _childQuizAnalytics = {};
+    } finally {
+      _isQuizAnalyticsLoading = false;
+    }
+  }
+  
+  /// Refresh quiz analytics
+  Future<void> refreshQuizAnalytics() async {
+    await _loadQuizAnalytics();
   }
 }

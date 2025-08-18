@@ -36,7 +36,7 @@ class QuestionOptionWidget extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(12),
             color: isSelected
-                ? (isCorrect ? const Color(0xFF50E801).withOpacity(0.1) : const Color(0xFFEF4444).withOpacity(0.1))
+                ? (isCorrect ? const Color(0xFF50E801).withValues(alpha: 0.1) : const Color(0xFFEF4444).withValues(alpha: 0.1))
                 : Colors.white,
           ),
           child: Row(
