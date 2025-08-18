@@ -216,7 +216,7 @@ class QuizChallengeSection extends StatelessWidget {
       final String studentSchool = 'Current School'; // Replace with actual school
 
       final challengeService = StudentChallengeService();
-      final challengeId = await challengeService.createRandomChallenge(
+      await challengeService.createRandomChallenge(
         challengerId: studentId,
         challengerName: studentName,
         challengerSchool: studentSchool,
@@ -226,27 +226,30 @@ class QuizChallengeSection extends StatelessWidget {
       );
 
       // Close loading dialog
-      Navigator.pop(context);
+      if (context.mounted) Navigator.pop(context);
 
       // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Challenge sent! Waiting for opponent to accept.'),
           backgroundColor: Color(0xFF50E801),
         ),
       );
+      }
 
       // Navigate to challenge tracking screen (to be implemented)
       // Navigator.push(context, MaterialPageRoute(builder: (context) => ChallengeTrackingScreen(challengeId: challengeId)));
 
     } catch (e) {
-      Navigator.pop(context); // Close loading dialog
+      if (context.mounted) Navigator.pop(context); // Close loading dialog
       HapticFeedback.heavyImpact();
       
       // Show error message
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
           title: const Text('Challenge Failed'),
           content: Text(e.toString().contains('No opponents')
               ? 'No opponents available for challenge. Please try again later.'
@@ -259,6 +262,7 @@ class QuizChallengeSection extends StatelessWidget {
           ],
         ),
       );
+      }
     }
   }
 

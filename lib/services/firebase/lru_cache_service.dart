@@ -19,8 +19,8 @@ class LRUCacheService {
     required String subject,
     required String topic,
   }) async {
-    final cacheKey = '${_cachePrefix}${grade}_${subject}_${topic}';
-    final timestampKey = '${_timestampPrefix}${cacheKey}';
+    final cacheKey = '$_cachePrefix${grade}_${subject}_$topic';
+    final timestampKey = '$_timestampPrefix$cacheKey';
     
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -52,8 +52,8 @@ class LRUCacheService {
     required String topic,
     required List<QuizQuestion> questions,
   }) async {
-    final cacheKey = '${_cachePrefix}${grade}_${subject}_${topic}';
-    final timestampKey = '${_timestampPrefix}${cacheKey}';
+    final cacheKey = '$_cachePrefix${grade}_${subject}_$topic';
+    final timestampKey = '$_timestampPrefix$cacheKey';
     
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -67,7 +67,7 @@ class LRUCacheService {
       // Store the cache
       await prefs.setString(cacheKey, questionsJson);
       await prefs.setInt(timestampKey, now);
-      await prefs.setInt('${_sizePrefix}${cacheKey}', sizeBytes);
+      await prefs.setInt('$_sizePrefix$cacheKey', sizeBytes);
       
       // Record access for LRU tracking
       _recordAccess(cacheKey);
@@ -109,8 +109,8 @@ class LRUCacheService {
       final List<Map<String, dynamic>> cacheInfo = [];
       
       for (final key in cacheKeys) {
-        final timestamp = prefs.getInt('${_timestampPrefix}$key') ?? 0;
-        final size = prefs.getInt('${_sizePrefix}$key') ?? 0;
+        final timestamp = prefs.getInt('$_timestampPrefix$key') ?? 0;
+        final size = prefs.getInt('$_sizePrefix$key') ?? 0;
         
         if (timestamp > 0 && size > 0) {
           totalSize += size;
@@ -134,8 +134,8 @@ class LRUCacheService {
         
         // Remove cache entry
         await prefs.remove(key);
-        await prefs.remove('${_timestampPrefix}$key');
-        await prefs.remove('${_sizePrefix}$key');
+        await prefs.remove('$_timestampPrefix$key');
+        await prefs.remove('$_sizePrefix$key');
         
         totalSize -= (itemToRemove['size'] as int);
       }
@@ -157,8 +157,8 @@ class LRUCacheService {
       int validItems = 0;
       
       for (final key in cacheKeys) {
-        final timestamp = prefs.getInt('${_timestampPrefix}$key') ?? 0;
-        final size = prefs.getInt('${_sizePrefix}$key') ?? 0;
+        final timestamp = prefs.getInt('$_timestampPrefix$key') ?? 0;
+        final size = prefs.getInt('$_sizePrefix$key') ?? 0;
         
         if (timestamp > 0 && size > 0) {
           totalSize += size;
@@ -191,9 +191,9 @@ class LRUCacheService {
     required String subject,
     required String topic,
   }) async {
-    final cacheKey = '${_cachePrefix}${grade}_${subject}_${topic}';
-    final timestampKey = '${_timestampPrefix}${cacheKey}';
-    final sizeKey = '${_sizePrefix}${cacheKey}';
+    final cacheKey = '$_cachePrefix${grade}_${subject}_$topic';
+    final timestampKey = '$_timestampPrefix$cacheKey';
+    final sizeKey = '$_sizePrefix$cacheKey';
     
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -233,13 +233,13 @@ class LRUCacheService {
       int cleanedCount = 0;
       
       for (final key in cacheKeys) {
-        final timestamp = prefs.getInt('${_timestampPrefix}$key') ?? 0;
+        final timestamp = prefs.getInt('$_timestampPrefix$key') ?? 0;
         
         // Remove expired items
         if (timestamp > 0 && !_isCacheValid(timestamp)) {
           await prefs.remove(key);
-          await prefs.remove('${_timestampPrefix}$key');
-          await prefs.remove('${_sizePrefix}$key');
+          await prefs.remove('$_timestampPrefix$key');
+          await prefs.remove('$_sizePrefix$key');
           cleanedCount++;
         }
       }

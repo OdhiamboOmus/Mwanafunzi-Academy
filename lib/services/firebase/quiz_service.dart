@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/models/quiz_model.dart' as quiz;
 import 'cost_optimized_cache_service.dart';
 import 'batch_operation_service.dart';
@@ -12,9 +10,6 @@ import 'performance_optimization_service.dart';
 import 'retry_service.dart';
 
 class QuizService {
-  static const String _cachePrefix = 'quiz_';
-  static const int _cacheTTLDays = 30;
-  static const int _maxCacheSize = 100; // LRU cache size limit
   
   final CostOptimizedCacheService _cacheService = CostOptimizedCacheService();
   final BatchOperationService _batchService = BatchOperationService();
@@ -143,39 +138,6 @@ class QuizService {
   }
 
 
-  /// Check if cache is still valid (30-day TTL)
-  bool _isCacheValid(int timestamp) {
-    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    final ttlSeconds = _cacheTTLDays * 24 * 60 * 60;
-    return (now - timestamp) < ttlSeconds;
-  }
-
-  /// LRU cache eviction to prevent excessive storage usage
-  Future<void> _evictLRUCache() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final allKeys = prefs.getKeys();
-      final quizKeys = allKeys.where((key) => key.startsWith(_cachePrefix)).toList();
-      
-      if (quizKeys.length > _maxCacheSize) {
-        // Sort by timestamp (oldest first)
-        quizKeys.sort((a, b) {
-          final timestampA = prefs.getInt('${a}_timestamp') ?? 0;
-          final timestampB = prefs.getInt('${b}_timestamp') ?? 0;
-          return timestampA.compareTo(timestampB);
-        });
-        
-        // Remove oldest entries
-        final keysToRemove = quizKeys.sublist(0, quizKeys.length - _maxCacheSize);
-        for (final key in keysToRemove) {
-          await prefs.remove(key);
-          await prefs.remove('${key}_timestamp');
-        }
-      }
-    } catch (e) {
-      debugPrint('Error evicting cache: $e');
-    }
-  }
 
   /// Clear cache for a specific topic using both cache services
   Future<void> clearTopicCache(String grade, String subject, String topic) async {

@@ -98,7 +98,13 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           ),
     bottomNavigationBar: BottomNavigationWidget(
       selectedIndex: _selectedBottomNavIndex,
-      onTabChanged: (index) => setState(() => _selectedBottomNavIndex = index),
+      onTabChanged: (index) {
+        if (index == 2) { // Video tab
+          Navigator.pushNamed(context, AppRoutes.video);
+        } else {
+          setState(() => _selectedBottomNavIndex = index);
+        }
+      },
     ),
   );
 

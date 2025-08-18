@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../data/models/quiz_model.dart';
@@ -7,7 +8,6 @@ import '../../data/models/quiz_model.dart';
 class QuizAnalyticsService {
   static const String _analyticsPrefix = 'quiz_analytics_';
   static const String _summaryPrefix = 'quiz_summary_';
-  static const int _syncIntervalSeconds = 3600; // 1 hour
   
   /// Get quiz analytics for a child with local caching
   Future<ChildQuizAnalytics> getChildQuizAnalytics(String childId) async {
@@ -34,7 +34,7 @@ class QuizAnalyticsService {
         return ChildQuizAnalytics.fromJson(jsonDecode(cachedJson));
       }
     } catch (e) {
-      print('Error reading cached analytics: $e');
+      debugPrint('Error reading cached analytics: $e');
     }
     
     return null;
@@ -47,7 +47,7 @@ class QuizAnalyticsService {
       final analyticsJson = jsonEncode(analytics.toJson());
       await prefs.setString('$_analyticsPrefix$childId', analyticsJson);
     } catch (e) {
-      print('Error caching analytics: $e');
+      debugPrint('Error caching analytics: $e');
     }
   }
   
@@ -168,7 +168,7 @@ class QuizAnalyticsService {
         return jsonDecode(cachedJson) as Map<String, dynamic>;
       }
     } catch (e) {
-      print('Error reading cached school summary: $e');
+      debugPrint('Error reading cached school summary: $e');
     }
     
     return null;
@@ -181,7 +181,7 @@ class QuizAnalyticsService {
       final summaryJson = jsonEncode(summary);
       await prefs.setString('$_summaryPrefix$schoolId', summaryJson);
     } catch (e) {
-      print('Error caching school summary: $e');
+      debugPrint('Error caching school summary: $e');
     }
   }
   
@@ -257,7 +257,7 @@ class QuizAnalyticsService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('$_analyticsPrefix$childId');
     } catch (e) {
-      print('Error clearing child analytics: $e');
+      debugPrint('Error clearing child analytics: $e');
     }
   }
   
@@ -267,7 +267,7 @@ class QuizAnalyticsService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('$_summaryPrefix$schoolId');
     } catch (e) {
-      print('Error clearing school summary: $e');
+      debugPrint('Error clearing school summary: $e');
     }
   }
   

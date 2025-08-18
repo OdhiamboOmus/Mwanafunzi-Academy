@@ -96,23 +96,7 @@
   - Add content validation and URL sanitization
   - _Requirements: 8.2, 2.1_
 
-- [ ] 9. Write comprehensive tests and documentation
-  - [ ] 9.1 Create unit tests for all components
-    - Write unit tests for VideoModel and YouTube utilities
-    - Test VideoService CRUD operations and caching
-    - Create widget tests for VideoCard and VideoScreen
-    - Test admin upload functionality and validation
-    - _Requirements: 7.7_
-
-  - [ ] 9.2 Implement integration tests
-    - Test end-to-end video upload and viewing flow
-    - Verify real-time synchronization between admin and student
-    - Test offline/online transition handling
-    - Validate grade selection integration across screens
-    - _Requirements: 1.2, 3.1, 6.5_
-
-- [ ] 10. Final optimization and polish
-  - Verify APK size increase stays under 200KB limit
+- [ ] 9. Final optimization and polish
   - Optimize video thumbnail loading and caching
   - Fine-tune animations and user experience
   - Conduct performance testing on mid-range devices

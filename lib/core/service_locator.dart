@@ -6,6 +6,7 @@ import 'package:mwanafunzi_academy/services/progress_service.dart';
 import 'package:mwanafunzi_academy/services/settings_service.dart';
 import 'package:mwanafunzi_academy/services/parent_service.dart';
 import 'package:mwanafunzi_academy/services/firebase/firestore_service.dart';
+import 'package:mwanafunzi_academy/services/firebase/video_service.dart';
 import 'package:mwanafunzi_academy/data/repositories/user_repository.dart';
 
 /// Simple service locator for Flutter Lite compliance
@@ -22,6 +23,7 @@ class ServiceLocator {
   ProgressService? _progressService;
   SettingsService? _settingsService;
   ParentService? _parentService;
+  VideoService? _videoService;
 
   /// Register services
   void initializeServices({
@@ -32,6 +34,7 @@ class ServiceLocator {
     ProgressService? progressService,
     SettingsService? settingsService,
     ParentService? parentService,
+    VideoService? videoService,
   }) {
     _userService = userService;
     _motivationService = motivationService;
@@ -40,6 +43,7 @@ class ServiceLocator {
     _progressService = progressService;
     _settingsService = settingsService;
     _parentService = parentService;
+    _videoService = videoService;
   }
 
   /// Get user service
@@ -75,6 +79,11 @@ class ServiceLocator {
   /// Get parent service
   ParentService get parentService {
     return _parentService ?? _createDefaultParentService();
+  }
+
+  /// Get video service
+  VideoService get videoService {
+    return _videoService ?? _createDefaultVideoService();
   }
 
   // Create default services for development
@@ -134,6 +143,10 @@ class ServiceLocator {
     );
   }
 
+  VideoService _createDefaultVideoService() {
+    return VideoService();
+  }
+
   /// Check if services are initialized
   bool get isInitialized {
     return _userService != null &&
@@ -142,6 +155,7 @@ class ServiceLocator {
            _storageService != null &&
            _progressService != null &&
            _settingsService != null &&
-           _parentService != null;
+           _parentService != null &&
+           _videoService != null;
   }
 }

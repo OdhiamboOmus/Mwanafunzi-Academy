@@ -7,6 +7,7 @@ import 'presentation/admin/admin_home_screen.dart';
 import 'presentation/admin/admin_quiz_upload_screen.dart';
 import 'presentation/student/student_home_screen.dart';
 import 'presentation/student/settings_screen.dart';
+import 'presentation/student/video_screen.dart';
 import 'presentation/parent/parent_home_screen.dart';
 import 'presentation/teacher/teacher_home_screen.dart';
 
@@ -21,6 +22,7 @@ class AppRoutes {
   static const String settings = '/settings';
   static const String parentHome = '/parent-home';
   static const String teacherHome = '/teacher-home';
+  static const String video = '/video';
 
   static Map<String, WidgetBuilder> get routes => {
     signIn: (context) => const SignInScreen(),
@@ -33,5 +35,6 @@ class AppRoutes {
     settings: (context) => const SettingsScreen(),
     parentHome: (context) => const ParentHomeScreen(),
     teacherHome: (context) => const TeacherHomeScreen(),
+    video: (context) => const VideoScreen(selectedGrade: 'Grade 1'),
   };
 }
