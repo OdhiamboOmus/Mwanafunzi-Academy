@@ -21,12 +21,12 @@ class QuestionService {
        _lessonService = lessonService;
 
   /// Get question for a specific section
-  Future<QuestionModel?> getQuestionForSection(String lessonId, String sectionId) async {
+  Future<Map<String, dynamic>?> getQuestionForSection(String lessonId, String sectionId) async {
     try {
       final section = await _lessonService.getLessonSection(lessonId, sectionId);
       
-      if (section.type == 'question' && section.question != null) {
-        return section.question;
+      if (section['type'] == 'question' && section['question'] != null) {
+        return section['question'];
       }
       
       return null;
@@ -49,17 +49,17 @@ class QuestionService {
       }
 
       // Record the answer
-      await recordAnswer(question.questionId, selectedOption, lessonId: lessonId);
+      await recordAnswer(question['questionId'], selectedOption, lessonId: lessonId);
       
       // Check if answer is correct
-      final isCorrect = isAnswerCorrect(question.questionId, selectedOption);
+      final isCorrect = isAnswerCorrect(question['questionId'], selectedOption);
       
       // Get explanation
-      final explanation = getExplanation(question.questionId);
+      final explanation = getExplanation(question['questionId']);
       
       // Record feedback for immediate display
       final feedback = {
-        'questionId': question.questionId,
+        'questionId': question['questionId'],
         'selectedOption': selectedOption,
         'isCorrect': isCorrect,
         'explanation': explanation,
@@ -71,7 +71,7 @@ class QuestionService {
       // Store feedback for immediate display
       await _storeFeedback(feedback);
       
-      debugPrint('✅ Answer recorded with feedback for question: ${question.questionId}, correct: $isCorrect');
+      debugPrint('✅ Answer recorded with feedback for question: ${question['questionId']}, correct: $isCorrect');
       
       return feedback;
     } catch (e) {
@@ -108,7 +108,7 @@ class QuestionService {
   bool isAnswerCorrect(String questionId, int selectedOption) {
     try {
       final question = _getQuestionById(questionId);
-      return question?.correctAnswer == selectedOption;
+      return question?['correctAnswer'] == selectedOption;
     } catch (e) {
       debugPrint('❌ QuestionService error in isAnswerCorrect: $e');
       return false;
@@ -119,7 +119,7 @@ class QuestionService {
   String? getExplanation(String questionId) {
     try {
       final question = _getQuestionById(questionId);
-      return question?.explanation;
+      return question?['explanation'];
     } catch (e) {
       debugPrint('❌ QuestionService error in getExplanation: $e');
       return null;
@@ -227,7 +227,7 @@ class QuestionService {
 
 
   /// Get sample lesson content as fallback
-  LessonContent _getSampleLessonContent(String lessonId) {
+  Map<String, dynamic> _getSampleLessonContent(String lessonId) {
     final sampleContent = '''
     {
       "lessonId": "$lessonId",
@@ -260,21 +260,21 @@ class QuestionService {
     }
     ''';
     
-    return LessonContent.fromJson(jsonDecode(sampleContent) as Map<String, dynamic>);
+    return jsonDecode(sampleContent) as Map<String, dynamic>;
   }
 
   /// Get question by ID from lesson content
-  QuestionModel? _getQuestionById(String questionId) {
+  Map<String, dynamic>? _getQuestionById(String questionId) {
     try {
       // In real implementation, this would fetch from lesson content
       // For now, return sample question
-      return QuestionModel(
-        questionId: questionId,
-        question: 'What is the capital of Kenya?',
-        options: ['Nairobi', 'Mombasa', 'Kisumu', 'Eldoret'],
-        correctAnswer: 0,
-        explanation: 'Nairobi is the capital city of Kenya.',
-      );
+      return {
+        'questionId': questionId,
+        'question': 'What is the capital of Kenya?',
+        'options': ['Nairobi', 'Mombasa', 'Kisumu', 'Eldoret'],
+        'correctAnswer': 0,
+        'explanation': 'Nairobi is the capital city of Kenya.',
+      };
     } catch (e) {
       debugPrint('❌ QuestionService error in _getQuestionById: $e');
       return null;

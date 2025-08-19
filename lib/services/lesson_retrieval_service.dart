@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import '../core/services/storage_service.dart';
-import '../data/models/lesson_model.dart';
 import '../services/firebase/firestore_service.dart';
 
 /// Service for core lesson retrieval operations
@@ -23,7 +22,7 @@ class LessonRetrievalService {
        _firestoreService = firestoreService;
 
   /// Get lessons metadata for a grade with single Firestore query
-  Future<List<LessonMeta>> getLessonsForGrade(String grade) async {
+  Future<List<Map<String, dynamic>>> getLessonsForGrade(String grade) async {
     try {
       // Try to get from cache first
       final cachedLessons = await _getCachedLessonsMeta(grade);
@@ -41,19 +40,19 @@ class LessonRetrievalService {
       // Parse lessons from Firestore data
       final lessons = querySnapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
-        return LessonMeta(
-          id: doc.id,
-          title: data['title'] ?? '',
-          subject: data['subject'] ?? '',
-          grade: data['grade'] ?? grade,
-          version: data['version'] ?? '1.0.0',
-          sizeBytes: data['sizeBytes'] ?? 0,
-          contentPath: data['contentPath'] ?? '',
-          mediaCount: data['mediaCount'] ?? 0,
-          totalSections: data['totalSections'] ?? 0,
-          hasQuestions: data['hasQuestions'] ?? false,
-          lastUpdated: data['lastUpdated']?.toDate() ?? DateTime.now(),
-        );
+        return {
+          'id': doc.id,
+          'title': data['title'] ?? '',
+          'subject': data['subject'] ?? '',
+          'grade': data['grade'] ?? grade,
+          'version': data['version'] ?? '1.0.0',
+          'sizeBytes': data['sizeBytes'] ?? 0,
+          'contentPath': data['contentPath'] ?? '',
+          'mediaCount': data['mediaCount'] ?? 0,
+          'totalSections': data['totalSections'] ?? 0,
+          'hasQuestions': data['hasQuestions'] ?? false,
+          'lastUpdated': data['lastUpdated']?.toDate() ?? DateTime.now(),
+        };
       }).toList();
 
       // Cache indefinitely with version-based validation
@@ -67,7 +66,7 @@ class LessonRetrievalService {
   }
 
   /// Get lesson content with automatic download and caching
-  Future<LessonContent> getLessonContent(String lessonId) async {
+  Future<Map<String, dynamic>> getLessonContent(String lessonId) async {
     try {
       // First check if lesson exists in local storage
       if (await _isLessonInLocalStorage(lessonId)) {
@@ -97,13 +96,13 @@ class LessonRetrievalService {
   }
 
   /// Get cached lessons metadata
-  Future<List<LessonMeta>?> _getCachedLessonsMeta(String grade) async {
+  Future<List<Map<String, dynamic>>?> _getCachedLessonsMeta(String grade) async {
     try {
-      final cached = await _storageService.getCachedData<List<LessonMeta>>(
+      final cached = await _storageService.getCachedData<List<Map<String, dynamic>>>(
         key: '$_lessonsMetaPrefix$grade',
         fromJson: (json) {
           final lessons = json['lessons'] as List?;
-          return lessons?.map((lesson) => LessonMeta.fromJson(lesson)).toList() ?? [];
+          return lessons?.cast<Map<String, dynamic>>() ?? [];
         },
         // No TTL for indefinite caching
       );
@@ -116,13 +115,13 @@ class LessonRetrievalService {
   }
 
   /// Cache lessons metadata
-  Future<void> _cacheLessonsMeta(String grade, List<LessonMeta> lessons) async {
+  Future<void> _cacheLessonsMeta(String grade, List<Map<String, dynamic>> lessons) async {
     try {
       await _storageService.setCachedData(
         key: '$_lessonsMetaPrefix$grade',
         data: lessons,
         toJson: (lessons) => {
-          'lessons': lessons.map((lesson) => lesson.toJson()).toList(),
+          'lessons': lessons,
           'lastUpdated': DateTime.now().toIso8601String(),
         },
       );
@@ -142,11 +141,11 @@ class LessonRetrievalService {
   }
 
   /// Get cached lesson content
-  Future<LessonContent> _getCachedLessonContent(String lessonId) async {
+  Future<Map<String, dynamic>> _getCachedLessonContent(String lessonId) async {
     try {
-      final cached = await _storageService.getCachedData<LessonContent>(
+      final cached = await _storageService.getCachedData<Map<String, dynamic>>(
         key: '$_cacheKeyPrefix$lessonId',
-        fromJson: (json) => LessonContent.fromJson(json),
+        fromJson: (json) => json,
         ttlSeconds: null, // No TTL, use version validation
       );
 
@@ -246,12 +245,12 @@ class LessonRetrievalService {
   }
 
   /// Load lesson content from local file
-  Future<LessonContent> _loadLessonFromFile(String lessonId) async {
+  Future<Map<String, dynamic>> _loadLessonFromFile(String lessonId) async {
     try {
       final lessonFile = await _getLessonFile(lessonId);
       final content = await lessonFile.readAsString();
       final json = jsonDecode(content) as Map<String, dynamic>;
-      return LessonContent.fromJson(json);
+      return json;
     } catch (e) {
       debugPrint('❌ Error loading lesson from file: $e');
       throw Exception('Failed to load lesson content from storage');

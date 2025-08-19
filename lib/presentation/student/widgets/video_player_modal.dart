@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mwanafunzi_academy/data/models/video_model.dart';
+import '../../../utils/video_error_handler.dart';
+import '../../../utils/video_performance_manager.dart';
 
 // VideoPlayerModal following Flutter Lite rules (<150 lines)
 class VideoPlayerModal extends StatefulWidget {
@@ -16,10 +19,22 @@ class VideoPlayerModal extends StatefulWidget {
 }
 
 class _VideoPlayerModalState extends State<VideoPlayerModal> {
+  final VideoPerformanceManager _performanceManager = VideoPerformanceManager.instance;
+  bool _hasError = false;
+  String _errorMessage = '';
+
   @override
   void initState() {
     super.initState();
     _markAsWatched();
+    _checkVideoAvailability();
+  }
+
+  @override
+  void dispose() {
+    // Clean up resources
+    _performanceManager.dispose();
+    super.dispose();
   }
 
   @override
@@ -69,7 +84,40 @@ class _VideoPlayerModalState extends State<VideoPlayerModal> {
     ),
   );
 
-  Widget _buildContent() => _buildVideoPreview();
+  Widget _buildContent() => _hasError ? _buildErrorState() : _buildVideoPreview();
+
+  Widget _buildErrorState() => Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(
+          Icons.error_outline,
+          color: Colors.red,
+          size: 48,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          _errorMessage,
+          style: const TextStyle(
+            fontSize: 16,
+            color: Colors.black87,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              _hasError = false;
+              _errorMessage = '';
+            });
+            _checkVideoAvailability();
+          },
+          child: const Text('Retry'),
+        ),
+      ],
+    ),
+  );
 
   Widget _buildVideoPreview() => Column(
     mainAxisAlignment: MainAxisAlignment.center,
@@ -80,7 +128,7 @@ class _VideoPlayerModalState extends State<VideoPlayerModal> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           image: DecorationImage(
-            image: NetworkImage(widget.video.thumbnailUrl),
+            image: NetworkImage(widget.video.optimizedThumbnailUrl),
             fit: BoxFit.cover,
           ),
         ),
@@ -212,9 +260,31 @@ class _VideoPlayerModalState extends State<VideoPlayerModal> {
       final prefs = await SharedPreferences.getInstance();
       final watchedKey = 'video_watched_${widget.video.id}';
       await prefs.setBool(watchedKey, true);
-      debugPrint('Video marked as watched: ${widget.video.title}');
+      
+      // Record cache access for performance tracking
+      await _performanceManager.recordCacheAccess(watchedKey, 1);
+      
+      if (kDebugMode) {
+        debugPrint('Video marked as watched: ${widget.video.title}');
+      }
     } catch (e) {
-      debugPrint('Error marking video as watched: $e');
+      VideoErrorHandler.handleCacheError(e, operation: 'markAsWatched');
     }
   }
+
+  Future<void> _checkVideoAvailability() async {
+    try {
+      final isUnavailable = await VideoErrorHandler.isVideoUnavailable(widget.video.youtubeId);
+      if (isUnavailable) {
+        setState(() {
+          _hasError = true;
+          _errorMessage = 'This video is currently unavailable. Please try again later.';
+        });
+        return;
+      }
+    } catch (e) {
+      VideoErrorHandler.handleYouTubeError(widget.video.youtubeId, e, operation: 'checkVideoAvailability');
+    }
+  }
+
 }

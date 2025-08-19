@@ -1,0 +1,118 @@
+[
+  {
+    "collectionGroup": "transactions",
+    "queryScope": "COLLECTION",
+    "fields": [
+      {
+        "fieldPath": "type",
+        "order": "ASCENDING"
+      },
+      {
+        "fieldPath": "status",
+        "order": "ASCENDING"
+      },
+      {
+        "fieldPath": "createdAt",
+        "order": "DESCENDING"
+      }
+    ]
+  },
+  {
+    "collectionGroup": "transactions",
+    "queryScope": "COLLECTION",
+    "fields": [
+      {
+        "fieldPath": "bookingId",
+        "order": "ASCENDING"
+      },
+      {
+        "fieldPath": "status",
+        "order": "ASCENDING"
+      }
+    ]
+  },
+  {
+    "collectionGroup": "platform_ledger",
+    "queryScope": "COLLECTION",
+    "fields": [
+      {
+        "fieldPath": "type",
+        "order": "ASCENDING"
+      },
+      {
+        "fieldPath": "createdAt",
+        "order": "DESCENDING"
+      }
+    ]
+  },
+  {
+    "collectionGroup": "platform_ledger",
+    "queryScope": "COLLECTION",
+    "fields": [
+      {
+        "fieldPath": "teacherId",
+        "order": "ASCENDING"
+      },
+      {
+        "fieldPath": "type",
+        "order": "ASCENDING"
+      }
+    ]
+  },
+  {
+    "collectionGroup": "bookings",
+    "queryScope": "COLLECTION",
+    "fields": [
+      {
+        "fieldPath": "status",
+        "order": "ASCENDING"
+      },
+      {
+        "fieldPath": "createdAt",
+        "order": "DESCENDING"
+      }
+    ]
+  },
+  {
+    "collectionGroup": "bookings",
+    "queryScope": "COLLECTION",
+    "fields": [
+      {
+        "fieldPath": "teacherId",
+        "order": "ASCENDING"
+      },
+      {
+        "fieldPath": "status",
+        "order": "ASCENDING"
+      }
+    ]
+  },
+  {
+    "collectionGroup": "lessons",
+    "queryScope": "COLLECTION",
+    "fields": [
+      {
+        "fieldPath": "bookingId",
+        "order": "ASCENDING"
+      },
+      {
+        "fieldPath": "status",
+        "order": "ASCENDING"
+      }
+    ]
+  },
+  {
+    "collectionGroup": "lessons",
+    "queryScope": "COLLECTION",
+    "fields": [
+      {
+        "fieldPath": "teacherId",
+        "order": "ASCENDING"
+      },
+      {
+        "fieldPath": "status",
+        "order": "ASCENDING"
+      }
+    ]
+  }
+]

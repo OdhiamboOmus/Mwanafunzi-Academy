@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import '../core/services/storage_service.dart';
-import '../data/models/lesson_model.dart';
 
 /// Service for lesson cache management operations
 class LessonCacheService {
@@ -78,15 +77,15 @@ class LessonCacheService {
 
       // Check SharedPreferences cache
       try {
-        final cached = await _storageService.getCachedData<LessonContent>(
+        final cached = await _storageService.getCachedData<Map<String, dynamic>>(
           key: '$_cacheKeyPrefix$lessonId',
-          fromJson: (json) => LessonContent.fromJson(json),
+          fromJson: (json) => json,
           ttlSeconds: null,
         );
         
         if (cached != null) {
           // Additional validation for cached content
-          if (cached.lessonId.isNotEmpty && cached.sections.isNotEmpty) {
+          if (cached['lessonId']?.isNotEmpty == true && (cached['sections'] as List?)?.isNotEmpty == true) {
             return true;
           }
         }

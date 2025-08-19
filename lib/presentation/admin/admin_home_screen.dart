@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/constants.dart';
 import '../../data/repositories/user_repository.dart';
 import 'admin_performance_dashboard.dart';
+import 'admin_video_upload_screen.dart';
+import 'verification_dashboard_screen.dart';
 
 // Admin home screen following Flutter Lite rules (<120 lines)
 class AdminHomeScreen extends StatefulWidget {
@@ -104,6 +106,30 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         title: 'Teachers',
         icon: Icons.person,
         onTap: () => _showUserList('teacher'),
+      ),
+      _buildDashboardCard(
+        title: 'Video Management',
+        icon: Icons.video_library,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminVideoUploadScreen()),
+        ),
+      ),
+      _buildDashboardCard(
+        title: 'Performance Dashboard',
+        icon: Icons.speed,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminPerformanceDashboard()),
+        ),
+      ),
+      _buildDashboardCard(
+        title: 'Teacher Verification',
+        icon: Icons.verified,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const VerificationDashboardScreen()),
+        ),
       ),
     ],
   );

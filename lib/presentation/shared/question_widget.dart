@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../data/models/lesson_model.dart';
+import '../../data/models/quiz_model.dart';
 import 'question_logic.dart';
 import 'question_option_widget.dart';
 import 'question_feedback_widget.dart';
@@ -8,7 +8,7 @@ import 'question_feedback_widget.dart';
 class QuestionWidget extends StatefulWidget {
   final String lessonId;
   final String sectionId;
-  final QuestionModel question;
+  final QuizQuestion question;
   final Function(int)? onAnswerSelected;
   final Function(bool, String)? onAnswerFeedback;
 
@@ -34,7 +34,7 @@ class _QuestionWidgetState extends State<QuestionWidget> {
     _logicHandler = QuestionLogicHandler(
       lessonId: widget.lessonId,
       sectionId: widget.sectionId,
-      questionId: widget.question.questionId,
+      questionId: widget.question.id,
     );
     _checkIfQuestionAnswered();
   }
@@ -109,7 +109,7 @@ class _QuestionWidgetState extends State<QuestionWidget> {
             final index = entry.key;
             final option = entry.value;
             final isSelected = _logicHandler.selectedOption == index;
-            final isCorrect = widget.question.isAnswerCorrect(index);
+            final isCorrect = widget.question.isCorrect(index);
             
             return QuestionOptionWidget(
               option: option,
@@ -125,7 +125,7 @@ class _QuestionWidgetState extends State<QuestionWidget> {
           if (_logicHandler.showFeedback) ...[
             const SizedBox(height: 16),
             QuestionFeedbackWidget(
-              isCorrect: widget.question.isAnswerCorrect(_logicHandler.selectedOption!),
+              isCorrect: widget.question.isCorrect(_logicHandler.selectedOption!),
               explanation: widget.question.explanation,
             ),
           ],

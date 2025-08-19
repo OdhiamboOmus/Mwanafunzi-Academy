@@ -1,5 +1,4 @@
 import '../core/services/storage_service.dart';
-import '../data/models/lesson_model.dart';
 import '../data/repositories/user_repository.dart';
 import '../services/firebase/firestore_service.dart';
 import 'lesson_retrieval_service.dart';
@@ -59,37 +58,37 @@ class LessonService {
   }
 
   /// Get lessons metadata for a grade with single Firestore query
-  Future<List<LessonMeta>> getLessonsForGrade(String grade) async {
+  Future<List<Map<String, dynamic>>> getLessonsForGrade(String grade) async {
     initializeServices();
     return await _retrievalService.getLessonsForGrade(grade);
   }
 
   /// Get lesson content with automatic download and caching
-  Future<LessonContent> getLessonContent(String lessonId) async {
+  Future<Map<String, dynamic>> getLessonContent(String lessonId) async {
     initializeServices();
     return await _retrievalService.getLessonContent(lessonId);
   }
 
   /// Get specific lesson section
-  Future<LessonSection> getLessonSection(String lessonId, String sectionId) async {
+  Future<Map<String, dynamic>> getLessonSection(String lessonId, String sectionId) async {
     initializeServices();
     return await _navigationService.getLessonSection(lessonId, sectionId);
   }
 
   /// Get lesson sections in order
-  Future<List<LessonSection>> getLessonSections(String lessonId) async {
+  Future<List<Map<String, dynamic>>> getLessonSections(String lessonId) async {
     initializeServices();
     return await _navigationService.getLessonSections(lessonId);
   }
 
   /// Get next section in lesson
-  Future<LessonSection?> getNextSection(String lessonId, String currentSectionId) async {
+  Future<Map<String, dynamic>?> getNextSection(String lessonId, String currentSectionId) async {
     initializeServices();
     return await _navigationService.getNextSection(lessonId, currentSectionId);
   }
 
   /// Get previous section in lesson
-  Future<LessonSection?> getPreviousSection(String lessonId, String currentSectionId) async {
+  Future<Map<String, dynamic>?> getPreviousSection(String lessonId, String currentSectionId) async {
     initializeServices();
     return await _navigationService.getPreviousSection(lessonId, currentSectionId);
   }
@@ -113,7 +112,7 @@ class LessonService {
   }
 
   /// Get all question sections from a lesson
-  Future<List<LessonSection>> getQuestionSections(String lessonId) async {
+  Future<List<Map<String, dynamic>>> getQuestionSections(String lessonId) async {
     initializeServices();
     return await _navigationService.getQuestionSections(lessonId);
   }
@@ -155,7 +154,7 @@ class LessonService {
   }
 
   /// Get question for a specific section
-  Future<QuestionModel?> getQuestionForSection(String lessonId, String sectionId) async {
+  Future<Map<String, dynamic>?> getQuestionForSection(String lessonId, String sectionId) async {
     initializeServices();
     return await _questionService.getQuestionForSection(lessonId, sectionId);
   }

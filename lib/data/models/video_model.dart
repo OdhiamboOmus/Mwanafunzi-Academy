@@ -64,6 +64,9 @@ class VideoModel {
 
   /// Get YouTube thumbnail URL
   String get thumbnailUrl => 'https://img.youtube.com/vi/$youtubeId/maxresdefault.jpg';
+  
+  /// Get optimized thumbnail URL for better performance
+  String get optimizedThumbnailUrl => 'https://img.youtube.com/vi/$youtubeId/mqdefault.jpg';
 
   /// Get YouTube watch URL
   String get watchUrl => 'https://www.youtube.com/watch?v=$youtubeId';

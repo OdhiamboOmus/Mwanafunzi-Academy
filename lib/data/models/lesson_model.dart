@@ -1,207 +1,163 @@
-/// Lesson section model for Duolingo-style learning
-class LessonSection {
-  final String sectionId;
-  final String type; // 'content' or 'question'
-  final String title;
-  final String content;
-  final List<String> media; // Image/audio file paths
-  final int order;
-  final QuestionModel? question; // Only if type == 'question'
+import 'dart:developer' as developer;
 
-  LessonSection({
-    required this.sectionId,
-    required this.type,
-    required this.title,
-    required this.content,
-    required this.media,
-    required this.order,
-    this.question,
-  });
-
-  factory LessonSection.fromJson(Map<String, dynamic> json) {
-    return LessonSection(
-      sectionId: json['sectionId'] ?? '',
-      type: json['type'] ?? 'content',
-      title: json['title'] ?? '',
-      content: json['content'] ?? '',
-      media: List<String>.from(json['media'] ?? []),
-      order: json['order'] ?? 0,
-      question: json['question'] != null 
-          ? QuestionModel.fromJson(json['question']) 
-          : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'sectionId': sectionId,
-      'type': type,
-      'title': title,
-      'content': content,
-      'media': media,
-      'order': order,
-      'question': question?.toJson(),
-    };
-  }
-}
-
-/// Question model for embedded assessments
-class QuestionModel {
-  final String questionId;
-  final String question;
-  final List<String> options;
-  final int correctAnswer; // Index of correct option (0-3)
-  final String explanation;
-
-  QuestionModel({
-    required this.questionId,
-    required this.question,
-    required this.options,
-    required this.correctAnswer,
-    required this.explanation,
-  });
-
-  factory QuestionModel.fromJson(Map<String, dynamic> json) {
-    return QuestionModel(
-      questionId: json['questionId'] ?? '',
-      question: json['question'] ?? '',
-      options: List<String>.from(json['options'] ?? []),
-      correctAnswer: json['correctAnswer'] ?? 0,
-      explanation: json['explanation'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'questionId': questionId,
-      'question': question,
-      'options': options,
-      'correctAnswer': correctAnswer,
-      'explanation': explanation,
-    };
-  }
-
-  /// Check if answer is correct
-  bool isAnswerCorrect(int selectedOption) {
-    return selectedOption == correctAnswer;
-  }
-}
-
-/// Lesson metadata model
-class LessonMeta {
+// Lesson model for individual lesson tracking
+class LessonModel {
   final String id;
-  final String title;
-  final String subject;
-  final String grade;
-  final String version;
-  final int sizeBytes;
-  final String contentPath;
-  final int mediaCount;
-  final int totalSections;
-  final bool hasQuestions;
-  final DateTime lastUpdated;
+  final String bookingId;
+  final String teacherId;
+  final String studentId;
+  
+  // Lesson details
+  final int weekNumber; // 1, 2, 3, etc.
+  final DateTime scheduledDate;
+  final int duration; // 120 minutes
+  final String zoomLink;
+  
+  // Status
+  final String status; // "scheduled" | "completed" | "missed" | "cancelled"
+  final DateTime? completedAt;
+  final String? teacherNotes;
+  
+  // Timestamps
+  final DateTime createdAt;
 
-  LessonMeta({
+  const LessonModel({
     required this.id,
-    required this.title,
-    required this.subject,
-    required this.grade,
-    required this.version,
-    required this.sizeBytes,
-    required this.contentPath,
-    required this.mediaCount,
-    required this.totalSections,
-    required this.hasQuestions,
-    required this.lastUpdated,
+    required this.bookingId,
+    required this.teacherId,
+    required this.studentId,
+    required this.weekNumber,
+    required this.scheduledDate,
+    required this.duration,
+    required this.zoomLink,
+    required this.status,
+    this.completedAt,
+    this.teacherNotes,
+    required this.createdAt,
   });
 
-  factory LessonMeta.fromJson(Map<String, dynamic> json) {
-    return LessonMeta(
-      id: json['id'] ?? '',
-      title: json['title'] ?? '',
-      subject: json['subject'] ?? '',
-      grade: json['grade'] ?? '',
-      version: json['version'] ?? '1.0.0',
-      sizeBytes: json['sizeBytes'] ?? 0,
-      contentPath: json['contentPath'] ?? '',
-      mediaCount: json['mediaCount'] ?? 0,
-      totalSections: json['totalSections'] ?? 0,
-      hasQuestions: json['hasQuestions'] ?? false,
-      lastUpdated: json['lastUpdated']?.toDate() ?? DateTime.now(),
+  // Create from map (Firestore document)
+  factory LessonModel.fromMap(Map<String, dynamic> map) {
+    developer.log('LessonModel: Creating from map for lesson ${map['id']}');
+    return LessonModel(
+      id: map['id'] ?? '',
+      bookingId: map['bookingId'] ?? '',
+      teacherId: map['teacherId'] ?? '',
+      studentId: map['studentId'] ?? '',
+      weekNumber: map['weekNumber'] ?? 0,
+      scheduledDate: map['scheduledDate']?.toDate() ?? DateTime.now(),
+      duration: map['duration'] ?? 0,
+      zoomLink: map['zoomLink'] ?? '',
+      status: map['status'] ?? 'scheduled',
+      completedAt: map['completedAt']?.toDate(),
+      teacherNotes: map['teacherNotes'],
+      createdAt: map['createdAt']?.toDate() ?? DateTime.now(),
     );
   }
 
-  Map<String, dynamic> toJson() {
+  // Convert to map (Firestore document)
+  Map<String, dynamic> toMap() {
+    developer.log('LessonModel: Converting to map for lesson $id');
     return {
       'id': id,
-      'title': title,
-      'subject': subject,
-      'grade': grade,
-      'version': version,
-      'sizeBytes': sizeBytes,
-      'contentPath': contentPath,
-      'mediaCount': mediaCount,
-      'totalSections': totalSections,
-      'hasQuestions': hasQuestions,
-      'lastUpdated': lastUpdated,
+      'bookingId': bookingId,
+      'teacherId': teacherId,
+      'studentId': studentId,
+      'weekNumber': weekNumber,
+      'scheduledDate': scheduledDate,
+      'duration': duration,
+      'zoomLink': zoomLink,
+      'status': status,
+      'completedAt': completedAt,
+      'teacherNotes': teacherNotes,
+      'createdAt': createdAt,
     };
   }
-}
 
-/// Complete lesson content model
-class LessonContent {
-  final String lessonId;
-  final String title;
-  final String subject;
-  final String topic;
-  final List<LessonSection> sections;
-
-  LessonContent({
-    required this.lessonId,
-    required this.title,
-    required this.subject,
-    required this.topic,
-    required this.sections,
-  });
-
-  factory LessonContent.fromJson(Map<String, dynamic> json) {
-    final sectionsJson = json['sections'] as List?;
-    final sections = sectionsJson?.map((section) =>
-        LessonSection.fromJson(section)).toList() ?? [];
-
-    return LessonContent(
-      lessonId: json['lessonId'] ?? '',
-      title: json['title'] ?? '',
-      subject: json['subject'] ?? '',
-      topic: json['topic'] ?? '',
-      sections: sections,
+  // Copy with method for immutability
+  LessonModel copyWith({
+    String? id,
+    String? bookingId,
+    String? teacherId,
+    String? studentId,
+    int? weekNumber,
+    DateTime? scheduledDate,
+    int? duration,
+    String? zoomLink,
+    String? status,
+    DateTime? completedAt,
+    String? teacherNotes,
+    DateTime? createdAt,
+  }) {
+    developer.log('LessonModel: Copying with changes for lesson $id');
+    return LessonModel(
+      id: id ?? this.id,
+      bookingId: bookingId ?? this.bookingId,
+      teacherId: teacherId ?? this.teacherId,
+      studentId: studentId ?? this.studentId,
+      weekNumber: weekNumber ?? this.weekNumber,
+      scheduledDate: scheduledDate ?? this.scheduledDate,
+      duration: duration ?? this.duration,
+      zoomLink: zoomLink ?? this.zoomLink,
+      status: status ?? this.status,
+      completedAt: completedAt ?? this.completedAt,
+      teacherNotes: teacherNotes ?? this.teacherNotes,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'lessonId': lessonId,
-      'title': title,
-      'subject': subject,
-      'topic': topic,
-      'sections': sections.map((section) => section.toJson()).toList(),
-    };
-  }
-
-  /// Get section by ID
-  LessonSection? getSection(String sectionId) {
-    try {
-      return sections.firstWhere((section) => section.sectionId == sectionId);
-    } catch (e) {
-      return null;
+  // Check if lesson is completed
+  bool get isCompleted => status == 'completed';
+  
+  // Check if lesson is scheduled
+  bool get isScheduled => status == 'scheduled';
+  
+  // Check if lesson is missed
+  bool get isMissed => status == 'missed';
+  
+  // Check if lesson is cancelled
+  bool get isCancelled => status == 'cancelled';
+  
+  // Get status display text
+  String get statusText {
+    switch (status) {
+      case 'completed':
+        return 'Completed';
+      case 'missed':
+        return 'Missed';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return 'Scheduled';
     }
   }
 
-  /// Get questions from lesson
-  List<QuestionModel> getQuestions() {
-    return sections
-        .where((section) => section.type == 'question' && section.question != null)
-        .map((section) => section.question!)
-        .toList();
+  // Get display date
+  String get displayDate {
+    return '${scheduledDate.day}/${scheduledDate.month}/${scheduledDate.year}';
   }
+  
+  // Get display time
+  String get displayTime {
+    return '${scheduledDate.hour.toString().padLeft(2, '0')}:${scheduledDate.minute.toString().padLeft(2, '0')}';
+  }
+  
+  // Get display date and time
+  String get displayDateTime {
+    return '$displayDate at $displayTime';
+  }
+  
+  // Check if lesson is in the past
+  bool get isPast => scheduledDate.isBefore(DateTime.now());
+  
+  // Check if lesson is today
+  bool get isToday {
+    final now = DateTime.now();
+    return scheduledDate.year == now.year &&
+           scheduledDate.month == now.month &&
+           scheduledDate.day == now.day;
+  }
+  
+  // Check if lesson is in the future
+  bool get isFuture => scheduledDate.isAfter(DateTime.now());
 }

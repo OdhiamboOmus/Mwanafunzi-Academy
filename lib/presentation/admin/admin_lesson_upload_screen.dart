@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../data/models/lesson_model.dart';
 import '../shared/grade_selector_widget.dart';
 import '../shared/widgets.dart';
 import '../../services/firebase/admin_lesson_service.dart';
@@ -15,7 +14,7 @@ class AdminLessonUploadScreen extends StatefulWidget {
 
 class _AdminLessonUploadScreenState extends State<AdminLessonUploadScreen> {
   String _selectedGrade = 'Grade 1';
-  LessonContent? _previewLesson;
+  Map<String, dynamic>? _previewLesson;
   bool _isUploading = false;
   String _message = '';
 
@@ -109,15 +108,15 @@ class _AdminLessonUploadScreenState extends State<AdminLessonUploadScreen> {
   Widget _buildLessonInfo() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text('Lesson ID: ${_previewLesson!.lessonId}', style: const TextStyle(fontWeight: FontWeight.w600)),
+      Text('Lesson ID: ${_previewLesson!['lessonId']}', style: const TextStyle(fontWeight: FontWeight.w600)),
       const SizedBox(height: 4),
-      Text('Title: ${_previewLesson!.title}', style: const TextStyle(fontWeight: FontWeight.w600)),
+      Text('Title: ${_previewLesson!['title']}', style: const TextStyle(fontWeight: FontWeight.w600)),
       const SizedBox(height: 4),
-      Text('Subject: ${_previewLesson!.subject}', style: const TextStyle(fontWeight: FontWeight.w600)),
+      Text('Subject: ${_previewLesson!['subject']}', style: const TextStyle(fontWeight: FontWeight.w600)),
       const SizedBox(height: 4),
-      Text('Topic: ${_previewLesson!.topic}', style: const TextStyle(fontWeight: FontWeight.w600)),
+      Text('Topic: ${_previewLesson!['topic']}', style: const TextStyle(fontWeight: FontWeight.w600)),
       const SizedBox(height: 4),
-      Text('Sections: ${_previewLesson!.sections.length}', style: const TextStyle(fontWeight: FontWeight.w600)),
+      Text('Sections: ${(_previewLesson!['sections'] as List).length}', style: const TextStyle(fontWeight: FontWeight.w600)),
     ],
   );
 
@@ -126,9 +125,9 @@ class _AdminLessonUploadScreenState extends State<AdminLessonUploadScreen> {
     children: [
       const Text('Sections:', style: TextStyle(fontWeight: FontWeight.w600)),
       const SizedBox(height: 8),
-      ..._previewLesson!.sections.asMap().entries.map((entry) {
+      ...(_previewLesson!['sections'] as List).asMap().entries.map((entry) {
         final index = entry.key;
-        final section = entry.value;
+        final section = entry.value as Map<String, dynamic>;
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Card(
@@ -137,10 +136,10 @@ class _AdminLessonUploadScreenState extends State<AdminLessonUploadScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Section ${index + 1}: ${section.type}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                  if (section.title.isNotEmpty) Text('Title: ${section.title}'),
-                  if (section.content.isNotEmpty) Text('Content: ${section.content.substring(0, section.content.length > 50 ? 50 : section.content.length)}...'),
-                  if (section.media.isNotEmpty) Text('Media: ${section.media.join(', ')}'),
+                  Text('Section ${index + 1}: ${section['type']}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                  if (section['title']?.isNotEmpty == true) Text('Title: ${section['title']}'),
+                  if (section['content']?.isNotEmpty == true) Text('Content: ${(section['content'] as String).substring(0, (section['content'] as String).length > 50 ? 50 : (section['content'] as String).length)}...'),
+                  if (section['media']?.isNotEmpty == true) Text('Media: ${(section['media'] as List).join(', ')}'),
                 ],
               ),
             ),
@@ -188,12 +187,12 @@ class _AdminLessonUploadScreenState extends State<AdminLessonUploadScreen> {
     }
 
     try {
-      // Convert to LessonContent object
-      final lesson = LessonContent.fromJson(jsonData.first);
+      // Validate lesson content
+      final lesson = AdminLessonService.validateLessonJson(jsonData.first);
       
       setState(() {
         _previewLesson = lesson;
-        _message = 'Validated lesson: ${lesson.title}';
+        _message = 'Validated lesson: ${lesson['title']}';
       });
     } catch (e) {
       setState(() {
@@ -223,7 +222,7 @@ class _AdminLessonUploadScreenState extends State<AdminLessonUploadScreen> {
       
       setState(() {
         _isUploading = false;
-        _message = 'Successfully uploaded lesson: ${_previewLesson!.title}';
+        _message = 'Successfully uploaded lesson: ${_previewLesson!['title']}';
         _previewLesson = null;
       });
 

@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import '../core/services/storage_service.dart' as core;
 import '../services/firebase/storage_service.dart';
-import '../data/models/lesson_model.dart';
 import '../data/repositories/user_repository.dart';
 
 /// Service for lesson download and caching operations
@@ -44,7 +43,7 @@ class LessonDownloadService {
       }
 
       // Download from Firebase Storage with gzip decompression
-      final content = await _downloadLessonFromStorage(lesson.contentPath);
+      final content = await _downloadLessonFromStorage(lesson['contentPath'] as String);
       
       // Decompress gzip content if needed
       final decompressedContent = await _decompressGzipContent(content);
@@ -56,7 +55,7 @@ class LessonDownloadService {
       await _cacheLessonContent(lessonId, lessonContent);
       
       // Update version tracking
-      await _updateLessonVersion(lessonId, lesson.version);
+      await _updateLessonVersion(lessonId, lesson['version'] as String);
       
     } catch (e) {
       debugPrint('❌ LessonDownloadService error in downloadLessonContent: $e');
@@ -101,19 +100,19 @@ class LessonDownloadService {
       }
 
       // Download and decompress
-      final content = await _downloadLessonFromStorage(lesson.contentPath);
+      final content = await _downloadLessonFromStorage(lesson['contentPath'] as String);
       final decompressedContent = await _decompressGzipContent(content);
       final lessonContent = _parseLessonContent(decompressedContent);
       
       // Save to local file
       final lessonFile = File('${lessonsDir.path}/$lessonId.json');
-      await lessonFile.writeAsString(jsonEncode(lessonContent.toJson()));
+      await lessonFile.writeAsString(jsonEncode(lessonContent));
       
       // Cache the content in SharedPreferences for faster access
       await _cacheLessonContent(lessonId, lessonContent);
       
       // Update version tracking
-      await _updateLessonVersion(lessonId, lesson.version);
+      await _updateLessonVersion(lessonId, lesson['version'] as String);
       
       debugPrint('✅ Lesson downloaded and cached: $lessonId');
       
@@ -155,12 +154,12 @@ class LessonDownloadService {
   }
 
   /// Cache lesson content
-  Future<void> _cacheLessonContent(String lessonId, LessonContent content) async {
+  Future<void> _cacheLessonContent(String lessonId, Map<String, dynamic> content) async {
     try {
       await _storageService.setCachedData(
         key: '$_cacheKeyPrefix$lessonId',
-        data: content.toJson(),
-        toJson: (data) => data,
+        data: content,
+        toJson: (data) => data as Map<String, dynamic>,
       );
     } catch (e) {
       debugPrint('❌ Cache lesson content error: $e');
@@ -252,10 +251,10 @@ class LessonDownloadService {
   }
 
   /// Parse lesson content
-  LessonContent _parseLessonContent(String content) {
+  Map<String, dynamic> _parseLessonContent(String content) {
     try {
       final json = jsonDecode(content) as Map<String, dynamic>;
-      return LessonContent.fromJson(json);
+      return json;
     } catch (e) {
       debugPrint('❌ Parse lesson content error: $e');
       throw Exception('Invalid lesson content format');
@@ -328,20 +327,20 @@ class LessonDownloadService {
   }
 
   /// Simulate getting lesson metadata (would come from retrieval service)
-  LessonMeta? _getLessonMetadata(String lessonId, String grade) {
+  Map<String, dynamic>? _getLessonMetadata(String lessonId, String grade) {
     // This is a placeholder - in real implementation, this would come from the retrieval service
-    return LessonMeta(
-      id: lessonId,
-      title: 'Sample Lesson',
-      subject: 'Mathematics',
-      grade: grade,
-      version: '1.2.0',
-      sizeBytes: 245760,
-      contentPath: 'lessons/$grade/$lessonId.json.gz',
-      mediaCount: 3,
-      totalSections: 8,
-      hasQuestions: true,
-      lastUpdated: DateTime.now(),
-    );
+    return {
+      'id': lessonId,
+      'title': 'Sample Lesson',
+      'subject': 'Mathematics',
+      'grade': grade,
+      'version': '1.2.0',
+      'sizeBytes': 245760,
+      'contentPath': 'lessons/$grade/$lessonId.json.gz',
+      'mediaCount': 3,
+      'totalSections': 8,
+      'hasQuestions': true,
+      'lastUpdated': DateTime.now(),
+    };
   }
 }

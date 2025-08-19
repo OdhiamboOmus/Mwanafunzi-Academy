@@ -9,21 +9,21 @@ class AdminLessonService {
   /// Upload lesson content to Firestore with gzip compression
   static Future<void> uploadLessonContent({
     required String grade,
-    required LessonContent lesson,
+    required Map<String, dynamic> lesson,
   }) async {
     try {
       // Compress lesson content with gzip
       final compressedContent = _compressLessonContent(lesson);
       
       // Store in Firestore with 30-day cache headers simulation
-      final lessonPath = 'lessons/$grade/${lesson.lessonId}.json.gz';
+      final lessonPath = 'lessons/$grade/${lesson['lessonId']}.json.gz';
       
       // Create lesson document in Firestore
       final lessonDoc = FirebaseFirestore.instance
           .collection('lessons')
           .doc(grade)
           .collection('lesson_files')
-          .doc(lesson.lessonId);
+          .doc(lesson['lessonId']);
       
       await lessonDoc.set({
         'content': base64Encode(compressedContent),
@@ -44,8 +44,8 @@ class AdminLessonService {
   }
 
   /// "Compress" lesson content using base64 encoding (simplified approach)
-  static List<int> _compressLessonContent(LessonContent lesson) {
-    final jsonString = jsonEncode(lesson.toJson());
+  static List<int> _compressLessonContent(Map<String, dynamic> lesson) {
+    final jsonString = jsonEncode(lesson);
     final bytes = utf8.encode(jsonString);
     
     // For Flutter Lite compliance, we'll use base64 encoding instead of external compression
@@ -56,24 +56,24 @@ class AdminLessonService {
   /// Create lessonsMeta document
   static Future<void> _createLessonMetaDocument(
     String grade,
-    LessonContent lesson,
+    Map<String, dynamic> lesson,
     String lessonPath,
   ) async {
     try {
       final metaDoc = FirebaseFirestore.instance
           .collection('lessonsMeta')
           .doc(grade);
-      
+    
       final lessonMeta = {
-        'id': lesson.lessonId,
-        'title': lesson.title,
-        'subject': lesson.subject,
-        'topic': lesson.topic,
-        'sizeBytes': lesson.toJson().toString().length,
+        'id': lesson['lessonId'],
+        'title': lesson['title'],
+        'subject': lesson['subject'],
+        'topic': lesson['topic'],
+        'sizeBytes': lesson.toString().length,
         'contentPath': lessonPath,
         'version': 1,
-        'totalSections': lesson.sections.length,
-        'hasQuestions': lesson.sections.any((s) => s.type == 'question'),
+        'totalSections': (lesson['sections'] as List).length,
+        'hasQuestions': (lesson['sections'] as List).any((s) => s['type'] == 'question'),
         'lastUpdated': FieldValue.serverTimestamp(),
       };
       
@@ -86,7 +86,7 @@ class AdminLessonService {
   }
 
   /// Validate lesson JSON structure
-  static LessonContent validateLessonJson(Map<String, dynamic> jsonData) {
+  static Map<String, dynamic> validateLessonJson(Map<String, dynamic> jsonData) {
     try {
       // Validate required fields
       if (jsonData['lessonId'] == null || jsonData['lessonId'] is! String) {
@@ -168,7 +168,7 @@ class AdminLessonService {
         }
       }
       
-      return LessonContent.fromJson(jsonData);
+      return jsonData;
     } catch (e) {
       throw Exception('Error validating lesson JSON: ${e.toString()}');
     }
@@ -248,7 +248,7 @@ class AdminLessonService {
   /// Update lesson content
   static Future<void> updateLessonContent({
     required String grade,
-    required LessonContent lesson,
+    required Map<String, dynamic> lesson,
   }) async {
     try {
       await uploadLessonContent(

@@ -1,7 +1,7 @@
-import 'package:equatable/equatable.dart';
+import 'dart:developer' as developer;
 
 // Teacher data model following Flutter Lite rules
-class TeacherModel extends Equatable {
+class TeacherModel {
   final String id;
   final String email;
   final String fullName;
@@ -16,6 +16,24 @@ class TeacherModel extends Equatable {
   final String userType;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  
+  // New verification fields
+  final String? profileImageUrl;
+  final String? tscCertificateUrl;
+  final String verificationStatus; // "pending" | "verified" | "rejected"
+  final String? rejectionReason;
+  
+  // Teaching preferences
+  final bool offersOnlineClasses;
+  final bool offersHomeTutoring;
+  final List<String> availableTimes; // ["Morning", "Afternoon", "Evening", "Weekend"]
+  
+  // Discovery algorithm fields
+  final bool isAvailable; // Currently accepting bookings
+  final DateTime? lastBookingDate;
+  final int completedLessons;
+  final int totalBookings;
+  final double responseRate; // For future algorithm improvements
 
   const TeacherModel({
     required this.id,
@@ -32,10 +50,23 @@ class TeacherModel extends Equatable {
     required this.userType,
     this.createdAt,
     this.updatedAt,
+    this.profileImageUrl,
+    this.tscCertificateUrl,
+    this.verificationStatus = 'pending',
+    this.rejectionReason,
+    this.offersOnlineClasses = false,
+    this.offersHomeTutoring = false,
+    this.availableTimes = const [],
+    this.isAvailable = true,
+    this.lastBookingDate,
+    this.completedLessons = 0,
+    this.totalBookings = 0,
+    this.responseRate = 0.0,
   });
 
   // Create from map (Firestore document)
   factory TeacherModel.fromMap(Map<String, dynamic> map) {
+    developer.log('TeacherModel: Creating from map for teacher ${map['id']}');
     return TeacherModel(
       id: map['id'] ?? '',
       email: map['email'] ?? '',
@@ -51,11 +82,24 @@ class TeacherModel extends Equatable {
       userType: map['userType'] ?? '',
       createdAt: map['createdAt']?.toDate(),
       updatedAt: map['updatedAt']?.toDate(),
+      profileImageUrl: map['profileImageUrl'],
+      tscCertificateUrl: map['tscCertificateUrl'],
+      verificationStatus: map['verificationStatus'] ?? 'pending',
+      rejectionReason: map['rejectionReason'],
+      offersOnlineClasses: map['offersOnlineClasses'] ?? false,
+      offersHomeTutoring: map['offersHomeTutoring'] ?? false,
+      availableTimes: List<String>.from(map['availableTimes'] ?? []),
+      isAvailable: map['isAvailable'] ?? true,
+      lastBookingDate: map['lastBookingDate']?.toDate(),
+      completedLessons: map['completedLessons'] ?? 0,
+      totalBookings: map['totalBookings'] ?? 0,
+      responseRate: (map['responseRate'] ?? 0).toDouble(),
     );
   }
 
   // Convert to map (Firestore document)
   Map<String, dynamic> toMap() {
+    developer.log('TeacherModel: Converting to map for teacher $id');
     return {
       'id': id,
       'email': email,
@@ -71,6 +115,18 @@ class TeacherModel extends Equatable {
       'userType': userType,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
+      'profileImageUrl': profileImageUrl,
+      'tscCertificateUrl': tscCertificateUrl,
+      'verificationStatus': verificationStatus,
+      'rejectionReason': rejectionReason,
+      'offersOnlineClasses': offersOnlineClasses,
+      'offersHomeTutoring': offersHomeTutoring,
+      'availableTimes': availableTimes,
+      'isAvailable': isAvailable,
+      'lastBookingDate': lastBookingDate,
+      'completedLessons': completedLessons,
+      'totalBookings': totalBookings,
+      'responseRate': responseRate,
     };
   }
 
@@ -90,7 +146,20 @@ class TeacherModel extends Equatable {
     String? userType,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? profileImageUrl,
+    String? tscCertificateUrl,
+    String? verificationStatus,
+    String? rejectionReason,
+    bool? offersOnlineClasses,
+    bool? offersHomeTutoring,
+    List<String>? availableTimes,
+    bool? isAvailable,
+    DateTime? lastBookingDate,
+    int? completedLessons,
+    int? totalBookings,
+    double? responseRate,
   }) {
+    developer.log('TeacherModel: Copying with changes for teacher $id');
     return TeacherModel(
       id: id ?? this.id,
       email: email ?? this.email,
@@ -106,24 +175,39 @@ class TeacherModel extends Equatable {
       userType: userType ?? this.userType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      tscCertificateUrl: tscCertificateUrl ?? this.tscCertificateUrl,
+      verificationStatus: verificationStatus ?? this.verificationStatus,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
+      offersOnlineClasses: offersOnlineClasses ?? this.offersOnlineClasses,
+      offersHomeTutoring: offersHomeTutoring ?? this.offersHomeTutoring,
+      availableTimes: availableTimes ?? this.availableTimes,
+      isAvailable: isAvailable ?? this.isAvailable,
+      lastBookingDate: lastBookingDate ?? this.lastBookingDate,
+      completedLessons: completedLessons ?? this.completedLessons,
+      totalBookings: totalBookings ?? this.totalBookings,
+      responseRate: responseRate ?? this.responseRate,
     );
   }
 
-  @override
-  List<Object?> get props => [
-        id,
-        email,
-        fullName,
-        gender,
-        age,
-        subjects,
-        areaOfOperation,
-        tscNumber,
-        phone,
-        availability,
-        price,
-        userType,
-        createdAt,
-        updatedAt,
-      ];
+  // Check if teacher is verified
+  bool get isVerified => verificationStatus == 'verified';
+  
+  // Check if teacher is pending verification
+  bool get isPending => verificationStatus == 'pending';
+  
+  // Check if teacher is rejected
+  bool get isRejected => verificationStatus == 'rejected';
+  
+  // Get verification status display text
+  String get verificationStatusText {
+    switch (verificationStatus) {
+      case 'verified':
+        return 'Verified';
+      case 'rejected':
+        return 'Rejected';
+      default:
+        return 'Pending';
+    }
+  }
 }

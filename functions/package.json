@@ -1,0 +1,27 @@
+{
+  "name": "teacher-verification-functions",
+  "version": "1.0.0",
+  "description": "Cloud Functions for teacher verification and payment processing",
+  "main": "index.js",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.10.1",
+    "firebase-functions": "^4.8.1",
+    "firebase-tools": "^13.0.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-google": "^0.14.0",
+    "prettier": "^3.2.4"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "private": true
+}

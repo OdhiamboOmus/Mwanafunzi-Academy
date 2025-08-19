@@ -41,7 +41,7 @@ dependencies:
   connectivity_plus: ^6.1.5
   
   # TODO: ADD MORE FIREBASE PACKAGES ONLY IF CRITICAL
-  # firebase_storage: ^12.4.0  # Only if file uploads needed
+  firebase_storage: ^12.4.0  # Required for teacher profile and certificate uploads
   # firebase_messaging: ^15.2.0  # Only if push notifications needed
   
   # TODO: AVOID NON-FIREBASE PACKAGES WHEN POSSIBLE

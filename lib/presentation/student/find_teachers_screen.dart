@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:developer' as developer;
 import '../shared/bottom_navigation_widget.dart';
 import 'home_tutoring_screen.dart';
 import 'widgets/teacher_toggle_buttons.dart';
 import 'widgets/teacher_filter_overlay.dart';
+import 'widgets/teacher_card_widget.dart';
+import '../../algorithms/teacher_discovery_algorithm.dart';
+import '../../data/models/teacher_model.dart';
+import '../../data/services/teacher_service.dart';
 
 class FindTeachersScreen extends StatefulWidget {
   const FindTeachersScreen({super.key});
@@ -21,6 +26,12 @@ class _FindTeachersScreenState extends State<FindTeachersScreen>
   String _selectedSubject = 'English';
   String _selectedClassSize = '5 Students';
   String _selectedTime = 'Weekend (Flexible)';
+  
+  // Teacher discovery data
+  final List<TeacherModel> _teachers = [];
+  final List<TeacherModel> _filteredTeachers = [];
+  bool _isTeachersLoading = false;
+  final TeacherService _teacherService = TeacherService();
 
   late AnimationController _filterController;
   late Animation<Offset> _filterSlideAnimation;
@@ -43,6 +54,8 @@ class _FindTeachersScreenState extends State<FindTeachersScreen>
       CurvedAnimation(parent: _filterController, curve: Curves.easeInOut),
     );
 
+    developer.log('FindTeachersScreen: Initializing screen');
+    _loadTeachers();
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _isLoading = false);
     });
@@ -52,6 +65,91 @@ class _FindTeachersScreenState extends State<FindTeachersScreen>
   void dispose() {
     _filterController.dispose();
     super.dispose();
+    developer.log('FindTeachersScreen: Screen disposed');
+  }
+
+  // Load teachers from service
+  Future<void> _loadTeachers() async {
+    developer.log('FindTeachersScreen: Loading teachers');
+    setState(() {
+      _isTeachersLoading = true;
+    });
+    
+    try {
+      final teachers = await _teacherService.getAvailableTeachers();
+      developer.log('FindTeachersScreen: Loaded ${teachers.length} teachers');
+      
+      setState(() {
+        _teachers.clear();
+        _teachers.addAll(teachers);
+        _applyFilters();
+      });
+    } catch (e) {
+      developer.log('FindTeachersScreen: Error loading teachers: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isTeachersLoading = false;
+        });
+      }
+    }
+  }
+
+  // Apply filters and rank teachers
+  void _applyFilters() {
+    developer.log('FindTeachersScreen: Applying filters');
+    developer.log('FindTeachersScreen: Selected subject: $_selectedSubject');
+    developer.log('FindTeachersScreen: Selected class size: $_selectedClassSize');
+    developer.log('FindTeachersScreen: Selected time: $_selectedTime');
+    
+    // Build filter map for discovery algorithm
+    final filters = <String, dynamic>{
+      'teachingType': _isOnlineClassesSelected ? 'online' : 'home',
+    };
+    
+    // Add subject filter
+    if (_selectedSubject != 'All Subjects') {
+      filters['subject'] = _selectedSubject;
+    }
+    
+    // Add time filter
+    if (_selectedTime != 'Weekend (Flexible)') {
+      // Extract time period from selected time
+      String timePeriod = 'Weekend';
+      if (_selectedTime.contains('Morning')) timePeriod = 'Morning';
+      else if (_selectedTime.contains('Afternoon')) timePeriod = 'Afternoon';
+      else if (_selectedTime.contains('Evening')) timePeriod = 'Evening';
+      
+      filters['availableTimes'] = [timePeriod];
+    }
+    
+    // Add price filter based on class size
+    double maxPrice = 4000; // Default for 1 student
+    if (_selectedClassSize.contains('3 Students')) maxPrice = 3000;
+    else if (_selectedClassSize.contains('5 Students')) maxPrice = 2000;
+    
+    filters['maxPrice'] = maxPrice;
+    
+    // Apply discovery algorithm
+    try {
+      final rankedTeachers = TeacherDiscoveryAlgorithm.rankTeachers(
+        teachers: List<TeacherModel>.from(_teachers),
+        filters: filters,
+      );
+      
+      developer.log('FindTeachersScreen: Algorithm returned ${rankedTeachers.length} teachers');
+      
+      setState(() {
+        _filteredTeachers.clear();
+        _filteredTeachers.addAll(rankedTeachers);
+      });
+    } catch (e) {
+      developer.log('FindTeachersScreen: Error applying discovery algorithm: $e');
+      setState(() {
+        _filteredTeachers.clear();
+        _filteredTeachers.addAll(_teachers);
+      });
+    }
   }
 
   @override
@@ -96,11 +194,21 @@ class _FindTeachersScreenState extends State<FindTeachersScreen>
             selectedSubject: _selectedSubject,
             selectedClassSize: _selectedClassSize,
             selectedTime: _selectedTime,
-            onSubjectChanged: (value) =>
-                setState(() => _selectedSubject = value),
-            onClassSizeChanged: (value) =>
-                setState(() => _selectedClassSize = value),
-            onTimeChanged: (value) => setState(() => _selectedTime = value),
+            onSubjectChanged: (value) {
+              developer.log('FindTeachersScreen: Subject filter changed to: $value');
+              setState(() => _selectedSubject = value);
+              _applyFilters();
+            },
+            onClassSizeChanged: (value) {
+              developer.log('FindTeachersScreen: Class size filter changed to: $value');
+              setState(() => _selectedClassSize = value);
+              _applyFilters();
+            },
+            onTimeChanged: (value) {
+              developer.log('FindTeachersScreen: Time filter changed to: $value');
+              setState(() => _selectedTime = value);
+              _applyFilters();
+            },
             onClose: _closeFilters,
           ),
       ],
@@ -148,26 +256,54 @@ class _FindTeachersScreenState extends State<FindTeachersScreen>
     ),
   );
 
-  Widget _buildOnlineContent() => _isLoading
-      ? const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(color: Color(0xFF50E801)),
-              SizedBox(height: 16),
-              Text(
-                'Finding teachers...',
-                style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)),
-              ),
-            ],
-          ),
-        )
-      : const Center(
-          child: Text(
-            'Online teachers will be displayed here',
-            style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)),
-          ),
+  Widget _buildOnlineContent() {
+    if (_isTeachersLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: Color(0xFF50E801)),
+            SizedBox(height: 16),
+            Text(
+              'Finding teachers...',
+              style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    if (_filteredTeachers.isEmpty) {
+      return const Center(
+        child: Text(
+          'No teachers found matching your criteria',
+          style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)),
+        ),
+      );
+    }
+    
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _filteredTeachers.length,
+      itemBuilder: (context, index) {
+        final teacher = _filteredTeachers[index];
+        developer.log('FindTeachersScreen: Building teacher card for ${teacher.fullName} at position $index');
+        return TeacherCardWidget(
+          teacher: teacher,
+          index: index,
+          onTap: () {
+            developer.log('FindTeachersScreen: Teacher card tapped for ${teacher.fullName}');
+            Navigator.pushNamed(context, '/teacher-detail', arguments: teacher.id);
+          },
+          onBook: () {
+            developer.log('FindTeachersScreen: Book button tapped for ${teacher.fullName}');
+            Navigator.pushNamed(context, '/booking', arguments: teacher.id);
+          },
         );
+      },
+    );
+  }
+
 
   void _closeFilters() {
     HapticFeedback.lightImpact();

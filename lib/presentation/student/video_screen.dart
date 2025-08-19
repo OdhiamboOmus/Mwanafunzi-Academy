@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mwanafunzi_academy/core/service_locator.dart' show ServiceLocator;
 import 'package:mwanafunzi_academy/data/models/video_model.dart';
 import 'package:mwanafunzi_academy/services/firebase/video_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../shared/grade_selector_widget.dart';
 import '../shared/bottom_navigation_widget.dart';
 import 'widgets/video_card.dart';
 import 'widgets/video_player_modal.dart';
+import '../../utils/video_error_handler.dart';
+import '../../utils/video_performance_manager.dart';
 
 // VideoScreen following Flutter Lite rules (<150 lines)
 class VideoScreen extends StatefulWidget {
@@ -22,15 +26,26 @@ class VideoScreen extends StatefulWidget {
 
 class _VideoScreenState extends State<VideoScreen> {
   final VideoService _videoService = ServiceLocator().videoService;
+  final VideoPerformanceManager _performanceManager = VideoPerformanceManager.instance;
   List<VideoModel> _videos = [];
   String _selectedSubject = 'All';
   bool _isLoading = true;
   String _errorMessage = '';
+  bool _isOffline = false;
+  StreamSubscription<List<VideoModel>>? _videoStreamSubscription;
+  DateTime? _lastSyncTime;
 
   @override
   void initState() {
     super.initState();
-    _loadVideos();
+    _initializeVideoStream();
+    _checkConnectivity();
+  }
+
+  @override
+  void dispose() {
+    _videoStreamSubscription?.cancel();
+    super.dispose();
   }
 
   @override
@@ -71,6 +86,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
     return Column(
       children: [
+        _buildOfflineIndicator(),
         _buildGradeSelector(),
         const SizedBox(height: 16),
         _buildSubjectFilter(),
@@ -133,20 +149,15 @@ class _VideoScreenState extends State<VideoScreen> {
     ),
   );
 
-  Widget _buildVideoGrid() => GridView.builder(
-    key: const ValueKey('video_grid'),
-    padding: const EdgeInsets.all(16),
-    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 2,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      childAspectRatio: 16 / 9,
-    ),
+  Widget _buildVideoGrid() => VideoPerformanceManager.buildOptimizedVideoList(
     itemCount: _videos.length,
     itemBuilder: (context, index) => VideoCard(
       video: _videos[index],
       onTap: () => _playVideo(_videos[index]),
     ),
+    padding: const EdgeInsets.all(16),
+    shrinkWrap: false,
+    physics: const AlwaysScrollableScrollPhysics(),
   );
 
   Widget _buildErrorState() => Center(
@@ -206,6 +217,64 @@ class _VideoScreenState extends State<VideoScreen> {
     ),
   );
 
+  /// Initialize real-time video stream
+  void _initializeVideoStream() {
+    _videoStreamSubscription = _videoService
+        .watchVideosByGrade(
+          widget.selectedGrade,
+          subject: _selectedSubject == 'All' ? null : _selectedSubject,
+        )
+        .listen(
+          (videos) {
+            if (mounted) {
+              setState(() {
+                _videos = videos;
+                _isLoading = false;
+                _lastSyncTime = DateTime.now();
+              });
+              
+              if (_videos.isEmpty) {
+                _errorMessage = _isOffline
+                    ? 'No cached videos available offline.'
+                    : 'No videos available for this grade and subject.';
+              } else {
+                _errorMessage = '';
+              }
+            }
+          },
+          onError: (error) {
+            if (mounted) {
+              setState(() {
+                _isLoading = false;
+                _errorMessage = 'Failed to load videos. Please check your connection.';
+              });
+            }
+            debugPrint('Video stream error: $error');
+          },
+        );
+  }
+
+  /// Check connectivity status
+  Future<void> _checkConnectivity() async {
+    try {
+      final connectivity = await Connectivity().checkConnectivity();
+      final wasOffline = _isOffline;
+      _isOffline = connectivity == ConnectivityResult.none;
+      
+      if (mounted && wasOffline != _isOffline) {
+        setState(() {});
+        
+        // If coming back online, refresh videos
+        if (!_isOffline) {
+          _loadVideos();
+        }
+      }
+    } catch (e, stackTrace) {
+      VideoErrorHandler.handleNetworkError(e, stackTrace, operation: 'checkConnectivity');
+    }
+  }
+
+  /// Load videos with offline fallback
   Future<void> _loadVideos() async {
     setState(() {
       _isLoading = true;
@@ -213,7 +282,7 @@ class _VideoScreenState extends State<VideoScreen> {
     });
 
     try {
-      final videos = await _videoService.getVideosByGrade(
+      final videos = await _videoService.getVideosByGradeWithOfflineFallback(
         widget.selectedGrade,
         subject: _selectedSubject == 'All' ? null : _selectedSubject,
       );
@@ -226,17 +295,25 @@ class _VideoScreenState extends State<VideoScreen> {
         
         if (_videos.isEmpty) {
           setState(() {
-            _errorMessage = 'No videos available for this grade and subject.';
+            _errorMessage = _isOffline
+                ? 'No cached videos available. Connect to internet to load videos.'
+                : 'No videos available for this grade and subject.';
           });
         }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Failed to load videos. Please try again.';
+          _errorMessage = VideoErrorHandler.getUserFriendlyErrorMessage(e);
         });
       }
+      
+      // Log error for debugging
+      VideoErrorHandler.handleVideoLoadError(e, stackTrace,
+        videoId: 'unknown',
+        operation: 'loadVideos'
+      );
     }
   }
 
@@ -246,6 +323,88 @@ class _VideoScreenState extends State<VideoScreen> {
       subjects.add(video.subject);
     }
     return subjects.toList()..sort();
+  }
+
+  /// Build offline indicator
+  Widget _buildOfflineIndicator() {
+    if (!_isOffline) return const SizedBox.shrink();
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF3CD),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFFFEAA7)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.wifi_off,
+            color: Color(0xFF856404),
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'You are offline. Showing cached videos.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF856404),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build last sync indicator
+  Widget _buildSyncIndicator() {
+    if (_lastSyncTime == null || _isOffline) return const SizedBox.shrink();
+    
+    final timeAgo = _getTimeAgo(_lastSyncTime!);
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.sync,
+            color: Color(0xFF50E801),
+            size: 16,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'Last updated: $timeAgo',
+            style: TextStyle(
+              fontSize: 12,
+              color: Color(0xFF6B7280),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Get human-readable time ago
+  String _getTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+    
+    if (difference.inSeconds < 60) {
+      return '${difference.inSeconds}s ago';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h ago';
+    } else {
+      return '${difference.inDays}d ago';
+    }
   }
 
   void _playVideo(VideoModel video) {
