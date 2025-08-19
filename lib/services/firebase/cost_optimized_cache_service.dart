@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart' show debugPrint;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/models/quiz_model.dart';
 
@@ -33,7 +34,7 @@ class CostOptimizedCacheService {
         return _parseQuizQuestions(cachedJson);
       }
     } catch (e) {
-      print('Error reading cached quiz questions: $e');
+      debugPrint('Error reading cached quiz questions: $e');
     }
     
     _recordCacheMiss();
@@ -58,7 +59,7 @@ class CostOptimizedCacheService {
       await prefs.setString(cacheKey, questionsJson);
       await prefs.setInt(timestampKey, now);
     } catch (e) {
-      print('Error caching quiz questions: $e');
+     debugPrint('Error caching quiz questions: $e');
     }
   }
   
@@ -80,7 +81,7 @@ class CostOptimizedCacheService {
         return jsonDecode(cachedJson) as Map<String, dynamic>;
       }
     } catch (e) {
-      print('Error reading cached quiz metadata: $e');
+      debugPrint('Error reading cached quiz metadata: $e');
     }
     
     _recordCacheMiss();
@@ -104,7 +105,7 @@ class CostOptimizedCacheService {
       await prefs.setString(metadataKey, metadataJson);
       await prefs.setInt(timestampKey, now);
     } catch (e) {
-      print('Error caching quiz metadata: $e');
+      debugPrint('Error caching quiz metadata: $e');
     }
   }
   
@@ -133,7 +134,7 @@ class CostOptimizedCacheService {
   /// Record cache event
   void _recordCacheEvent(String key) {
     // Simple implementation - in production, you might want to use a more sophisticated approach
-    print('Cache event: $key');
+    debugPrint('Cache event: $key');
   }
   
   /// Get cache hit rate
@@ -157,7 +158,7 @@ class CostOptimizedCacheService {
       await prefs.remove(cacheKey);
       await prefs.remove(timestampKey);
     } catch (e) {
-      print('Error clearing topic cache: $e');
+     debugPrint('Error clearing topic cache: $e');
     }
   }
   
@@ -175,7 +176,7 @@ class CostOptimizedCacheService {
         }
       }
     } catch (e) {
-      print('Error clearing all quiz caches: $e');
+      debugPrint('Error clearing all quiz caches: $e');
     }
   }
   
@@ -191,7 +192,7 @@ class CostOptimizedCacheService {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getInt(timestampKey);
     } catch (e) {
-      print('Error reading sync timestamp: $e');
+      debugPrint('Error reading sync timestamp: $e');
       return null;
     }
   }
@@ -209,7 +210,7 @@ class CostOptimizedCacheService {
       final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       await prefs.setInt(timestampKey, now);
     } catch (e) {
-      print('Error updating sync timestamp: $e');
+      debugPrint('Error updating sync timestamp: $e');
     }
   }
 }

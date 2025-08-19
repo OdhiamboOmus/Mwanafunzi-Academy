@@ -18,7 +18,7 @@ class ProfileImagePicker extends StatefulWidget {
 
 class _ProfileImagePickerState extends State<ProfileImagePicker> {
   File? _image;
-  bool _isUploading = false;
+  final bool _isUploading = false;
   String? _errorMessage;
 
   @override

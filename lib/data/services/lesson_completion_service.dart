@@ -1,6 +1,5 @@
 import 'dart:developer' as developer;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/constants.dart';
 
 // Lesson completion service with comprehensive logging
 class LessonCompletionService {
@@ -92,11 +91,6 @@ class LessonCompletionService {
       // Get booking details
       final bookingDoc = await _firestore.collection('bookings').doc(bookingId).get();
       final booking = bookingDoc.data() as Map<String, dynamic>;
-
-      if (booking == null) {
-        developer.log('LessonCompletionService: Booking $bookingId not found');
-        return;
-      }
 
       // Get all lessons for this booking
       final lessonsSnapshot = await _firestore

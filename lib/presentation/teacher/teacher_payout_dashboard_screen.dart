@@ -1,6 +1,5 @@
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../data/services/payout_service.dart';
 import '../../data/services/payout_retry_service.dart';
 import '../../data/models/transaction_model.dart';
@@ -14,9 +13,9 @@ class TeacherPayoutDashboardScreen extends StatefulWidget {
   final String teacherId;
 
   const TeacherPayoutDashboardScreen({
-    Key? key,
+    super.key,
     required this.teacherId,
-  }) : super(key: key);
+  });
 
   @override
   _TeacherPayoutDashboardScreenState createState() => _TeacherPayoutDashboardScreenState();

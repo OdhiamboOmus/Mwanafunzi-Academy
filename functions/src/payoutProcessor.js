@@ -23,6 +23,7 @@ exports.processPayout = functions.firestore
     const beforeData = change.before.data();
     const afterData = change.after.data();
 
+    debugPrint('processPayout: Lesson status update detected - LessonID: ${lessonId}, Before: ${beforeData.status}, After: ${afterData.status}');
     logger.info('processPayout: Lesson status update detected', {
       lessonId,
       beforeStatus: beforeData.status,
@@ -31,6 +32,7 @@ exports.processPayout = functions.firestore
 
     // Only process if status changed to 'completed'
     if (beforeData.status === 'completed' || afterData.status !== 'completed') {
+      debugPrint('processPayout: Lesson not newly completed, skipping processing - LessonID: ${lessonId}');
       logger.info('processPayout: Lesson not newly completed, skipping processing');
       return null;
     }
@@ -39,6 +41,7 @@ exports.processPayout = functions.firestore
       const bookingId = afterData.bookingId;
       const teacherId = afterData.teacherId;
 
+      debugPrint('processPayout: Processing completed lesson - LessonID: ${lessonId}, BookingID: ${bookingId}, TeacherID: ${teacherId}');
       logger.info('processPayout: Processing completed lesson', {
         lessonId,
         bookingId,
@@ -56,6 +59,7 @@ exports.processPayout = functions.firestore
       // Get booking details
       const bookingDoc = await db.collection('bookings').doc(bookingId).get();
       if (!bookingDoc.exists) {
+        debugPrint('processPayout: Booking not found - BookingID: ${bookingId}');
         logger.error('processPayout: Booking not found', { bookingId });
         return null;
       }
@@ -65,6 +69,7 @@ exports.processPayout = functions.firestore
       // Calculate teacher payout (80% of total amount)
       const teacherPayout = booking.teacherPayout;
 
+      debugPrint('processPayout: Calculating payout - BookingID: ${bookingId}, TeacherID: ${teacherId}, Amount: ${teacherPayout}');
       logger.info('processPayout: Calculating payout', {
         bookingId,
         teacherId,
@@ -82,6 +87,7 @@ exports.processPayout = functions.firestore
         .get();
 
       if (!existingPayout.empty) {
+        debugPrint('processPayout: Payout already processed - BookingID: ${bookingId}');
         logger.info('processPayout: Payout already processed', { bookingId });
         return null;
       }
@@ -93,6 +99,7 @@ exports.processPayout = functions.firestore
         amount: teacherPayout,
       });
 
+      debugPrint('processPayout: Payout transaction created - TransactionID: ${payoutTransactionId}, Amount: ${teacherPayout}');
       logger.info('processPayout: Payout transaction created', {
         payoutTransactionId,
         teacherPayout
@@ -106,6 +113,7 @@ exports.processPayout = functions.firestore
       });
 
       if (payoutSuccess) {
+        debugPrint('processPayout: Payout processed successfully - TransactionID: ${payoutTransactionId}');
         // Update payout transaction status
         await db.collection('transactions').doc(payoutTransactionId).update({
           status: 'completed',
@@ -132,6 +140,7 @@ exports.processPayout = functions.firestore
           teacherPayout
         });
       } else {
+        debugPrint('processPayout: Payout failed - TransactionID: ${payoutTransactionId}, Amount: ${teacherPayout}');
         // Update payout transaction status to failed
         await db.collection('transactions').doc(payoutTransactionId).update({
           status: 'failed',

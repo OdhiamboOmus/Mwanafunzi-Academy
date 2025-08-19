@@ -1,5 +1,4 @@
 import 'dart:developer' as developer;
-import 'package:flutter/material.dart';
 import 'teacher_dashboard_controller.dart';
 
 // Teacher navigation handlers for managing navigation actions with logging

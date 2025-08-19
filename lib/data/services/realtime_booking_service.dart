@@ -414,4 +414,141 @@ class RealtimeBookingService {
     // For now, we'll just log the cleanup
     developer.log('RealtimeBookingService: All listeners cleaned up');
   }
+  // Get teacher's active bookings with logging
+  Future<List<BookingModel>> getTeacherActiveBookings(String teacherId) async {
+    developer.log('RealtimeBookingService: Getting active bookings for teacher - TeacherID: $teacherId');
+    
+    try {
+      final querySnapshot = await _firestore
+          .collection('bookings')
+          .where('teacherId', isEqualTo: teacherId)
+          .where('status', whereIn: ['draft', 'payment_pending', 'paid', 'active'])
+          .orderBy('createdAt', descending: true)
+          .get();
+      
+      final bookings = querySnapshot.docs.map((doc) => BookingModel.fromMap(doc.data())).toList();
+      
+      developer.log('RealtimeBookingService: Retrieved ${bookings.length} active bookings for teacher - TeacherID: $teacherId');
+      return bookings;
+    } catch (e) {
+      developer.log('RealtimeBookingService: Error getting active bookings - TeacherID: $teacherId, Error: $e');
+      return [];
+    }
+  }
+
+  // Get teacher's new bookings with logging
+  Future<List<BookingModel>> getTeacherNewBookings(String teacherId) async {
+    developer.log('RealtimeBookingService: Getting new bookings for teacher - TeacherID: $teacherId');
+    
+    try {
+      final querySnapshot = await _firestore
+          .collection('bookings')
+          .where('teacherId', isEqualTo: teacherId)
+          .where('status', isEqualTo: 'draft')
+          .orderBy('createdAt', descending: true)
+          .get();
+      
+      final bookings = querySnapshot.docs.map((doc) => BookingModel.fromMap(doc.data())).toList();
+      
+      developer.log('RealtimeBookingService: Retrieved ${bookings.length} new bookings for teacher - TeacherID: $teacherId');
+      return bookings;
+    } catch (e) {
+      developer.log('RealtimeBookingService: Error getting new bookings - TeacherID: $teacherId, Error: $e');
+      return [];
+    }
+  }
+
+  // Listen to booking status changes with logging
+  Stream<List<Map<String, dynamic>>> listenToBookingStatusChanges(String teacherId) {
+    developer.log('RealtimeBookingService: Starting booking status change listener - TeacherID: $teacherId');
+    
+    return _firestore
+        .collection('bookings')
+        .where('teacherId', isEqualTo: teacherId)
+        .where('status', whereIn: ['draft', 'payment_pending', 'paid', 'active', 'completed', 'cancelled'])
+        .snapshots()
+        .map((snapshot) {
+          developer.log('RealtimeBookingService: Received booking status changes - ${snapshot.docs.length} changes');
+          
+          final changes = <Map<String, dynamic>>[];
+          
+          for (final change in snapshot.docChanges) {
+            if (change.type == DocumentChangeType.modified) {
+              final booking = BookingModel.fromMap(change.doc.data()!);
+              final previousStatus = change.doc.data()?['status'];
+              final newStatus = booking.status;
+              
+              if (previousStatus != newStatus) {
+                developer.log('RealtimeBookingService: Booking status changed - BookingID: ${booking.id}, From: $previousStatus, To: $newStatus');
+                
+                changes.add({
+                  'type': 'status_change',
+                  'bookingId': booking.id,
+                  'previousStatus': previousStatus,
+                  'newStatus': newStatus,
+                  'booking': booking.toMap(),
+                  'timestamp': DateTime.now(),
+                });
+              }
+            }
+          }
+          
+          return changes;
+        });
+  }
+
+  // Listen to payment confirmations with logging
+  Stream<List<Map<String, dynamic>>> listenToPaymentConfirmations(String teacherId) {
+    developer.log('RealtimeBookingService: Starting payment confirmation listener - TeacherID: $teacherId');
+    
+    return _firestore
+        .collection('bookings')
+        .where('teacherId', isEqualTo: teacherId)
+        .where('status', isEqualTo: 'payment_pending')
+        .snapshots()
+        .map((snapshot) {
+          developer.log('RealtimeBookingService: Received payment confirmation updates - ${snapshot.docs.length} updates');
+          
+          final confirmations = <Map<String, dynamic>>[];
+          
+          for (final change in snapshot.docChanges) {
+            if (change.type == DocumentChangeType.modified) {
+              final booking = BookingModel.fromMap(change.doc.data()!);
+              final previousStatus = change.doc.data()?['status'];
+              final newStatus = booking.status;
+              
+              if (previousStatus == 'payment_pending' && newStatus == 'paid') {
+                developer.log('RealtimeBookingService: Payment confirmed - BookingID: ${booking.id}, Amount: ${booking.totalAmount}');
+                
+                confirmations.add({
+                  'type': 'payment_confirmation',
+                  'bookingId': booking.id,
+                  'amount': booking.totalAmount,
+                  'booking': booking.toMap(),
+                  'timestamp': DateTime.now(),
+                });
+              }
+            }
+          }
+          
+          return confirmations;
+        });
+  }
+
+  // Mark booking as viewed with logging
+  Future<void> markBookingAsViewed(String bookingId) async {
+    developer.log('RealtimeBookingService: Marking booking as viewed - BookingID: $bookingId');
+    
+    try {
+      await _firestore.collection('bookings').doc(bookingId).update({
+        'viewedAt': DateTime.now(),
+        'updatedAt': DateTime.now(),
+      });
+      
+      developer.log('RealtimeBookingService: Booking marked as viewed - BookingID: $bookingId');
+    } catch (e) {
+      developer.log('RealtimeBookingService: Error marking booking as viewed - BookingID: $bookingId, Error: $e');
+      rethrow;
+    }
+  }
 }

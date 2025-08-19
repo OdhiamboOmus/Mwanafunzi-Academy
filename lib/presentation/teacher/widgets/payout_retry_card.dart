@@ -6,9 +6,9 @@ class PayoutRetryCard extends StatelessWidget {
   final Map<String, dynamic> retry;
 
   const PayoutRetryCard({
-    Key? key,
+    super.key,
     required this.retry,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

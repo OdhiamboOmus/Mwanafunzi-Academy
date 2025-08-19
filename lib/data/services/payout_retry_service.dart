@@ -224,7 +224,7 @@ class PayoutRetryService {
         'failedRetries': failedRetries.docs.length,
         'scheduledRetries': scheduledRetries.docs.length,
         'processingRetries': processingRetries.docs.length,
-        'successRate': totalRetries.docs.length > 0 
+        'successRate': totalRetries.docs.isNotEmpty 
             ? (successfulRetries.docs.length / totalRetries.docs.length * 100).toStringAsFixed(1)
             : '0.0',
       };

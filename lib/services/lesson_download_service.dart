@@ -159,7 +159,7 @@ class LessonDownloadService {
       await _storageService.setCachedData(
         key: '$_cacheKeyPrefix$lessonId',
         data: content,
-        toJson: (data) => data as Map<String, dynamic>,
+        toJson: (data) => data,
       );
     } catch (e) {
       debugPrint('❌ Cache lesson content error: $e');

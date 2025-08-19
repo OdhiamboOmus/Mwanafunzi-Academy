@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
 import '../shared/bottom_navigation_widget.dart';
-import '../../data/models/teacher_model.dart';
 import '../../data/models/booking_model.dart';
 import '../../data/services/booking_service.dart';
 import '../../data/services/payment_service.dart';
 import '../../core/constants.dart';
 import 'widgets/booking_form_widget.dart';
 import 'widgets/payment_widget.dart';
-import '../../shared/notification_integration_widget.dart';
+import '../shared/notification_integration_widget.dart';
 
 /// Booking screen for weekly package selection and scheduling with booking flow logging
 class BookingScreen extends StatefulWidget {
@@ -234,7 +233,7 @@ class _BookingScreenState extends State<BookingScreen> {
             onPressed: () => context.showNotification(
               title: 'Notifications',
               message: 'You have no new notifications',
-              type: NotificationType.info,
+              type: 'info',
             ),
             tooltip: 'Notifications',
           ),

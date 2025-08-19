@@ -50,7 +50,7 @@ class LessonNavigationService {
   Future<Map<String, dynamic>?> getNextSection(String lessonId, String currentSectionId) async {
     try {
       final sections = await getLessonSections(lessonId);
-      final currentIndex = sections.indexWhere((s) => (s as Map<String, dynamic>)?['sectionId'] == currentSectionId);
+      final currentIndex = sections.indexWhere((s) => (s)['sectionId'] == currentSectionId);
       
       if (currentIndex == -1 || currentIndex >= sections.length - 1) {
         return null;
@@ -67,7 +67,7 @@ class LessonNavigationService {
   Future<Map<String, dynamic>?> getPreviousSection(String lessonId, String currentSectionId) async {
     try {
       final sections = await getLessonSections(lessonId);
-      final currentIndex = sections.indexWhere((s) => (s as Map<String, dynamic>)?['sectionId'] == currentSectionId);
+      final currentIndex = sections.indexWhere((s) => (s)['sectionId'] == currentSectionId);
       
       if (currentIndex <= 0) {
         return null;

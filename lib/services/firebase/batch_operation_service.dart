@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart' show debugPrint;
 import '../../data/models/quiz_model.dart';
 
 /// Service for batching operations to minimize Firebase costs
@@ -64,7 +65,7 @@ class BatchOperationService {
       // Clear all processed attempts
       _pendingAttempts.clear();
     } catch (e) {
-      print('Error flushing batch: $e');
+      debugPrint('Error flushing batch: $e');
       // Don't clear pending attempts on error, retry on next sync
     } finally {
       _isSyncing = false;

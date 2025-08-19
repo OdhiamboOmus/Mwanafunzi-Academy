@@ -53,7 +53,7 @@ class TeacherService {
       
       uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
         final progress = snapshot.totalBytes != null 
-            ? (snapshot.bytesTransferred / snapshot.totalBytes! * 100).toStringAsFixed(0)
+            ? (snapshot.bytesTransferred / snapshot.totalBytes * 100).toStringAsFixed(0)
             : '0';
         developer.log('TeacherService: Upload progress: $progress%');
       });
@@ -78,7 +78,7 @@ class TeacherService {
       
       uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
         final progress = snapshot.totalBytes != null 
-            ? (snapshot.bytesTransferred / snapshot.totalBytes! * 100).toStringAsFixed(0)
+            ? (snapshot.bytesTransferred / snapshot.totalBytes * 100).toStringAsFixed(0)
             : '0';
         developer.log('TeacherService: Certificate upload progress: $progress%');
       });

@@ -168,7 +168,7 @@ class TransactionService {
       
       double totalRevenue = 0;
       for (var doc in paymentsSnapshot.docs) {
-        final transaction = TransactionModel.fromMap(doc.data() as Map<String, dynamic>);
+        final transaction = TransactionModel.fromMap(doc.data());
         totalRevenue += transaction.amount;
       }
       
@@ -181,7 +181,7 @@ class TransactionService {
       
       double pendingPayouts = 0;
       for (var doc in payoutsSnapshot.docs) {
-        final transaction = TransactionModel.fromMap(doc.data() as Map<String, dynamic>);
+        final transaction = TransactionModel.fromMap(doc.data());
         pendingPayouts += transaction.amount;
       }
       
@@ -200,7 +200,7 @@ class TransactionService {
       
       double monthlyRevenue = 0;
       for (var doc in monthlySnapshot.docs) {
-        final transaction = TransactionModel.fromMap(doc.data() as Map<String, dynamic>);
+        final transaction = TransactionModel.fromMap(doc.data());
         monthlyRevenue += transaction.amount;
       }
       

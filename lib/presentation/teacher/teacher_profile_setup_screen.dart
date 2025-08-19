@@ -1,7 +1,6 @@
 import 'dart:developer' as developer;
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../../data/models/teacher_model.dart';
 import '../../data/services/teacher_service.dart';
 import 'widgets/profile_image_picker.dart';
 import 'widgets/tsc_upload_widget.dart';

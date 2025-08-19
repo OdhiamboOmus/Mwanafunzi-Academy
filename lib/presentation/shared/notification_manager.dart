@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
 import 'notification_service.dart';
-import 'notification_widget.dart';
+import 'notification_widget.dart' as notification_widget;
 
 // Notification manager for handling different notification types with comprehensive logging
 class NotificationManager {
@@ -20,7 +20,7 @@ class NotificationManager {
     
     _showNotificationWidget(
       context: context,
-      type: NotificationType.success,
+      type: notification_widget.NotificationType.success,
       title: title,
       message: message,
       bookingId: bookingId,
@@ -42,7 +42,7 @@ class NotificationManager {
     
     _showNotificationWidget(
       context: context,
-      type: NotificationType.error,
+      type: notification_widget.NotificationType.error,
       title: title,
       message: message,
       bookingId: bookingId,
@@ -64,7 +64,7 @@ class NotificationManager {
     
     _showNotificationWidget(
       context: context,
-      type: NotificationType.info,
+      type: notification_widget.NotificationType.info,
       title: title,
       message: message,
       bookingId: bookingId,
@@ -86,7 +86,7 @@ class NotificationManager {
     
     _showNotificationWidget(
       context: context,
-      type: NotificationType.booking,
+      type: notification_widget.NotificationType.booking,
       title: title,
       message: message,
       bookingId: bookingId,
@@ -108,7 +108,7 @@ class NotificationManager {
     
     _showNotificationWidget(
       context: context,
-      type: NotificationType.payment,
+      type: notification_widget.NotificationType.payment,
       title: title,
       message: message,
       bookingId: bookingId,
@@ -130,7 +130,7 @@ class NotificationManager {
     
     _showNotificationWidget(
       context: context,
-      type: NotificationType.verification,
+      type: notification_widget.NotificationType.verification,
       title: title,
       message: message,
       bookingId: bookingId,
@@ -152,7 +152,7 @@ class NotificationManager {
     
     _showNotificationWidget(
       context: context,
-      type: NotificationType.lesson,
+      type: notification_widget.NotificationType.lesson,
       title: title,
       message: message,
       bookingId: bookingId,
@@ -164,7 +164,7 @@ class NotificationManager {
   // Show notification widget with logging
   void _showNotificationWidget({
     required BuildContext context,
-    required NotificationType type,
+    required notification_widget.NotificationType type,
     required String title,
     required String message,
     String? bookingId,
@@ -202,23 +202,23 @@ class NotificationManager {
   }
   
   // Get background color based on notification type with logging
-  Color _getBackgroundColor(NotificationType type) {
+  Color _getBackgroundColor(notification_widget.NotificationType type) {
     developer.log('NotificationManager: Getting background color for type: $type');
     
     switch (type) {
-      case NotificationType.success:
+      case notification_widget.NotificationType.success:
         return Colors.green;
-      case NotificationType.error:
+      case notification_widget.NotificationType.error:
         return Colors.red;
-      case NotificationType.info:
+      case notification_widget.NotificationType.info:
         return Colors.blue;
-      case NotificationType.booking:
+      case notification_widget.NotificationType.booking:
         return Colors.purple;
-      case NotificationType.payment:
+      case notification_widget.NotificationType.payment:
         return Colors.orange;
-      case NotificationType.verification:
+      case notification_widget.NotificationType.verification:
         return Colors.teal;
-      case NotificationType.lesson:
+      case notification_widget.NotificationType.lesson:
         return Colors.indigo;
       default:
         return Colors.blue;

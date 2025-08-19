@@ -1,7 +1,6 @@
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import '../../../data/models/booking_model.dart';
-import '../../../core/constants.dart';
 import 'booking_card_widget.dart';
 
 // Teacher bookings section widget with interaction logging
@@ -69,7 +68,7 @@ class TeacherBookingsSection extends StatelessWidget {
               onLessonCompleted: onLessonCompleted,
             ),
           );
-        }).toList(),
+        }),
         if (activeBookings.length > 3)
           _buildViewAllButton(),
       ],

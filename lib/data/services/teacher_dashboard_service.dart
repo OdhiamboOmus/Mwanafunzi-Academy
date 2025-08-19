@@ -1,6 +1,4 @@
 import 'dart:developer' as developer;
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/constants.dart';
 import '../../data/services/booking_service.dart';
 import '../../data/services/realtime_booking_service.dart';
 import '../../data/services/lesson_completion_service.dart';
@@ -127,36 +125,36 @@ class TeacherDashboardService {
     developer.log('TeacherDashboardService: Setting up real-time streams for teacher $teacherId');
     
     // Setup active bookings stream
-    final activeBookingsStream = _realtimeBookingService.getTeacherActiveBookings(teacherId);
-    activeBookingsStream.listen((bookings) {
-      developer.log('TeacherDashboardService: Active bookings stream updated - ${bookings.length} bookings');
-      onActiveBookingsUpdated(bookings);
+    _realtimeBookingService.listenToBookingStatusChanges(teacherId).listen((changes) {
+      if (changes.isNotEmpty) {
+        developer.log('TeacherDashboardService: Active bookings stream updated - ${changes.length} changes');
+        onActiveBookingsUpdated(changes);
+      }
     });
 
     // Setup new bookings stream
-    final newBookingsStream = _realtimeBookingService.getTeacherNewBookings(teacherId);
-    newBookingsStream.listen((data) {
-      if (data['booking'] != null) {
-        developer.log('TeacherDashboardService: New booking received - ${data['booking']['id']}');
-        onNewBooking(data['booking']);
+    _realtimeBookingService.listenToBookingStatusChanges(teacherId).listen((changes) {
+      for (var change in changes) {
+        if (change['type'] == 'new_booking') {
+          developer.log('TeacherDashboardService: New booking received - ${change['bookingId']}');
+          onNewBooking(change['booking']);
+        }
       }
     });
 
     // Setup status changes stream
-    final statusChangesStream = _realtimeBookingService.listenToBookingStatusChanges(teacherId);
-    statusChangesStream.listen((data) {
-      if (data['changes'].isNotEmpty) {
-        developer.log('TeacherDashboardService: Status changes received - ${data['changes'].length} changes');
-        onStatusChanges(data['changes']);
+    _realtimeBookingService.listenToBookingStatusChanges(teacherId).listen((changes) {
+      if (changes.isNotEmpty) {
+        developer.log('TeacherDashboardService: Status changes received - ${changes.length} changes');
+        onStatusChanges(changes);
       }
     });
 
     // Setup payment confirmations stream
-    final paymentConfirmationsStream = _realtimeBookingService.listenToPaymentConfirmations(teacherId);
-    paymentConfirmationsStream.listen((data) {
-      if (data['changes'].isNotEmpty) {
-        developer.log('TeacherDashboardService: Payment confirmations received - ${data['changes'].length} confirmations');
-        onPaymentConfirmations(data['changes']);
+    _realtimeBookingService.listenToPaymentConfirmations(teacherId).listen((confirmations) {
+      if (confirmations.isNotEmpty) {
+        developer.log('TeacherDashboardService: Payment confirmations received - ${confirmations.length} confirmations');
+        onPaymentConfirmations(confirmations);
       }
     });
   }

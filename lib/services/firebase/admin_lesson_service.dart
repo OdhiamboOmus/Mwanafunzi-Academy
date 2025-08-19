@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
-import '../../data/models/lesson_model.dart';
 
 // Admin lesson service following Flutter Lite rules (<150 lines)
 class AdminLessonService {

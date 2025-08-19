@@ -17,14 +17,16 @@ const db = admin.firestore();
  * and sends notifications.
  */
 exports.handleMpesaWebhook = functions.https.onRequest(async (req, res) => {
-  logger.info('handleMpesaWebhook: Starting webhook processing', { 
+  debugPrint('handleMpesaWebhook: Starting webhook processing');
+  logger.info('handleMpesaWebhook: Starting webhook processing', {
     headers: req.headers,
-    body: req.body 
+    body: req.body
   });
 
   try {
     // Verify webhook signature (in production, implement proper signature verification)
     const payload = req.body;
+    debugPrint('handleMpesaWebhook: Processing webhook payload - TransactionID: ${payload.TransactionID}, ResultCode: ${payload.ResultCode}');
     logger.info('handleMpesaWebhook: Processing webhook payload', { payload });
 
     // Extract payment details
@@ -45,6 +47,7 @@ exports.handleMpesaWebhook = functions.https.onRequest(async (req, res) => {
     });
 
     // Find the transaction by M-Pesa transaction ID
+    debugPrint('handleMpesaWebhook: Searching for transaction with M-Pesa ID: ${mpesaTransactionId}');
     const transactionQuery = await db
       .collection('transactions')
       .where('mpesaTransactionId', '==', mpesaTransactionId)
@@ -52,10 +55,11 @@ exports.handleMpesaWebhook = functions.https.onRequest(async (req, res) => {
       .get();
 
     if (transactionQuery.empty) {
+      debugPrint('handleMpesaWebhook: Transaction not found with M-Pesa ID: ${mpesaTransactionId}');
       logger.error('handleMpesaWebhook: Transaction not found', { mpesaTransactionId });
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Transaction not found' 
+      return res.status(404).json({
+        success: false,
+        message: 'Transaction not found'
       });
     }
 
@@ -63,10 +67,11 @@ exports.handleMpesaWebhook = functions.https.onRequest(async (req, res) => {
     const transaction = transactionDoc.data();
     const transactionId = transactionDoc.id;
 
-    logger.info('handleMpesaWebhook: Found transaction', { 
+    debugPrint('handleMpesaWebhook: Found transaction - ID: ${transactionId}, BookingID: ${transaction.bookingId}, Amount: ${transaction.amount}');
+    logger.info('handleMpesaWebhook: Found transaction', {
       transactionId,
       bookingId: transaction.bookingId,
-      amount: transaction.amount 
+      amount: transaction.amount
     });
 
     // Update transaction status based on M-Pesa response
@@ -79,6 +84,7 @@ exports.handleMpesaWebhook = functions.https.onRequest(async (req, res) => {
       processedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
+    debugPrint('handleMpesaWebhook: Updating transaction status - ID: ${transactionId}, Status: ${status}, ResultCode: ${resultCode}');
     logger.info('handleMpesaWebhook: Updating transaction status', {
       transactionId,
       status,
@@ -93,6 +99,7 @@ exports.handleMpesaWebhook = functions.https.onRequest(async (req, res) => {
 
     // If payment is successful, activate booking and create ledger entries
     if (resultCode === '0') {
+      debugPrint('handleMpesaWebhook: Payment successful, activating booking - BookingID: ${transaction.bookingId}, Amount: ${transaction.amount}');
       logger.info('handleMpesaWebhook: Payment successful, activating booking', {
         bookingId: transaction.bookingId,
         amount: transaction.amount
@@ -107,10 +114,12 @@ exports.handleMpesaWebhook = functions.https.onRequest(async (req, res) => {
       // Send notifications
       await sendPaymentSuccessNotifications(transaction);
 
+      debugPrint('handleMpesaWebhook: Booking activated and notifications sent - BookingID: ${transaction.bookingId}');
       logger.info('handleMpesaWebhook: Booking activated and notifications sent', {
         bookingId: transaction.bookingId
       });
     } else {
+      debugPrint('handleMpesaWebhook: Payment failed - TransactionID: ${transactionId}, Reason: ${resultDesc}');
       logger.warn('handleMpesaWebhook: Payment failed', {
         transactionId,
         resultDesc

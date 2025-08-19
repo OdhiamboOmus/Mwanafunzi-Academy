@@ -1,6 +1,5 @@
 import 'dart:developer' as developer;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/constants.dart';
 
 // Teacher notification service with comprehensive logging (simplified for Flutter Lite)
 class TeacherNotificationService {

@@ -6,9 +6,9 @@ class PayoutStatsCard extends StatelessWidget {
   final Map<String, dynamic> stats;
 
   const PayoutStatsCard({
-    Key? key,
+    super.key,
     required this.stats,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

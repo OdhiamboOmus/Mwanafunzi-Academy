@@ -1,9 +1,6 @@
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/teacher_model.dart';
-import '../models/booking_model.dart';
-import '../models/lesson_model.dart';
 
 // Enhanced notification service for in-app and email notifications with comprehensive logging
 class NotificationService {

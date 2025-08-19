@@ -392,7 +392,7 @@ class _AdminVideoUploadScreenState extends State<AdminVideoUploadScreen> {
 
       // Log validation attempt
       await _logAdminAction('url_validation', 'URL: $url, Title: ${metadata.title ?? "Unknown"}');
-    } catch (e, stackTrace) {
+    } catch (e) {
       setState(() {
         _message = 'Validation failed: ${e.toString()}';
         _isUploading = false;

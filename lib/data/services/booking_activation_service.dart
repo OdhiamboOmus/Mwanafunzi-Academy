@@ -3,10 +3,7 @@ import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/booking_model.dart';
 import '../models/lesson_model.dart';
-import '../models/transaction_model.dart';
-import 'booking_service.dart';
 import 'ledger_service.dart';
-import 'payment_service.dart';
 import '../../presentation/shared/payment_notification_service.dart';
 
 // Enhanced booking activation service with comprehensive logging

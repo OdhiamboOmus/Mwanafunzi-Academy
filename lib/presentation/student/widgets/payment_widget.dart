@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
 import '../../../data/services/payment_service.dart';
 import '../../../data/services/booking_service.dart';
-import '../../../core/constants.dart';
 
 /// Payment widget for M-Pesa STK Push integration with payment request/response logging
 class PaymentWidget extends StatefulWidget {

@@ -1,0 +1,126 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Public access for app assets and icons
+    match /assets/{allAssets=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Teacher profile images - restricted access with logging
+    match /teacher_profiles/{teacherId}/{imageId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        request.auth.uid == teacherId ||
+        (isVerifiedTeacher() && request.auth.uid != null)
+      );
+      
+      allow write, create: if isAuthenticated() && (
+        isAdmin() ||
+        (request.auth.uid == teacherId && isTeacherProfileEditable(teacherId))
+      );
+      
+      allow delete: if isAdmin() || (request.auth.uid == teacherId);
+      
+      // Log storage access for debugging
+      function isAuthenticated() {
+        return request.auth != null;
+      }
+      
+      function isAdmin() {
+        return isAuthenticated() &&
+               exists(/databases/$(database)/documents/admin_users/$(request.auth.uid));
+      }
+      
+      function isVerifiedTeacher() {
+        return isAuthenticated() &&
+               request.auth.token.role == 'teacher' &&
+               request.auth.token.verified == true;
+      }
+      
+      function isTeacherProfileEditable(String teacherId) {
+        // Check if teacher can upload images based on verification status
+        if (request.auth != null && request.auth.uid == teacherId) {
+          let teacherDoc = get(/databases/$(database)/documents/teachers/$(teacherId));
+          let verificationStatus = teacherDoc.data().verificationStatus;
+          
+          // Teachers can upload if verification is pending or they are verified
+          return verificationStatus == 'pending' || verificationStatus == 'verified';
+        }
+        return false;
+      }
+    }
+    
+    // TSC certificates - restricted access with logging
+    match /tsc_certificates/{teacherId}/{certificateId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        request.auth.uid == teacherId ||
+        (isVerifiedTeacher() && request.auth.uid != null)
+      );
+      
+      allow write, create: if isAuthenticated() && (
+        isAdmin() ||
+        (request.auth.uid == teacherId && isTeacherProfileEditable(teacherId))
+      );
+      
+      allow delete: if isAdmin() || (request.auth.uid == teacherId);
+      
+      // Log certificate access for security auditing
+      function isAuthenticated() {
+        return request.auth != null;
+      }
+      
+      function isAdmin() {
+        return isAuthenticated() &&
+               exists(/databases/$(database)/documents/admin_users/$(request.auth.uid));
+      }
+      
+      function isVerifiedTeacher() {
+        return isAuthenticated() &&
+               request.auth.token.role == 'teacher' &&
+               request.auth.token.verified == true;
+      }
+      
+      function isTeacherProfileEditable(String teacherId) {
+        // Check if teacher can upload certificates based on verification status
+        if (request.auth != null && request.auth.uid == teacherId) {
+          let teacherDoc = get(/databases/$(database)/documents/teachers/$(teacherId));
+          let verificationStatus = teacherDoc.data().verificationStatus;
+          
+          // Teachers can upload if verification is pending or they are verified
+          return verificationStatus == 'pending' || verificationStatus == 'verified';
+        }
+        return false;
+      }
+    }
+    
+    // Zoom meeting recordings - restricted access
+    match /zoom_recordings/{bookingId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        request.auth.uid == resource.metadata.creator ||
+        (isVerifiedTeacher() && request.auth.uid == resource.metadata.teacherId) ||
+        (isParent() && request.auth.uid == resource.metadata.parentId)
+      );
+      
+      allow write, create, delete: if isAdmin();
+    }
+    
+    // General user uploads - restricted by user type
+    match /user_uploads/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write, create: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // System logs - admin only
+    match /system_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Backup files - admin only
+    match /backups/{backupId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

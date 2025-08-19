@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Simple cache hit rate tracker for performance monitoring
@@ -22,7 +23,7 @@ class CacheHitTracker {
       final currentCount = prefs.getInt(key) ?? 0;
       await prefs.setInt(key, currentCount + 1);
     } catch (e) {
-      print('Error incrementing counter: $e');
+      debugPrint('Error incrementing counter: $e');
     }
   }
   
@@ -37,7 +38,7 @@ class CacheHitTracker {
       if (total == 0) return 0.0;
       return hits / total;
     } catch (e) {
-      print('Error calculating cache hit rate: $e');
+      debugPrint('Error calculating cache hit rate: $e');
       return 0.0;
     }
   }
@@ -55,7 +56,7 @@ class CacheHitTracker {
       await prefs.remove(_cacheHitKey);
       await prefs.remove(_cacheMissKey);
     } catch (e) {
-      print('Error resetting counters: $e');
+      debugPrint('Error resetting counters: $e');
     }
   }
 }

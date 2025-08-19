@@ -1,6 +1,5 @@
 import 'dart:developer' as developer;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/booking_model.dart';
 import '../models/lesson_model.dart';
 import '../models/transaction_model.dart';
 import 'teacher_service.dart';

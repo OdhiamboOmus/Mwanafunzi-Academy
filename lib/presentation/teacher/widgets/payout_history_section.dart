@@ -8,9 +8,9 @@ class PayoutHistorySection extends StatelessWidget {
   final List<TransactionModel>? transactions;
 
   const PayoutHistorySection({
-    Key? key,
+    super.key,
     required this.transactions,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

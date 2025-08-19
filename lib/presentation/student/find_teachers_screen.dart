@@ -116,8 +116,9 @@ class _FindTeachersScreenState extends State<FindTeachersScreen>
     if (_selectedTime != 'Weekend (Flexible)') {
       // Extract time period from selected time
       String timePeriod = 'Weekend';
-      if (_selectedTime.contains('Morning')) timePeriod = 'Morning';
-      else if (_selectedTime.contains('Afternoon')) timePeriod = 'Afternoon';
+      if (_selectedTime.contains('Morning')) {
+        timePeriod = 'Morning';
+      } else if (_selectedTime.contains('Afternoon')) timePeriod = 'Afternoon';
       else if (_selectedTime.contains('Evening')) timePeriod = 'Evening';
       
       filters['availableTimes'] = [timePeriod];
@@ -125,8 +126,9 @@ class _FindTeachersScreenState extends State<FindTeachersScreen>
     
     // Add price filter based on class size
     double maxPrice = 4000; // Default for 1 student
-    if (_selectedClassSize.contains('3 Students')) maxPrice = 3000;
-    else if (_selectedClassSize.contains('5 Students')) maxPrice = 2000;
+    if (_selectedClassSize.contains('3 Students')) {
+      maxPrice = 3000;
+    } else if (_selectedClassSize.contains('5 Students')) maxPrice = 2000;
     
     filters['maxPrice'] = maxPrice;
     

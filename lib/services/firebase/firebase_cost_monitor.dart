@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart' show debugPrint;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Simple Firebase cost monitoring service
@@ -22,7 +23,7 @@ class FirebaseCostMonitor {
       final currentCount = prefs.getInt(key) ?? 0;
       await prefs.setInt(key, currentCount + 1);
     } catch (e) {
-      print('Error incrementing counter: $e');
+      debugPrint('Error incrementing counter: $e');
     }
   }
   
@@ -35,7 +36,7 @@ class FirebaseCostMonitor {
         'writes': prefs.getInt(_firebaseWriteKey) ?? 0,
       };
     } catch (e) {
-      print('Error getting Firebase operation counts: $e');
+      debugPrint('Error getting Firebase operation counts: $e');
       return {'reads': 0, 'writes': 0};
     }
   }
@@ -47,7 +48,7 @@ class FirebaseCostMonitor {
       await prefs.remove(_firebaseReadKey);
       await prefs.remove(_firebaseWriteKey);
     } catch (e) {
-      print('Error resetting counters: $e');
+      debugPrint('Error resetting counters: $e');
     }
   }
 }

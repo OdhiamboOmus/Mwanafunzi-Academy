@@ -1,6 +1,5 @@
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
-import '../../data/models/transaction_model.dart';
 import 'widgets/transaction_list_widget.dart';
 
 // Financial overview tab following Flutter Lite rules (<150 lines)

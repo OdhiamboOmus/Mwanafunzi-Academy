@@ -1,7 +1,5 @@
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
-import '../../../data/models/booking_model.dart';
-import '../../../core/constants.dart';
 
 // Booking schedule info widget with logging
 class BookingScheduleInfo extends StatelessWidget {

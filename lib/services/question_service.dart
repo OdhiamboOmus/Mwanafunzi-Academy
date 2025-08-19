@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../core/services/storage_service.dart';
-import '../data/models/lesson_model.dart';
 import 'lesson_service_core.dart';
 
 /// Enhanced Question service for handling embedded questions within lesson sections

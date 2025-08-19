@@ -2,11 +2,9 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'teacher_dashboard_controller.dart';
 import 'teacher_navigation_handlers.dart';
-import 'widgets/booking_card_widget.dart';
 import 'widgets/teacher_bookings_section.dart';
 import 'widgets/teacher_welcome_section.dart';
 import 'widgets/teacher_quick_actions.dart';
-import '../../shared/notification_integration_widget.dart';
 import '../shared/notification_integration_widget.dart';
 
 // Teacher home screen following Flutter Lite rules (<150 lines)
@@ -124,7 +122,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
               onPressed: () => context.showNotification(
                 title: 'Notifications',
                 message: 'You have no new notifications',
-                type: NotificationType.info,
+                type: 'info',
               ),
               tooltip: 'Notifications',
             ),

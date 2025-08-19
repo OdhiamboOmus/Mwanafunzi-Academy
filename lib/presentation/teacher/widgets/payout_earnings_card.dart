@@ -6,9 +6,9 @@ class PayoutEarningsCard extends StatelessWidget {
   final Map<String, dynamic> earnings;
 
   const PayoutEarningsCard({
-    Key? key,
+    super.key,
     required this.earnings,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

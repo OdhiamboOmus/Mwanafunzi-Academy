@@ -36,7 +36,7 @@ class TransactionEmptyState extends StatelessWidget {
             'Try adjusting your search or filters',
             style: TextStyle(
               fontSize: 14,
-              color: const Color(0xFF757575),
+              color: Color(0xFF757575),
             ),
           ),
         ],

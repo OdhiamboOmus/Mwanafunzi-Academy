@@ -54,9 +54,10 @@ class CompetitionCardsWidget extends StatelessWidget {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                       Row(
                         children: [
                           Icon(
@@ -116,6 +117,7 @@ class CompetitionCardsWidget extends StatelessWidget {
                         ),
                       ),
                     ],
+                    ),
                   ),
                 ),
               ),

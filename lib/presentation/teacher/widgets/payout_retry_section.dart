@@ -7,9 +7,9 @@ class PayoutRetrySection extends StatelessWidget {
   final List<Map<String, dynamic>>? retryHistory;
 
   const PayoutRetrySection({
-    Key? key,
+    super.key,
     required this.retryHistory,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
