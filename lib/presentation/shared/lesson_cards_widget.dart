@@ -59,70 +59,34 @@ class _LessonCardsWidgetState extends State<LessonCardsWidget> {
         ),
       ),
       const SizedBox(height: 8),
-      // Premium scrollable cards with visual cues
-      Stack(
-        children: [
-          SizedBox(
-            height: 220,
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: (index) => setState(() => _currentPage = index),
-              itemCount: _getLessonCards().length,
-              itemBuilder: (context, index) => LessonCardItem(
-                card: _getLessonCards()[index],
-                selectedGrade: widget.selectedGrade,
-              ),
-            ),
-          ),
-          // Left scroll indicator
-          if (_currentPage > 0)
-            Positioned(
-              left: 0,
-              top: 0,
-              bottom: 0,
-              child: Container(
-                width: 20,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [Colors.white.withValues(alpha: 0.8), Colors.transparent],
-                  ),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.chevron_left,
-                    color: Color(0xFF50E801),
-                    size: 20,
-                  ),
+      // Subject cards directly in the UI without container
+      SizedBox(
+        height: 220,
+        child: PageView.builder(
+          controller: _pageController,
+          onPageChanged: (index) => setState(() => _currentPage = index),
+          itemCount: _getLessonCards().length,
+          physics: const BouncingScrollPhysics(),
+          scrollDirection: Axis.horizontal,
+          itemBuilder: (context, index) {
+            final isCurrentPage = index == _currentPage;
+            final scale = isCurrentPage ? 1.0 : 0.9;
+            final opacity = isCurrentPage ? 1.0 : 0.7;
+            
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              transform: Matrix4.identity()..scale(scale),
+              child: Opacity(
+                opacity: opacity,
+                child: LessonCardItem(
+                  card: _getLessonCards()[index],
+                  selectedGrade: widget.selectedGrade,
                 ),
               ),
-            ),
-          // Right scroll indicator
-          if (_currentPage < _getLessonCards().length - 1)
-            Positioned(
-              right: 0,
-              top: 0,
-              bottom: 0,
-              child: Container(
-                width: 20,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.centerRight,
-                    end: Alignment.centerLeft,
-                    colors: [Colors.white.withValues(alpha: 0.8), Colors.transparent],
-                  ),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.chevron_right,
-                    color: Color(0xFF50E801),
-                    size: 20,
-                  ),
-                ),
-              ),
-            ),
-        ],
+            );
+          },
+        ),
       ),
     ],
   );

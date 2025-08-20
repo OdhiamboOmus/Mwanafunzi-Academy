@@ -27,6 +27,7 @@ class LessonContentCard extends StatelessWidget {
       ],
     ),
     child: Column(
+      mainAxisSize: MainAxisSize.min, // Add this to allow shrink-wrapping
       children: [
         // Example badge
         Container(
@@ -76,7 +77,8 @@ class LessonContentCard extends StatelessWidget {
         const SizedBox(height: 32),
 
         // Content area
-        Expanded(
+        Flexible(
+          fit: FlexFit.loose, // Use Flexible instead of Expanded with loose fit
           child: Column(
             children: [
               _buildCountingExample('🍎', '1 apple'),

@@ -1,96 +1,75 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 // Lesson navigation bar following Flutter Lite rules (<150 lines)
 class LessonNavigationBar extends StatelessWidget {
   final VoidCallback onPrevious;
   final VoidCallback onNext;
+  final VoidCallback onComments;
   final bool canGoBack;
 
   const LessonNavigationBar({
     super.key,
     required this.onPrevious,
     required this.onNext,
+    required this.onComments,
     this.canGoBack = true,
   });
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: const Color(0xFF6366F1),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.1),
-          blurRadius: 10,
-          offset: const Offset(0, -2),
-        ),
-      ],
-    ),
-    child: SafeArea(
-      child: Row(
-        children: [
-          // Previous button
-          Expanded(
-            flex: 1,
-            child: canGoBack
-                ? TextButton.icon(
-                    onPressed: onPrevious,
-                    icon: const Icon(
-                      Icons.chevron_left,
-                      color: Color(0xFF50E801),
-                      size: 20,
-                    ),
-                    label: const Text(
-                      'Previous',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF50E801),
-                      ),
-                    ),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      backgroundColor: Colors.white.withValues(alpha: 0.1),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                    ),
-                  )
-                : const SizedBox(),
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      // Previous button (smaller)
+      if (canGoBack)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: FloatingActionButton.small(
+            onPressed: onPrevious,
+            backgroundColor: Colors.grey[200],
+            foregroundColor: Colors.black,
+            elevation: 2,
+            child: const Icon(Icons.chevron_left, size: 20),
           ),
-          const SizedBox(width: 16),
-
-          // Next button
-          Expanded(
-            flex: 1,
-            child: ElevatedButton.icon(
-              onPressed: onNext,
-              icon: const Icon(
-                Icons.chevron_right,
-                color: Colors.white,
-                size: 20,
-              ),
-              label: const Text(
-                'Next',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF50E801),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
-                ),
-                elevation: 8,
-                shadowColor: const Color(0xFF50E801).withValues(alpha: 0.4),
-              ),
+        ),
+      // Comments button (medium)
+      Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: FloatingActionButton(
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            onComments();
+          },
+          backgroundColor: const Color(0xFF50E801),
+          foregroundColor: Colors.white,
+          elevation: 4,
+          child: const Text(
+            'C',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ],
+        ),
       ),
-    ),
+      // Next button (larger, primary action)
+      Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: FloatingActionButton.extended(
+          onPressed: onNext,
+          backgroundColor: const Color(0xFF50E801),
+          foregroundColor: Colors.white,
+          elevation: 6,
+          icon: const Icon(Icons.chevron_right, size: 24),
+          label: const Text(
+            'Next',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    ],
   );
 }

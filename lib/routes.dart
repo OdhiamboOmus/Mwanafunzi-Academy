@@ -8,6 +8,7 @@ import 'presentation/admin/admin_quiz_upload_screen.dart';
 import 'presentation/student/student_home_screen.dart';
 import 'presentation/student/settings_screen.dart';
 import 'presentation/student/video_screen.dart';
+import 'presentation/student/lesson_detail_screen.dart';
 import 'presentation/parent/parent_home_screen.dart';
 import 'presentation/teacher/teacher_home_screen.dart';
 
@@ -23,6 +24,7 @@ class AppRoutes {
   static const String parentHome = '/parent-home';
   static const String teacherHome = '/teacher-home';
   static const String video = '/video';
+  static const String lessonDetail = '/lesson-detail';
 
   static Map<String, WidgetBuilder> get routes => {
     signIn: (context) => const SignInScreen(),
@@ -36,5 +38,11 @@ class AppRoutes {
     parentHome: (context) => const ParentHomeScreen(),
     teacherHome: (context) => const TeacherHomeScreen(),
     video: (context) => const VideoScreen(selectedGrade: 'Grade 1'),
+    lessonDetail: (context) => const LessonDetailScreen(
+      subject: 'Mathematics',
+      grade: 'Grade 1',
+      icon: Icons.calculate,
+      progress: 0.5,
+    ),
   };
 }

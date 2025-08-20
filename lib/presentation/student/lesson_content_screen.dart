@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../shared/lesson_content_card.dart';
-import '../shared/lesson_navigation_bar.dart';
 import '../shared/section_comment_sheet.dart';
 import 'package:mwanafunzi_academy/core/service_locator.dart';
 import 'package:mwanafunzi_academy/services/comment_service.dart';
@@ -55,12 +54,12 @@ class _LessonContentScreenState extends State<LessonContentScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF6366F1),
+    backgroundColor: Colors.white,
     appBar: AppBar(
-      backgroundColor: const Color(0xFF6366F1),
+      backgroundColor: Colors.white,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.close, color: Colors.white, size: 24),
+        icon: const Icon(Icons.close, color: Colors.black, size: 24),
         onPressed: () => Navigator.pop(context),
       ),
       title: Text(
@@ -68,53 +67,104 @@ class _LessonContentScreenState extends State<LessonContentScreen> {
         style: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: Colors.black,
         ),
       ),
       centerTitle: true,
-      actions: [
-        Container(
-          margin: const EdgeInsets.only(right: 8),
-          child: IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF50E801),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF50E801).withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+    ),
+    body: Stack(
+      children: [
+        // Main content
+        ListView(
+          children: [
+            const SizedBox(height: kToolbarHeight + 20), // Space for app bar
+            LessonContentCard(
+              lessonTitle: widget.lessonTitle,
+              subject: widget.subject,
+            ),
+            const SizedBox(height: 80), // Space for smaller buttons
+          ],
+        ),
+        // Floating action buttons at the bottom
+        Positioned(
+          bottom: 16,
+          left: 0,
+          right: 0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              // Previous button - smaller
+              if (widget.currentStep > 1)
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _goToPrevious,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(Icons.chevron_left, size: 20, color: Colors.black),
+                    ),
                   ),
-                ],
-              ),
-              child: Text(
-                '$_commentCount',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                ),
+              // Comments button - smaller text button
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _showComments,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF50E801),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Comments',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-            onPressed: _showComments,
+              // Next button - smaller
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _goToNext,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF50E801),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.chevron_right, size: 20, color: Colors.white),
+                        SizedBox(width: 4),
+                        Text(
+                          'Next',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
-    ),
-    body: Column(
-      children: [
-        Expanded(
-          child: LessonContentCard(
-            lessonTitle: widget.lessonTitle,
-            subject: widget.subject,
-          ),
-        ),
-        LessonNavigationBar(
-          onPrevious: _goToPrevious,
-          onNext: _goToNext,
-          canGoBack: widget.currentStep > 1,
         ),
       ],
     ),

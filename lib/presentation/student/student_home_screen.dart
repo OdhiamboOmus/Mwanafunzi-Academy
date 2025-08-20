@@ -25,7 +25,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   final ProgressService _progressService = ServiceLocator().progressService;
   
   String _studentName = 'Loading...';
-  final String _selectedGrade = '';
   bool _isLoading = true;
   int _selectedBottomNavIndex = 0;
   bool _isRefreshing = false;
@@ -44,9 +43,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       backgroundColor: Colors.white,
       elevation: 0,
       title: const Text(
-        'Student Dashboard',
+        'Mwanafunzi Academy',
         style: TextStyle(
-          fontSize: 20,
+          fontSize: 16,
           fontWeight: FontWeight.w600,
           color: Colors.black,
         ),
@@ -172,6 +171,19 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       userService: _userService,
       motivationService: _motivationService,
       userPoints: _userPoints,
+      onGradeChanged: (grade) {
+        // Navigate to grade content when grade is selected
+        Navigator.pushNamed(
+          context,
+          AppRoutes.lessonDetail,
+          arguments: {
+            'subject': 'Mathematics', // Default subject, could be made dynamic
+            'grade': grade,
+            'icon': Icons.calculate,
+            'progress': 0.5,
+          },
+        );
+      },
     );
   }
 
