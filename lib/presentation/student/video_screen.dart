@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mwanafunzi_academy/core/service_locator.dart' show ServiceLocator;
 import 'package:mwanafunzi_academy/data/models/video_model.dart';
 import 'package:mwanafunzi_academy/services/firebase/video_service.dart';
+import 'package:mwanafunzi_academy/routes.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../shared/grade_selector_widget.dart';
 import '../shared/bottom_navigation_widget.dart';
@@ -55,19 +56,39 @@ class _VideoScreenState extends State<VideoScreen> {
       backgroundColor: Colors.white,
       elevation: 0,
       title: const Text(
-        'Video Learning',
+        'Mwanafunzi Academy',
         style: TextStyle(
-          fontSize: 20,
+          fontSize: 16,
           fontWeight: FontWeight.w600,
           color: Colors.black,
         ),
       ),
       centerTitle: true,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.settings, color: Color(0xFF50E801)),
+          onPressed: () {
+            Navigator.pushNamed(context, AppRoutes.settings);
+          },
+        ),
+      ],
     ),
     body: _buildBody(),
     bottomNavigationBar: BottomNavigationWidget(
-      selectedIndex: 2,
-      onTabChanged: (index) => Navigator.popUntil(context, (route) => route.isFirst),
+      selectedIndex: 2, // Video tab is selected
+      onTabChanged: (index) {
+        if (index == 0) { // Home tab
+          Navigator.popUntil(context, (route) => route.isFirst);
+        } else if (index == 1) { // Quiz tab
+          Navigator.popUntil(context, (route) => route.isFirst);
+          Navigator.pushNamed(context, AppRoutes.quizChallenge);
+        } else if (index == 3) { // Teachers tab
+          Navigator.popUntil(context, (route) => route.isFirst);
+          Navigator.pushNamed(context, AppRoutes.findTeachers);
+        }
+        // If it's the video tab, just update the local state
+        setState(() {});
+      },
     ),
   );
 

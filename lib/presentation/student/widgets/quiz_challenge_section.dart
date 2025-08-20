@@ -75,7 +75,7 @@ class QuizChallengeSection extends StatelessWidget {
           ),
           Container(
             margin: const EdgeInsets.only(left: 80),
-            height: 280,
+            height: 200,
             child: PageView.builder(
               controller: pageController,
               onPageChanged: onPageChanged,

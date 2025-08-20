@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:developer' as developer;
+import 'package:mwanafunzi_academy/routes.dart';
 import '../shared/bottom_navigation_widget.dart';
 import 'home_tutoring_screen.dart';
 import 'widgets/teacher_toggle_buttons.dart';
@@ -19,7 +20,6 @@ class FindTeachersScreen extends StatefulWidget {
 
 class _FindTeachersScreenState extends State<FindTeachersScreen>
     with TickerProviderStateMixin {
-  int _selectedBottomNavIndex = 3;
   bool _isOnlineClassesSelected = true;
   bool _showFilters = false;
   bool _isLoading = true;
@@ -161,14 +161,22 @@ class _FindTeachersScreenState extends State<FindTeachersScreen>
       backgroundColor: Colors.white,
       elevation: 0,
       title: const Text(
-        'Find Teachers',
+        'Mwanafunzi Academy',
         style: TextStyle(
-          fontSize: 20,
+          fontSize: 16,
           fontWeight: FontWeight.w600,
           color: Colors.black,
         ),
       ),
       centerTitle: true,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.settings, color: Color(0xFF50E801)),
+          onPressed: () {
+            Navigator.pushNamed(context, AppRoutes.settings);
+          },
+        ),
+      ],
     ),
     body: Stack(
       children: [
@@ -216,8 +224,20 @@ class _FindTeachersScreenState extends State<FindTeachersScreen>
       ],
     ),
     bottomNavigationBar: BottomNavigationWidget(
-      selectedIndex: _selectedBottomNavIndex,
-      onTabChanged: (index) => setState(() => _selectedBottomNavIndex = index),
+      selectedIndex: 3, // Teachers tab is selected
+      onTabChanged: (index) {
+        if (index == 0) { // Home tab
+          Navigator.popUntil(context, (route) => route.isFirst);
+        } else if (index == 1) { // Quiz tab
+          Navigator.popUntil(context, (route) => route.isFirst);
+          Navigator.pushNamed(context, AppRoutes.quizChallenge);
+        } else if (index == 2) { // Video tab
+          Navigator.popUntil(context, (route) => route.isFirst);
+          Navigator.pushNamed(context, AppRoutes.video);
+        }
+        // If it's the teachers tab, just update the local state
+        setState(() {});
+      },
     ),
   );
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mwanafunzi_academy/routes.dart';
 import '../shared/bottom_navigation_widget.dart';
 import 'widgets/quiz_challenge_section.dart';
 import 'widgets/quiz_competitions_section.dart';
@@ -13,7 +14,6 @@ class QuizChallengeScreen extends StatefulWidget {
 class _QuizChallengeScreenState extends State<QuizChallengeScreen> {
   final PageController _pageController = PageController(viewportFraction: 0.85);
   int _currentPage = 0;
-  int _selectedBottomNavIndex = 1;
   int _selectedCompetitionTab = 0;
 
   @override
@@ -29,14 +29,38 @@ class _QuizChallengeScreenState extends State<QuizChallengeScreen> {
       backgroundColor: Colors.white,
       elevation: 0,
       title: const Text(
-        'Quiz Challenge',
+        'Mwanafunzi Academy',
         style: TextStyle(
-          fontSize: 20,
+          fontSize: 16,
           fontWeight: FontWeight.w600,
           color: Colors.black,
         ),
       ),
       centerTitle: true,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.settings, color: Color(0xFF50E801)),
+          onPressed: () {
+            Navigator.pushNamed(context, AppRoutes.settings);
+          },
+        ),
+      ],
+    ),
+    bottomNavigationBar: BottomNavigationWidget(
+      selectedIndex: 1, // Quiz tab is selected
+      onTabChanged: (index) {
+        if (index == 0) { // Home tab
+          Navigator.popUntil(context, (route) => route.isFirst);
+        } else if (index == 2) { // Video tab
+          Navigator.popUntil(context, (route) => route.isFirst);
+          Navigator.pushNamed(context, AppRoutes.video);
+        } else if (index == 3) { // Teachers tab
+          Navigator.popUntil(context, (route) => route.isFirst);
+          Navigator.pushNamed(context, AppRoutes.findTeachers);
+        }
+        // If it's the quiz tab, just update the local state
+        setState(() {});
+      },
     ),
     body: SingleChildScrollView(
       child: Column(
@@ -57,10 +81,6 @@ class _QuizChallengeScreenState extends State<QuizChallengeScreen> {
           const SizedBox(height: 32),
         ],
       ),
-    ),
-    bottomNavigationBar: BottomNavigationWidget(
-      selectedIndex: _selectedBottomNavIndex,
-      onTabChanged: (index) => setState(() => _selectedBottomNavIndex = index),
     ),
   );
 }

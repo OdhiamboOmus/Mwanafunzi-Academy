@@ -43,7 +43,7 @@ class _QuizInterfaceScreenState extends State<QuizInterfaceScreen>
   String _errorMessage = '';
   
   // Quiz data
-  late List<quiz.QuizQuestion> _questions;
+  List<quiz.QuizQuestion> _questions = [];
   final QuizService _quizService = QuizService();
   final FirestoreService _firestoreService = FirestoreService();
   late LessonQuizProgressService _progressService;
@@ -68,7 +68,7 @@ class _QuizInterfaceScreenState extends State<QuizInterfaceScreen>
     _progressAnimation =
         Tween<double>(
           begin: 0.0,
-          end: (_currentQuestionIndex + 1) / _questions.length,
+          end: 0.0, // Will be updated when questions are loaded
         ).animate(
           CurvedAnimation(parent: _progressController, curve: Curves.easeInOut),
         );
@@ -115,6 +115,14 @@ class _QuizInterfaceScreenState extends State<QuizInterfaceScreen>
       setState(() {
         _isLoading = false;
         _hasError = false;
+        
+        // Update progress animation after questions are loaded
+        _progressAnimation = Tween<double>(
+          begin: 0.0,
+          end: 1.0,
+        ).animate(
+          CurvedAnimation(parent: _progressController, curve: Curves.easeInOut),
+        );
       });
     } catch (e) {
       debugPrint('Error loading quiz questions: $e');
@@ -139,13 +147,6 @@ class _QuizInterfaceScreenState extends State<QuizInterfaceScreen>
     appBar: AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black),
-        onPressed: () {
-          HapticFeedback.lightImpact();
-          Navigator.pop(context);
-        },
-      ),
       title: Column(
         children: [
           Text(
@@ -157,7 +158,7 @@ class _QuizInterfaceScreenState extends State<QuizInterfaceScreen>
             ),
           ),
           Text(
-            'Question ${_currentQuestionIndex + 1} of ${_questions.length}',
+            'Question ${_currentQuestionIndex + 1} of ${_questions.isNotEmpty ? _questions.length : 1}',
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w400,
@@ -297,7 +298,7 @@ class _QuizInterfaceScreenState extends State<QuizInterfaceScreen>
           const SizedBox(height: 40),
           Expanded(
             child: ListView.builder(
-              itemCount: _getCurrentQuestion().options.length,
+              itemCount: _getCurrentQuestion().options.isNotEmpty ? _getCurrentQuestion().options.length : 0,
               itemBuilder: (context, index) => QuizAnswerOption(
                 index: index,
                 option: _getCurrentQuestion().options[index],
@@ -326,7 +327,7 @@ class _QuizInterfaceScreenState extends State<QuizInterfaceScreen>
   void _nextQuestion() {
     HapticFeedback.lightImpact();
 
-    if (_currentQuestionIndex < _questions.length - 1) {
+    if (_questions.isNotEmpty && _currentQuestionIndex < _questions.length - 1) {
       setState(() {
         _currentQuestionIndex++;
         _selectedAnswerIndex = null;
@@ -337,8 +338,8 @@ class _QuizInterfaceScreenState extends State<QuizInterfaceScreen>
       _progressController.reset();
       _progressAnimation =
           Tween<double>(
-            begin: _currentQuestionIndex / _questions.length,
-            end: (_currentQuestionIndex + 1) / _questions.length,
+            begin: _questions.isNotEmpty ? _currentQuestionIndex / _questions.length : 0.0,
+            end: _questions.isNotEmpty ? (_currentQuestionIndex + 1) / _questions.length : 1.0,
           ).animate(
             CurvedAnimation(
               parent: _progressController,
@@ -356,7 +357,7 @@ class _QuizInterfaceScreenState extends State<QuizInterfaceScreen>
   /// Record quiz attempt to Firebase and update lesson progress
   Future<void> _recordQuizAttempt() async {
     try {
-      final answers = List<int>.filled(_questions.length, -1);
+      final answers = List<int>.filled(_questions.isNotEmpty ? _questions.length : 0, -1);
       if (_selectedAnswerIndex != null) {
         answers[_currentQuestionIndex] = _selectedAnswerIndex!;
       }
@@ -408,5 +409,10 @@ class _QuizInterfaceScreenState extends State<QuizInterfaceScreen>
     }
   }
 
-  quiz.QuizQuestion _getCurrentQuestion() => _questions[_currentQuestionIndex];
+  quiz.QuizQuestion _getCurrentQuestion() {
+    if (_questions.isEmpty) {
+      throw Exception('No questions available');
+    }
+    return _questions[_currentQuestionIndex];
+  }
 }

@@ -29,90 +29,94 @@ class QuizCardWidget extends StatelessWidget {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE5E7EB),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
                       card.icon,
                       color: const Color(0xFF6B7280),
-                      size: 24,
+                      size: 16,
                     ),
                   ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       color: const Color(0xFF50E801).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
                       Icons.diamond,
                       color: Color(0xFF50E801),
-                      size: 16,
+                      size: 12,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 6),
               Text(
                 card.title,
                 style: const TextStyle(
-                  fontSize: 20,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: Colors.black,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 2),
               Text(
                 card.description,
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 9,
                   color: Color(0xFF6B7280),
-                  height: 1.4,
+                  height: 1.1,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 6),
               Row(
                 children: [
-                  _buildInfoChip('${card.questionCount} Questions', Icons.quiz),
+                  Expanded(
+                    child: _buildInfoChip('${card.questionCount} Questions', Icons.quiz),
+                  ),
                   const SizedBox(width: 12),
-                  _buildInfoChip(card.duration, Icons.access_time),
+                  Expanded(
+                    child: _buildInfoChip(card.duration, Icons.access_time),
+                  ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 6),
               Text(
                 'Best Score',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 9,
                   fontWeight: FontWeight.w500,
                   color: Colors.grey.shade700,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 2),
               LinearProgressIndicator(
                 value: card.bestScore / 100,
                 backgroundColor: const Color(0xFFE5E7EB),
                 valueColor: const AlwaysStoppedAnimation<Color>(
                   Color(0xFF50E801),
                 ),
-                minHeight: 6,
-                borderRadius: BorderRadius.circular(3),
+                minHeight: 2,
+                borderRadius: BorderRadius.circular(1),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 6),
               SizedBox(
                 width: double.infinity,
-                height: 48,
+                height: 28,
                 child: ElevatedButton(
                   onPressed: () {
                     HapticFeedback.lightImpact();
@@ -123,22 +127,15 @@ class QuizCardWidget extends StatelessWidget {
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(6),
                     ),
                   ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Practice Quiz',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Icon(Icons.arrow_forward, size: 18),
-                    ],
+                  child: const Text(
+                    'Start',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -150,22 +147,25 @@ class QuizCardWidget extends StatelessWidget {
   );
 
   Widget _buildInfoChip(String text, IconData icon) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     decoration: BoxDecoration(
       color: const Color(0xFF50E801).withValues(alpha: 0.1),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: const Color(0xFF50E801)),
+        Icon(icon, size: 12, color: const Color(0xFF50E801)),
         const SizedBox(width: 4),
-        Text(
-          text,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF50E801),
+        Flexible(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF50E801),
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],

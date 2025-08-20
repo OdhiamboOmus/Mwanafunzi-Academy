@@ -52,10 +52,10 @@ class QuizCompetitionsSection extends StatelessWidget {
         Row(
           children: [
             _buildCompetitionTab('All', 0),
-            const SizedBox(width: 12),
-            _buildCompetitionTab('School vs School', 1),
-            const SizedBox(width: 12),
-            _buildCompetitionTab('Student vs Student', 2),
+            const SizedBox(width: 8),
+            _buildCompetitionTab('School', 1),
+            const SizedBox(width: 8),
+            _buildCompetitionTab('Student', 2),
           ],
         ),
         const SizedBox(height: 20),
@@ -98,12 +98,12 @@ class QuizCompetitionsSection extends StatelessWidget {
       onTabChanged(index);
     },
     child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: selectedTab == index
             ? const Color(0xFF50E801)
             : Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: selectedTab == index
               ? const Color(0xFF50E801)
@@ -113,7 +113,7 @@ class QuizCompetitionsSection extends StatelessWidget {
       child: Text(
         title,
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: FontWeight.w600,
           color: selectedTab == index ? Colors.white : const Color(0xFF6B7280),
         ),

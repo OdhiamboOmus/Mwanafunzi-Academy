@@ -97,15 +97,25 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           ),
     bottomNavigationBar: BottomNavigationWidget(
       selectedIndex: _selectedBottomNavIndex,
-      onTabChanged: (index) {
-        if (index == 2) { // Video tab
-          Navigator.pushNamed(context, AppRoutes.video);
-        } else {
-          setState(() => _selectedBottomNavIndex = index);
-        }
-      },
+      onTabChanged: _handleNavigation,
     ),
   );
+void _handleNavigation(int index) {
+  debugPrint('🔍 DEBUG: Handling navigation for index: $index');
+  if (index == 1) { // Quiz tab
+    debugPrint('🔍 DEBUG: Navigating to Quiz Challenge screen');
+    Navigator.pushNamed(context, AppRoutes.quizChallenge);
+  } else if (index == 2) { // Video tab
+    debugPrint('🔍 DEBUG: Navigating to Video screen');
+    Navigator.pushNamed(context, AppRoutes.video);
+  } else if (index == 3) { // Teachers tab
+    debugPrint('🔍 DEBUG: Navigating to Find Teachers screen');
+    Navigator.pushNamed(context, AppRoutes.findTeachers);
+  } else {
+    debugPrint('🔍 DEBUG: Navigation to tab $index - Only updating UI state');
+    setState(() => _selectedBottomNavIndex = index);
+  }
+}
 
 
 
