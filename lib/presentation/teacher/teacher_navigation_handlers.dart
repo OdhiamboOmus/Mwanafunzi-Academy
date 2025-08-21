@@ -18,28 +18,4 @@ class TeacherNavigationHandlers {
     developer.log('TeacherNavigationHandlers: Navigate to my classes');
     // TODO: Implement navigation
   }
-
-  // Navigate to create assignment with logging
-  void navigateToCreateAssignment() {
-    developer.log('TeacherNavigationHandlers: Navigate to create assignment');
-    // TODO: Implement navigation
-  }
-
-  // Navigate to student management with logging
-  void navigateToStudentManagement() {
-    developer.log('TeacherNavigationHandlers: Navigate to student management');
-    // TODO: Implement navigation
-  }
-
-  // Navigate to grades with logging
-  void navigateToGrades() {
-    developer.log('TeacherNavigationHandlers: Navigate to grades');
-    // TODO: Implement navigation
-  }
-
-  // Navigate to attendance with logging
-  void navigateToAttendance() {
-    developer.log('TeacherNavigationHandlers: Navigate to attendance');
-    // TODO: Implement navigation
-  }
 }

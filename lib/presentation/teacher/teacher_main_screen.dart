@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'teacher_home_screen.dart';
 import 'teacher_payout_dashboard_screen.dart';
+import 'teacher_profile_setup_screen.dart';
 import 'widgets/teacher_bottom_navigation.dart';
+import 'widgets/booking_card_widget.dart';
+import '../../data/models/booking_model.dart';
+import '../shared/lesson_card_item.dart';
+import '../shared/grade_selector_widget.dart';
 
 class TeacherMainScreen extends StatefulWidget {
   const TeacherMainScreen({super.key});
@@ -16,9 +21,8 @@ class _TeacherMainScreenState extends State<TeacherMainScreen> {
   final List<Widget> _screens = [
     const TeacherHomeContent(),
     const TeacherClassesScreen(),
-    const TeacherAssignmentsScreen(),
-    const TeacherGradesScreen(),
-    TeacherPayoutDashboardScreen(teacherId: 'default_teacher_id'), // TODO: Get actual teacherId
+    TeacherPayoutDashboardScreen(teacherId: 'current_teacher_id'), // TODO: Get actual teacherId
+    const TeacherProfileSetupScreen(),
   ];
 
   @override
@@ -39,7 +43,7 @@ class TeacherHomeContent extends StatelessWidget {
   Widget build(BuildContext context) => const TeacherHomeScreen();
 }
 
-// Placeholder screens for other tabs
+// Classes screen using existing booking widgets
 class TeacherClassesScreen extends StatelessWidget {
   const TeacherClassesScreen({super.key});
 
@@ -59,25 +63,103 @@ class TeacherClassesScreen extends StatelessWidget {
       ),
       centerTitle: true,
     ),
-    body: const Center(
+    body: SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.class_, size: 80, color: Color(0xFF50E801)),
-          SizedBox(height: 16),
-          Text(
-            'My Classes',
+          const Text(
+            'Active Classes',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 18,
               fontWeight: FontWeight.w600,
               color: Colors.black,
             ),
           ),
-          SizedBox(height: 8),
-          Text(
-            'View and manage your teaching classes here',
-            style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)),
-            textAlign: TextAlign.center,
+          const SizedBox(height: 16),
+          // Using booking card widget to display classes
+          BookingCardWidget(
+            booking: BookingModel(
+              id: 'class_1',
+              teacherId: 'teacher_1',
+              parentId: 'parent_1',
+              studentId: 'student_1',
+              subject: 'Mathematics',
+              numberOfWeeks: 4,
+              weeklyRate: 2500.0,
+              totalAmount: 10000.0,
+              platformFee: 2000.0,
+              teacherPayout: 8000.0,
+              dayOfWeek: 'Monday',
+              startTime: '10:00',
+              duration: 60,
+              startDate: DateTime(2024, 1, 15),
+              endDate: DateTime(2024, 2, 12),
+              status: 'active',
+              createdAt: DateTime(2024, 1, 10),
+            ),
+            onLessonCompleted: (lessonId) {
+              // Handle lesson completion
+            },
+          ),
+          const SizedBox(height: 12),
+          BookingCardWidget(
+            booking: BookingModel(
+              id: 'class_2',
+              teacherId: 'teacher_1',
+              parentId: 'parent_2',
+              studentId: 'student_2',
+              subject: 'English',
+              numberOfWeeks: 6,
+              weeklyRate: 2000.0,
+              totalAmount: 12000.0,
+              platformFee: 2400.0,
+              teacherPayout: 9600.0,
+              dayOfWeek: 'Wednesday',
+              startTime: '14:00',
+              duration: 45,
+              startDate: DateTime(2024, 1, 17),
+              endDate: DateTime(2024, 2, 28),
+              status: 'active',
+              createdAt: DateTime(2024, 1, 12),
+            ),
+            onLessonCompleted: (lessonId) {
+              // Handle lesson completion
+            },
+          ),
+          const SizedBox(height: 32),
+          const Text(
+            'Upcoming Classes',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 16),
+          BookingCardWidget(
+            booking: BookingModel(
+              id: 'class_3',
+              teacherId: 'teacher_1',
+              parentId: 'parent_3',
+              studentId: 'student_3',
+              subject: 'Science',
+              numberOfWeeks: 8,
+              weeklyRate: 3000.0,
+              totalAmount: 24000.0,
+              platformFee: 4800.0,
+              teacherPayout: 19200.0,
+              dayOfWeek: 'Friday',
+              startTime: '16:00',
+              duration: 60,
+              startDate: DateTime(2024, 2, 1),
+              endDate: DateTime(2024, 3, 29),
+              status: 'payment_pending',
+              createdAt: DateTime(2024, 1, 20),
+            ),
+            onLessonCompleted: (lessonId) {
+              // Handle lesson completion
+            },
           ),
         ],
       ),
@@ -85,92 +167,3 @@ class TeacherClassesScreen extends StatelessWidget {
   );
 }
 
-class TeacherAssignmentsScreen extends StatelessWidget {
-  const TeacherAssignmentsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: Colors.white,
-    appBar: AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      title: const Text(
-        'Assignments',
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: Colors.black,
-        ),
-      ),
-      centerTitle: true,
-    ),
-    body: const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.add_task, size: 80, color: Color(0xFF50E801)),
-          SizedBox(height: 16),
-          Text(
-            'Assignments',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Create and manage student assignments here',
-            style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-class TeacherGradesScreen extends StatelessWidget {
-  const TeacherGradesScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: Colors.white,
-    appBar: AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      title: const Text(
-        'Grades',
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: Colors.black,
-        ),
-      ),
-      centerTitle: true,
-    ),
-    body: const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.grade, size: 80, color: Color(0xFF50E801)),
-          SizedBox(height: 16),
-          Text(
-            'Grades',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Manage student grades and performance here',
-            style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    ),
-  );
-}

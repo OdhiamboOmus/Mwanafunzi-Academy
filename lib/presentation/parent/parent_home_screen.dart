@@ -82,12 +82,6 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
                   ),
                   const SizedBox(height: 12),
                   ParentHomeWidgets.buildMainActionCard(
-                    title: 'Assignments',
-                    icon: Icons.assignment,
-                    onTap: () {},
-                  ),
-                  const SizedBox(height: 12),
-                  ParentHomeWidgets.buildMainActionCard(
                     title: 'Teacher Communication',
                     icon: Icons.message,
                     onTap: () {},

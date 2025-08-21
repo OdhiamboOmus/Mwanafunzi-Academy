@@ -156,10 +156,6 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                       // Quick Actions
                       TeacherQuickActions(
                         onMyClasses: _navigationHandlers.navigateToMyClasses,
-                        onCreateAssignment: _navigationHandlers.navigateToCreateAssignment,
-                        onStudentManagement: _navigationHandlers.navigateToStudentManagement,
-                        onGrades: _navigationHandlers.navigateToGrades,
-                        onAttendance: _navigationHandlers.navigateToAttendance,
                       ),
                     ],
                   ),

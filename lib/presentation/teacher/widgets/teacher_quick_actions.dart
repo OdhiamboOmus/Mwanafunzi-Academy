@@ -5,18 +5,10 @@ import '../../../core/constants.dart';
 // Teacher quick actions widget with interaction logging
 class TeacherQuickActions extends StatelessWidget {
   final VoidCallback onMyClasses;
-  final VoidCallback onCreateAssignment;
-  final VoidCallback onStudentManagement;
-  final VoidCallback onGrades;
-  final VoidCallback onAttendance;
 
   const TeacherQuickActions({
     super.key,
     required this.onMyClasses,
-    required this.onCreateAssignment,
-    required this.onStudentManagement,
-    required this.onGrades,
-    required this.onAttendance,
   });
 
   @override
@@ -41,30 +33,6 @@ class TeacherQuickActions extends StatelessWidget {
           title: 'My Classes',
           icon: Icons.class_,
           onTap: onMyClasses,
-        ),
-        const SizedBox(height: 12),
-        _buildActionCard(
-          title: 'Create Assignment',
-          icon: Icons.add_task,
-          onTap: onCreateAssignment,
-        ),
-        const SizedBox(height: 12),
-        _buildActionCard(
-          title: 'Student Management',
-          icon: Icons.people,
-          onTap: onStudentManagement,
-        ),
-        const SizedBox(height: 12),
-        _buildActionCard(
-          title: 'Grades',
-          icon: Icons.grade,
-          onTap: onGrades,
-        ),
-        const SizedBox(height: 12),
-        _buildActionCard(
-          title: 'Attendance',
-          icon: Icons.checklist,
-          onTap: onAttendance,
         ),
       ],
     );
