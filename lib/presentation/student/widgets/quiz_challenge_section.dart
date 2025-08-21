@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../quiz_interface_screen.dart';
+import '../../../routes.dart';
 import 'quiz_card_widget.dart';
 import 'subject_indicator_widget.dart';
 import '../../../services/firebase/student_challenge_service.dart';
@@ -96,16 +96,16 @@ class QuizChallengeSection extends StatelessWidget {
     if (card.title == 'Challenge Random Student') {
       _showChallengeDialog(context);
     } else {
-      Navigator.push(
+      // Use named route instead of push to avoid back arrow
+      Navigator.pushNamed(
         context,
-        MaterialPageRoute(
-          builder: (context) => QuizInterfaceScreen(
-            subject: card.title.replaceAll(' Quiz', ''),
-            quizTitle: card.title,
-            grade: 'Grade 1', // Default grade, should be selected by user
-            topic: card.title.replaceAll(' Quiz', ''), // Use subject as topic for now
-          ),
-        ),
+        AppRoutes.quizInterface,
+        arguments: {
+          'subject': card.title.replaceAll(' Quiz', ''),
+          'quizTitle': card.title,
+          'grade': 'Grade 1', // Default grade, should be selected by user
+          'topic': card.title.replaceAll(' Quiz', ''), // Use subject as topic for now
+        },
       );
     }
   }

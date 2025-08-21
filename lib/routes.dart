@@ -11,8 +11,10 @@ import 'presentation/student/video_screen.dart';
 import 'presentation/student/lesson_detail_screen.dart';
 import 'presentation/student/quiz_challenge_screen.dart';
 import 'presentation/student/find_teachers_screen.dart';
-import 'presentation/parent/parent_home_screen.dart';
-import 'presentation/teacher/teacher_home_screen.dart';
+import 'presentation/student/quiz_interface_screen.dart';
+import 'presentation/student/competition_quiz_screen.dart';
+import 'presentation/parent/parent_main_screen.dart';
+import 'presentation/teacher/teacher_main_screen.dart';
 
 class AppRoutes {
   static const String signIn = '/sign-in';
@@ -29,6 +31,8 @@ class AppRoutes {
   static const String quizChallenge = '/quiz-challenge';
   static const String findTeachers = '/find-teachers';
   static const String lessonDetail = '/lesson-detail';
+  static const String quizInterface = '/quiz-interface';
+  static const String competitionQuiz = '/competition-quiz';
 
   static Map<String, WidgetBuilder> get routes => {
     signIn: (context) => const SignInScreen(),
@@ -39,8 +43,8 @@ class AppRoutes {
     adminQuizUpload: (context) => const AdminQuizUploadScreen(),
     studentHome: (context) => const StudentHomeScreen(),
     settings: (context) => const SettingsScreen(),
-    parentHome: (context) => const ParentHomeScreen(),
-    teacherHome: (context) => const TeacherHomeScreen(),
+    parentHome: (context) => const ParentMainScreen(),
+    teacherHome: (context) => const TeacherMainScreen(),
     video: (context) => const VideoScreen(selectedGrade: 'Grade 1'),
     quizChallenge: (context) => const QuizChallengeScreen(),
     findTeachers: (context) => const FindTeachersScreen(),
@@ -50,5 +54,23 @@ class AppRoutes {
       icon: Icons.calculate,
       progress: 0.5,
     ),
+    quizInterface: (context) {
+      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      return QuizInterfaceScreen(
+        subject: args['subject'],
+        quizTitle: args['quizTitle'],
+        grade: args['grade'],
+        topic: args['topic'],
+      );
+    },
+    competitionQuiz: (context) {
+      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      return CompetitionQuizScreen(
+        competitionId: args['competitionId'],
+        studentId: args['studentId'],
+        questions: args['questions'],
+        challenge: args['challenge'],
+      );
+    },
   };
 }

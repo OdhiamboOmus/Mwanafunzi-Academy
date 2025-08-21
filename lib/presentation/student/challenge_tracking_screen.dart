@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../shared/bottom_navigation_widget.dart';
-import 'competition_quiz_screen.dart';
 import '../../../services/firebase/student_challenge_service.dart';
 import '../../../data/models/quiz_model.dart' as quiz;
+import '../../../routes.dart';
 
 class ChallengeTrackingScreen extends StatefulWidget {
   final String studentId;
@@ -77,6 +77,7 @@ class _ChallengeTrackingScreenState extends State<ChallengeTrackingScreen> {
     appBar: AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
+      automaticallyImplyLeading: false, // Remove back arrow
       title: const Text(
         'My Challenges',
         style: TextStyle(
@@ -602,16 +603,15 @@ class _ChallengeTrackingScreenState extends State<ChallengeTrackingScreen> {
 
   void _startCompetition(quiz.StudentChallenge challenge) {
     HapticFeedback.lightImpact();
-    Navigator.push(
+    Navigator.pushNamed(
       context,
-      MaterialPageRoute(
-        builder: (context) => CompetitionQuizScreen(
-          competitionId: challenge.id,
-          studentId: widget.studentId,
-          questions: challenge.questions.map((q) => q.toJson()).toList(),
-          challenge: challenge,
-        ),
-      ),
+      AppRoutes.competitionQuiz,
+      arguments: {
+        'competitionId': challenge.id,
+        'studentId': widget.studentId,
+        'questions': challenge.questions.map((q) => q.toJson()).toList(),
+        'challenge': challenge,
+      },
     );
   }
 }

@@ -55,6 +55,7 @@ class _VideoScreenState extends State<VideoScreen> {
     appBar: AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
+      automaticallyImplyLeading: false, // Remove back arrow
       title: const Text(
         'Mwanafunzi Academy',
         style: TextStyle(

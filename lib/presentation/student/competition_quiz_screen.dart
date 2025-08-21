@@ -40,7 +40,6 @@ class _CompetitionQuizScreenState extends State<CompetitionQuizScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -62,6 +61,7 @@ class _CompetitionQuizScreenState extends State<CompetitionQuizScreen> {
   PreferredSizeWidget _buildAppBar() => AppBar(
     backgroundColor: Colors.white,
     elevation: 0,
+    automaticallyImplyLeading: false, // Remove back arrow
     title: const Text(
       'School Competition',
       style: TextStyle(
@@ -205,18 +205,6 @@ class _CompetitionQuizScreenState extends State<CompetitionQuizScreen> {
 
   Widget _buildResultsScreen() => Scaffold(
     backgroundColor: Colors.white,
-    appBar: AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      title: const Text(
-        'Competition Results',
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: Colors.black,
-        ),
-      ),
-    ),
     body: SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(

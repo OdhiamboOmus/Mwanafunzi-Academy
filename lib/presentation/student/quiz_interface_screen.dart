@@ -144,49 +144,6 @@ class _QuizInterfaceScreenState extends State<QuizInterfaceScreen>
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: Colors.white,
-    appBar: AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      title: Column(
-        children: [
-          Text(
-            widget.quizTitle,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
-          ),
-          Text(
-            'Question ${_currentQuestionIndex + 1} of ${_questions.isNotEmpty ? _questions.length : 1}',
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: Color(0xFF6B7280),
-            ),
-          ),
-        ],
-      ),
-      centerTitle: true,
-      actions: [
-        Container(
-          margin: const EdgeInsets.only(right: 16),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xFF50E801),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Text(
-            'V3',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ],
-    ),
     body: Column(
       children: [
         QuizProgressBar(animation: _progressAnimation),

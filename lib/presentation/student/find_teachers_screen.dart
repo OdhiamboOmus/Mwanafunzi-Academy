@@ -160,6 +160,7 @@ class _FindTeachersScreenState extends State<FindTeachersScreen>
     appBar: AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
+      automaticallyImplyLeading: false, // Remove back arrow
       title: const Text(
         'Mwanafunzi Academy',
         style: TextStyle(

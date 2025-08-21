@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:mwanafunzi_academy/data/models/comment_model.dart';
 import 'package:mwanafunzi_academy/core/service_locator.dart';
 import 'package:mwanafunzi_academy/services/comment_service.dart';

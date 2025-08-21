@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mwanafunzi_academy/presentation/shared/widgets.dart';
 import '../../services/firebase/school_competition_service.dart';
 import '../shared/grade_selector_widget.dart';
-import 'competition_quiz_screen.dart';
+import '../../../routes.dart';
 
 // School competition screen following Flutter Lite rules (<150 lines)
 class SchoolCompetitionScreen extends StatefulWidget {
@@ -48,6 +48,7 @@ class _SchoolCompetitionScreenState extends State<SchoolCompetitionScreen> {
   PreferredSizeWidget _buildAppBar() => AppBar(
     backgroundColor: Colors.white,
     elevation: 0,
+    automaticallyImplyLeading: false, // Remove back arrow
     title: const Text(
       'School Competitions',
       style: TextStyle(
@@ -343,15 +344,15 @@ class _SchoolCompetitionScreenState extends State<SchoolCompetitionScreen> {
 
       // Navigate to competition quiz screen
       if (mounted) {
-        Navigator.push(
+        Navigator.pushNamed(
           context,
-          MaterialPageRoute(
-            builder: (context) => CompetitionQuizScreen(
-              competitionId: competition['id'],
-              studentId: studentId,
-              questions: competition['questions'],
-            ),
-          ),
+          AppRoutes.competitionQuiz,
+          arguments: {
+            'competitionId': competition['id'],
+            'studentId': studentId,
+            'questions': competition['questions'],
+            'challenge': null,
+          },
         );
       }
     } catch (e) {
