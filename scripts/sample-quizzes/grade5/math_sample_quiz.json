@@ -1,0 +1,45 @@
+{
+  "quizId": "math_grade5_quiz1",
+  "title": "Fractions Quiz",
+  "grade": "5",
+  "subject": "Mathematics",
+  "topic": "Fractions",
+  "description": "Test your understanding of fractions including basic concepts, equivalent fractions, and operations",
+  "questions": [
+    {
+      "id": "q1",
+      "question": "What is 1/2 + 1/4?",
+      "options": ["1/6", "3/4", "2/6", "1/4"],
+      "correctAnswerIndex": 1,
+      "explanation": "To add fractions with the same denominator, add the numerators: 1/2 + 1/4 = 2/4 + 1/4 = 3/4"
+    },
+    {
+      "id": "q2",
+      "question": "Which fraction is equivalent to 2/3?",
+      "options": ["4/6", "3/6", "2/9", "1/3"],
+      "correctAnswerIndex": 0,
+      "explanation": "2/3 is equivalent to 4/6 because both fractions represent the same value (multiply numerator and denominator by 2)"
+    },
+    {
+      "id": "q3",
+      "question": "What is 3/4 - 1/4?",
+      "options": ["1/2", "2/4", "1/4", "4/4"],
+      "correctAnswerIndex": 1,
+      "explanation": "When subtracting fractions with the same denominator, subtract the numerators: 3/4 - 1/4 = 2/4"
+    },
+    {
+      "id": "q4",
+      "question": "If a pizza is cut into 8 equal slices and you eat 3 slices, what fraction of the pizza did you eat?",
+      "options": ["3/8", "5/8", "1/8", "8/3"],
+      "correctAnswerIndex": 0,
+      "explanation": "You ate 3 out of 8 equal slices, so you ate 3/8 of the pizza"
+    },
+    {
+      "id": "q5",
+      "question": "Which fraction is greater: 2/5 or 3/8?",
+      "options": ["2/5", "3/8", "They are equal", "Cannot be determined"],
+      "correctAnswerIndex": 0,
+      "explanation": "2/5 = 0.4 and 3/8 = 0.375, so 2/5 is greater. To compare fractions, find a common denominator or convert to decimals."
+    }
+  ]
+}

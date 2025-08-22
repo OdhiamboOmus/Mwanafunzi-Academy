@@ -13,6 +13,7 @@ class FirestoreService {
   CollectionReference get _parents => _users.doc('parents').collection('users');
   CollectionReference get _students => _users.doc('students').collection('users');
   CollectionReference get _teachers => _users.doc('teachers').collection('users');
+  CollectionReference get _admins => _users.doc('admins').collection('users');
 
   // Parent-child linking collections
   CollectionReference get _parentLinks => _firestore.collection('parentLinks');
@@ -31,6 +32,8 @@ class FirestoreService {
         return _students;
       case AppConstants.userTypeTeacher:
         return _teachers;
+      case AppConstants.userTypeAdmin:
+        return _admins;
       default:
         throw Exception('Unknown user type: $userType');
     }
@@ -70,6 +73,9 @@ class FirestoreService {
       final teacherDoc = await _teachers.doc(userId).get();
       if (teacherDoc.exists) return teacherDoc;
       
+      final adminDoc = await _admins.doc(userId).get();
+      if (adminDoc.exists) return adminDoc;
+      
       throw Exception('User not found in any collection');
     } catch (e) {
       throw Exception('Failed to get user data: ${e.toString()}');
@@ -93,6 +99,11 @@ class FirestoreService {
       final teacherResults = await _teachers.where('email', isEqualTo: email).get();
       if (teacherResults.docs.isNotEmpty) {
         return teacherResults;
+      }
+      
+      final adminResults = await _admins.where('email', isEqualTo: email).get();
+      if (adminResults.docs.isNotEmpty) {
+        return adminResults;
       }
       
       throw Exception('User not found with email: $email');
@@ -349,14 +360,15 @@ class FirestoreService {
       debugPrint('🔍 DEBUG: Firestore - createAdminData called');
       debugPrint('🔍 DEBUG: User ID: $userId');
       
-      // Use new admin_users collection structure
-      final adminCollection = _firestore.collection('admin_users');
+      // Use existing users/admins structure
+      final adminCollection = _admins;
       
       await adminCollection.doc(userId).set({
         'email': email,
-        'role': 'admin',
+        'userType': 'admin',
         'fullName': fullName,
         'permissions': permissions,
+        'profileCompleted': true,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -369,16 +381,13 @@ class FirestoreService {
     }
   }
 
-  // Get admin user data from admin_users collection
+  // Get admin user data from users/admins collection
   Future<DocumentSnapshot> getAdminData(String userId) async {
     try {
       debugPrint('🔍 DEBUG: Firestore - getAdminData called');
       debugPrint('🔍 DEBUG: User ID: $userId');
       
-      final adminDoc = await _firestore
-          .collection('admin_users')
-          .doc(userId)
-          .get();
+      final adminDoc = await _admins.doc(userId).get();
       
       debugPrint('✅ DEBUG: Firestore admin data retrieved successfully');
       return adminDoc;
@@ -397,10 +406,7 @@ class FirestoreService {
     try {
       debugPrint('🔍 DEBUG: Firestore - updateAdminPermissions called');
       
-      await _firestore
-          .collection('admin_users')
-          .doc(userId)
-          .update({
+      await _admins.doc(userId).update({
         'permissions': permissions,
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -419,8 +425,7 @@ class FirestoreService {
       debugPrint('🔍 DEBUG: Firestore - isAdminUser called');
       debugPrint('🔍 DEBUG: Email: $email');
       
-      final adminDoc = await _firestore
-          .collection('admin_users')
+      final adminDoc = await _admins
           .where('email', isEqualTo: email)
           .limit(1)
           .get();

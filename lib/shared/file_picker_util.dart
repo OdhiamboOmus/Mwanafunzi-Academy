@@ -7,32 +7,60 @@ class FilePickerUtil {
   /// Pick JSON file from device and return parsed content
   static Future<List<Map<String, dynamic>>> pickJsonFile(BuildContext context) async {
     try {
+      debugPrint('🔍 DEBUG: FilePickerUtil.pickJsonFile - Starting file picker');
       // Use file picker from storage
+      debugPrint('🔍 DEBUG: Opening file picker dialog...');
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['json'],
         allowMultiple: false,
       );
 
+      debugPrint('🔍 DEBUG: File picker result: ${result?.toString() ?? "null"}');
+
       if (result == null || result.files.isEmpty) {
+        debugPrint('🔍 DEBUG: FilePickerUtil - No file selected');
         throw Exception('No file selected');
       }
 
       final file = result.files.first;
+      debugPrint('🔍 DEBUG: FilePickerUtil - File selected: ${file.name}');
+      debugPrint('🔍 DEBUG: File size: ${file.size} bytes');
+      debugPrint('🔍 DEBUG: File bytes available: ${file.bytes != null}');
+      
       if (file.bytes == null) {
+        debugPrint('🔍 DEBUG: FilePickerUtil - File content is empty');
         throw Exception('File content is empty');
       }
 
       // Parse JSON content
+      debugPrint('🔍 DEBUG: Decoding file content...');
       final content = utf8.decode(file.bytes!);
-      final jsonData = jsonDecode(content) as List;
+      debugPrint('🔍 DEBUG: Decoded content length: ${content.length}');
+      debugPrint('🔍 DEBUG: First 200 chars: ${content.substring(0, content.length > 200 ? 200 : content.length)}');
+      
+      try {
+        debugPrint('🔍 DEBUG: Parsing JSON...');
+        final jsonData = jsonDecode(content) as List;
+        debugPrint('🔍 DEBUG: FilePickerUtil - JSON decoded successfully with ${jsonData.length} items');
 
-      if (jsonData.isEmpty) {
-        throw Exception('JSON file is empty');
+        if (jsonData.isEmpty) {
+          debugPrint('🔍 DEBUG: JSON array is empty');
+          throw Exception('JSON file is empty');
+        }
+
+        debugPrint('🔍 DEBUG: First item keys: ${jsonData.first.keys}');
+        debugPrint('🔍 DEBUG: First item preview: ${jsonData.first.toString().substring(0, jsonData.first.toString().length > 200 ? 200 : jsonData.first.toString().length)}');
+
+        return jsonData.cast<Map<String, dynamic>>();
+      } catch (jsonError) {
+        debugPrint('🔍 DEBUG: FilePickerUtil - JSON decode error: $jsonError');
+        debugPrint('🔍 DEBUG: FilePickerUtil - Content preview: ${content.substring(0, content.length > 200 ? 200 : content.length)}');
+        throw Exception('Invalid JSON format: ${jsonError.toString()}');
       }
-
-      return jsonData.cast<Map<String, dynamic>>();
     } catch (e) {
+      debugPrint('🔍 DEBUG: FilePickerUtil - Error: $e');
+      debugPrint('🔍 DEBUG: Error type: ${e.runtimeType}');
       throw Exception('Error reading file: ${e.toString()}');
     }
   }

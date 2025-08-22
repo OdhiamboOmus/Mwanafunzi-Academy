@@ -24,42 +24,19 @@ class SignInLogic {
     }
 
     try {
-      // Check if this is an admin login attempt
-      final isAdmin = await _userRepository.isAdminUser(email);
-      
-      if (isAdmin) {
-        // Admin login - use admin authentication
-        final user = await _userRepository.signInAdmin(
-          email: email,
-          password: password,
-        );
+      // Regular user login - this will work for all user types including admin
+      final user = await _userRepository.signInUser(
+        email: email,
+        password: password,
+      );
 
-        if (user != null && context.mounted) {
-          await _navigateBasedOnUserType(context, user.uid);
-        } else {
-          // Admin authentication failed
-          if (context.mounted) {
-            NotificationService().showErrorMessage(
-              context,
-              'Invalid admin credentials or access denied'
-            );
-          }
-        }
+      if (user != null && context.mounted) {
+        await _navigateBasedOnUserType(context, user.uid);
       } else {
-        // Regular user login
-        final user = await _userRepository.signInUser(
-          email: email,
-          password: password,
-        );
-
-        if (user != null && context.mounted) {
-          await _navigateBasedOnUserType(context, user.uid);
-        } else {
-          // Regular user authentication failed
-          if (context.mounted) {
-            final errorMessage = ErrorHandler.getAuthErrorMessage('Invalid credentials');
-            NotificationService().showErrorMessage(context, errorMessage);
-          }
+        // Authentication failed
+        if (context.mounted) {
+          final errorMessage = ErrorHandler.getAuthErrorMessage('Invalid credentials');
+          NotificationService().showErrorMessage(context, errorMessage);
         }
       }
     } catch (e) {
@@ -83,22 +60,28 @@ class SignInLogic {
       switch (userType) {
         case AppConstants.userTypeStudent:
           debugPrint('🔍 DEBUG: Navigating to student-home');
+          debugPrint('🎉 SUCCESS: Student login successful');
           Navigator.pushReplacementNamed(context, '/student-home');
           break;
         case AppConstants.userTypeParent:
           debugPrint('🔍 DEBUG: Navigating to parent-home');
+          debugPrint('🎉 SUCCESS: Parent login successful');
           Navigator.pushReplacementNamed(context, '/parent-home');
           break;
         case AppConstants.userTypeTeacher:
           debugPrint('🔍 DEBUG: Navigating to teacher-home');
+          debugPrint('🎉 SUCCESS: Teacher login successful');
           Navigator.pushReplacementNamed(context, '/teacher-home');
           break;
         case AppConstants.userTypeAdmin:
           debugPrint('🔍 DEBUG: Navigating to admin-home');
+          debugPrint('🎉 SUCCESS: Admin login successful - redirecting to admin dashboard');
+          debugPrint('🔐 ADMIN: User has full administrative access');
           Navigator.pushReplacementNamed(context, '/admin-home');
           break;
         default:
           debugPrint('🔍 DEBUG: User type not found, defaulting to student-home');
+          debugPrint('⚠️ WARNING: Unknown user type, defaulting to student');
           // Default to student if type not found
           Navigator.pushReplacementNamed(context, '/student-home');
       }
@@ -160,29 +143,18 @@ class SignInLogic {
         return AppConstants.userTypeTeacher;
       }
       
-      // Check admin_users collection (new admin structure)
-      debugPrint('🔍 DEBUG: Checking admin_users collection');
+      // Check admin collection in users structure
+      debugPrint('🔍 DEBUG: Checking admin collection');
       final adminDoc = await _firestore
-          .collection('admin_users')
+          .collection('users')
+          .doc('admin')
+          .collection('users')
           .doc(userId)
           .get();
       
       if (adminDoc.exists) {
-        debugPrint('🔍 DEBUG: User found in admin_users collection');
-        return AppConstants.userTypeAdmin;
-      }
-      
-      // Check legacy admins collection (for backward compatibility)
-      debugPrint('🔍 DEBUG: Checking legacy admins collection');
-      final legacyAdminDoc = await _firestore
-          .collection('users')
-          .doc('admins')
-          .collection('users')
-          .doc(userId)
-          .get();
-      
-      if (legacyAdminDoc.exists) {
-        debugPrint('🔍 DEBUG: User found in legacy admins collection');
+        debugPrint('🔍 DEBUG: User found in admins collection');
+        debugPrint('🔐 ADMIN: User has administrative privileges');
         return AppConstants.userTypeAdmin;
       }
       

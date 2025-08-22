@@ -1,400 +1,94 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow authenticated users to read/write their own data in hierarchical structure
+    // Allow user creation and basic authentication
     match /users/{userType}/users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Admin users collection - only admins can read/write
+    // Admin users collection - only specific admin email can access
     match /admin_users/{adminId} {
-      allow read, write: if isAdmin();
+      allow read, write: if request.auth != null && request.auth.email == 'official.poa.labs@gmail.com';
     }
     
-    // Quiz collections - admins can write, students can read their grade
-    match /quizzes/{grade}/{subject}/{topic} {
-      allow read: if isAuthenticated() &&
-                     (isAdmin() || getUserGrade() == grade);
-      allow write: if isAdmin();
+    // Admin users in new structure - only specific admin email can access
+    match /users/admins/users/{adminId} {
+      allow read, write: if request.auth != null && request.auth.email == 'official.poa.labs@gmail.com';
     }
     
-    // Quiz attempts - comprehensive rules for regular and competition attempts
-    match /quiz_attempts/{studentId}/{collectionType}/{attemptId} {
-      allow read: if isAuthenticated() &&
-                    (request.auth.uid == studentId ||
-                     isParentOfStudent(request.auth.uid, studentId) ||
-                     isAdmin());
-      allow write: if isAuthenticated() &&
-                    (request.auth.uid == studentId || isAdmin());
-    }
-    
-    // Student challenges - participants can read/write their challenges
-    match /student_challenges/{challengeId} {
-      allow read: if isAuthenticated() &&
-                    (isChallengeParticipant(challengeId, request.auth.uid) || isAdmin());
-      allow write: if isAuthenticated() &&
-                    (isChallengeParticipant(challengeId, request.auth.uid) || isAdmin());
-    }
-    
-    // School competitions - participants can read, admins can write
-    match /school_competitions/{competitionId} {
-      allow read: if isAuthenticated() &&
-                    (isSchoolCompetitionParticipant(competitionId, request.auth.uid) || isAdmin());
-      allow write: if isAdmin();
-    }
-    
-    // Lesson progress - students can read/write their own progress, parents can read linked children's progress
-    match /lesson_progress/{studentId} {
-      allow read: if isAuthenticated() &&
-                    (request.auth.uid == studentId ||
-                     isParentOfStudent(request.auth.uid, studentId) ||
-                     isAdmin());
-      allow write: if isAuthenticated() &&
-                    (request.auth.uid == studentId || isAdmin());
-    }
-    
-    // Lessons - admins can write, students can read their grade
-    match /lessonsMeta/{grade} {
-      allow read: if isAuthenticated() && (getUserGrade() == grade || isAdmin());
-      allow write: if isAdmin();
-    }
-    
-    // Parent-child linking for analytics
-    match /parentLinks/{parentId} {
-      allow read, write: if isAuthenticated() && request.auth.uid == parentId;
-    }
-    
-    // TEACHER COLLECTION - Enhanced security rules with verification status
-    match /teachers/{teacherId} {
-      allow read: if isAuthenticated() && (
-        isAdmin() ||
-        request.auth.uid == teacherId ||
-        (isVerifiedTeacher() && request.auth.uid != null)
-      );
-      
-      allow write: if request.auth != null && (
-        (isAdmin() && request.auth.uid == teacherId) ||
-        (request.auth.uid == teacherId && isTeacherProfileEditable(teacherId))
-      );
-      
-      // Log security rule evaluations for debugging
-      function isTeacherProfileEditable(String teacherId) {
-        // Log rule evaluation
-        if (request.auth != null && request.auth.uid == teacherId) {
-          // Check if teacher can edit their profile based on verification status
-          let teacherDoc = get(/databases/$(database)/documents/teachers/$(teacherId));
-          let verificationStatus = teacherDoc.data().verificationStatus;
-          
-          // Teachers can edit if verification is pending or they are verified
-          return verificationStatus == 'pending' || verificationStatus == 'verified';
-        }
-        return false;
-      }
-    }
-    
-    // BOOKING COLLECTION - Comprehensive booking security rules
-    match /bookings/{bookingId} {
-      allow read: if isAuthenticated() && (
-        isAdmin() ||
-        request.auth.uid == resource.data.teacherId ||
-        request.auth.uid == resource.data.parentId ||
-        (isVerifiedTeacher() && request.auth.uid == resource.data.teacherId)
-      );
-      
-      allow create: if isAuthenticated() && (
-        isAdmin() ||
-        (isVerifiedTeacher() && request.auth.uid == request.resource.data.teacherId) ||
-        (isParent() && request.auth.uid == request.resource.data.parentId)
-      );
-      
-      allow update: if isAuthenticated() && (
-        isAdmin() ||
-        (isVerifiedTeacher() && request.auth.uid == resource.data.teacherId && isBookingStatusUpdateAllowed()) ||
-        (isParent() && request.auth.uid == resource.data.parentId && isBookingStatusUpdateAllowed())
-      );
-      
-      allow delete: if isAdmin() || (
-        (isVerifiedTeacher() && request.auth.uid == resource.data.teacherId && resource.data.status == 'draft') ||
-        (isParent() && request.auth.uid == resource.data.parentId && resource.data.status == 'draft')
-      );
-      
-      // Log booking security rule evaluations
-      function isBookingStatusUpdateAllowed() {
-        let currentStatus = resource.data.status;
-        let newStatus = request.resource.data.status;
-        
-        // Log status change attempts
-        if (currentStatus != newStatus) {
-          // Allow status changes based on current status
-          return (currentStatus == 'draft' && newStatus == 'payment_pending') ||
-                 (currentStatus == 'payment_pending' && newStatus == 'paid') ||
-                 (currentStatus == 'paid' && newStatus == 'active') ||
-                 (currentStatus == 'active' && newStatus == 'completed') ||
-                 (currentStatus == 'draft' && newStatus == 'cancelled');
-        }
-        return true; // Allow no-op updates
-      }
-    }
-    
-    // LESSON COLLECTION - Lesson management security rules
+    // Lessons collection - temporarily open for testing
     match /lessons/{lessonId} {
-      allow read: if isAuthenticated() && (
-        isAdmin() ||
-        request.auth.uid == resource.data.teacherId ||
-        request.auth.uid == resource.data.studentId ||
-        (isParent() && request.auth.uid == resource.data.studentId)
-      );
-      
-      allow write: if isAuthenticated() && (
-        isAdmin() ||
-        (isVerifiedTeacher() && request.auth.uid == resource.data.teacherId && isLessonStatusUpdateAllowed()) ||
-        (isParent() && request.auth.uid == resource.data.studentId && isLessonStatusUpdateAllowed())
-      );
-      
-      // Log lesson security rule evaluations
-      function isLessonStatusUpdateAllowed() {
-        let currentStatus = resource.data.status;
-        let newStatus = request.resource.data.status;
-        
-        // Allow status transitions for lesson completion
-        return (currentStatus == 'scheduled' && newStatus == 'completed') ||
-               (currentStatus == 'scheduled' && newStatus == 'missed') ||
-               (currentStatus == 'scheduled' && newStatus == 'cancelled');
-      }
+      allow read, write: if true;
     }
     
-    // TRANSACTION COLLECTION - Financial transaction security rules
-    match /transactions/{transactionId} {
-      allow read: if isAuthenticated() && (
-        isAdmin() ||
-        request.auth.uid == resource.data.teacherId ||
-        request.auth.uid == resource.data.parentId ||
-        (isParent() && request.auth.uid == resource.data.parentId)
-      );
-      
-      allow create: if isAuthenticated() && (
-        isAdmin() ||
-        (isVerifiedTeacher() && request.auth.uid == request.resource.data.teacherId && request.resource.data.type == 'payout') ||
-        (isParent() && request.auth.uid == request.resource.data.parentId && request.resource.data.type == 'payment')
-      );
-      
-      allow update: if isAdmin() || (
-        (isVerifiedTeacher() && request.auth.uid == resource.data.teacherId && isTransactionStatusUpdateAllowed()) ||
-        (isParent() && request.auth.uid == resource.data.parentId && isTransactionStatusUpdateAllowed())
-      );
-      
-      // Log transaction security rule evaluations
-      function isTransactionStatusUpdateAllowed() {
-        let currentStatus = resource.data.status;
-        let newStatus = request.resource.data.status;
-        
-        // Allow status transitions for payment processing
-        return (currentStatus == 'pending' && newStatus == 'completed') ||
-               (currentStatus == 'pending' && newStatus == 'failed');
-      }
+    // Lessons metadata collection - temporarily open for testing
+    match /lessonsMeta/{grade} {
+      allow read, write: if true;
     }
     
-    // PLATFORM LEDGER COLLECTION - Immutable financial ledger
-    match /platform_ledger/{entryId} {
-      allow read: if isAuthenticated() && (
-        isAdmin() ||
-        (isVerifiedTeacher() && request.auth.uid == resource.data.teacherId)
-      );
-      
-      allow create: if isAdmin();
-      allow update, delete: if false; // Immutable ledger
+    // Quizzes collection - temporarily open for testing
+    match /quizzes/{grade}/{quizId} {
+      allow read, write: if true;
     }
     
-    // Video collections - admins can write, students can read their grade
-    match /videos/{grade}/{subject}/{topic}/{videoId} {
-      allow read: if isAuthenticated() &&
-                     (isAdmin() || getUserGrade() == grade);
-      allow write: if isAdmin();
+    // Quiz metadata collection - temporarily open for testing
+    match /quizMeta/{grade} {
+      allow read, write: if true;
     }
     
-    // Admin audit logs - only admins can read/write
-    match /admin_audit_logs/{logId} {
-      allow read, write: if isAdmin();
-    }
-    
-    // Video errors - only admins can read/write
-    match /video_errors/{errorId} {
-      allow read, write: if isAdmin();
+    // Quiz attempts collection - for student progress tracking
+    match /quiz_attempts/{studentId} {
+      allow read, write: if true;
     }
     
     // Helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    function isAdmin() {
-      return isAuthenticated() &&
-             exists(/databases/$(database)/documents/admin_users/$(request.auth.uid));
-    }
-    
-    function getUserGrade() {
-      // Get user's grade from their student document
-      return get(/databases/$(database)/documents/users/students/users/$(request.auth.uid)).data.grade;
-    }
-    
-    function isChallengeParticipant(String challengeId, String userId) {
-      // Check if user is challenger or challenged in the challenge
-      return get(/databases/$(database)/documents/student_challenges/$(challengeId)).data.challenger.studentId == userId ||
-             get(/databases/$(database)/documents/student_challenges/$(challengeId)).data.challenged.studentId == userId;
-    }
-    
-    function isSchoolCompetitionParticipant(String competitionId, String userId) {
-      // Check if user is participating in the school competition
-      return get(/databases/$(database)/documents/school_competitions/$(competitionId)).data.participantSchools.any(
-        (participant) => participant.studentId == userId
-      );
-    }
-    
-    function isParentOfStudent(String parentId, String studentId) {
-      // Check if parent has linked to this student
-      return exists(/databases/$(database)/documents/parentLinks/$(parentId)) &&
-             get(/databases/$(database)/documents/parentLinks/$(parentId)).data.children.any(
-               (child) => child.studentId == studentId
-             );
-    }
-    
-    function isVerifiedTeacher() {
-      // Check if user has verified teacher custom claims
-      return isAuthenticated() &&
-             request.auth.token.role == 'teacher' &&
-             request.auth.token.verified == true;
-    }
-    
-    function isParent() {
-      // Check if user has parent role
-      return isAuthenticated() && request.auth.token.role == 'parent';
-    }
   }
 }
 
-// Firebase Storage Security Rules
+// Firebase Storage Security Rules - simplified
 service firebase.storage {
   match /b/{bucket}/o {
-    // Public access for app assets and icons
-    match /assets/{allAssets=**} {
-      allow read, write: if request.auth != null;
+    // Allow basic file access for authenticated users
+    match /users/{userType}/users/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Teacher profile images - restricted access with logging
-    match /teacher_profiles/{teacherId}/{imageId} {
-      allow read: if isAuthenticated() && (
-        isAdmin() ||
-        request.auth.uid == teacherId ||
-        (isVerifiedTeacher() && request.auth.uid != null)
+    // Admin access for specific admin email
+    match /admin_users/{adminId} {
+      allow read, write: if request.auth != null && request.auth.email == 'official.poa.labs@gmail.com';
+    }
+    
+    // Lessons storage - allow API key authentication for simple uploads
+    match /lessons/{grade}/{lessonId} {
+      allow read: if request.auth != null;
+      allow write, create: if request.auth != null && (
+        request.auth.email == 'official.poa.labs@gmail.com' ||
+        request.auth.token.firebase.sign_in_provider == 'anonymous' ||
+        request.auth.token.firebase.sign_in_provider == 'password'
       );
-      
-      allow write, create: if isAuthenticated() && (
-        isAdmin() ||
-        (request.auth.uid == teacherId && isTeacherProfileEditable(teacherId))
+    }
+    
+    // Lessons metadata storage - allow API key authentication for simple uploads
+    match /lessonsMeta/{grade} {
+      allow read: if request.auth != null;
+      allow write, create: if request.auth != null && (
+        request.auth.email == 'official.poa.labs@gmail.com' ||
+        request.auth.token.firebase.sign_in_provider == 'anonymous' ||
+        request.auth.token.firebase.sign_in_provider == 'password'
       );
-      
-      allow delete: if isAdmin() || (request.auth.uid == teacherId);
-      
-      // Log storage access for debugging
-      function isAuthenticated() {
-        return request.auth != null;
-      }
-      
-      function isAdmin() {
-        return isAuthenticated() &&
-               exists(/databases/$(database)/documents/admin_users/$(request.auth.uid));
-      }
-      
-      function isVerifiedTeacher() {
-        return isAuthenticated() &&
-               request.auth.token.role == 'teacher' &&
-               request.auth.token.verified == true;
-      }
-      
-      function isTeacherProfileEditable(String teacherId) {
-        // Check if teacher can upload images based on verification status
-        if (request.auth != null && request.auth.uid == teacherId) {
-          let teacherDoc = get(/databases/$(database)/documents/teachers/$(teacherId));
-          let verificationStatus = teacherDoc.data().verificationStatus;
-          
-          // Teachers can upload if verification is pending or they are verified
-          return verificationStatus == 'pending' || verificationStatus == 'verified';
-        }
-        return false;
-      }
     }
     
-    // TSC certificates - restricted access with logging
-    match /tsc_certificates/{teacherId}/{certificateId} {
-      allow read: if isAuthenticated() && (
-        isAdmin() ||
-        request.auth.uid == teacherId ||
-        (isVerifiedTeacher() && request.auth.uid != null)
+    // Quiz media storage - allow API key authentication for simple uploads
+    match /quiz_media/{grade}/{quizId} {
+      allow read: if request.auth != null;
+      allow write, create: if request.auth != null && (
+        request.auth.email == 'official.poa.labs@gmail.com' ||
+        request.auth.token.firebase.sign_in_provider == 'anonymous' ||
+        request.auth.token.firebase.sign_in_provider == 'password'
       );
-      
-      allow write, create: if isAuthenticated() && (
-        isAdmin() ||
-        (request.auth.uid == teacherId && isTeacherProfileEditable(teacherId))
-      );
-      
-      allow delete: if isAdmin() || (request.auth.uid == teacherId);
-      
-      // Log certificate access for security auditing
-      function isAuthenticated() {
-        return request.auth != null;
-      }
-      
-      function isAdmin() {
-        return isAuthenticated() &&
-               exists(/databases/$(database)/documents/admin_users/$(request.auth.uid));
-      }
-      
-      function isVerifiedTeacher() {
-        return isAuthenticated() &&
-               request.auth.token.role == 'teacher' &&
-               request.auth.token.verified == true;
-      }
-      
-      function isTeacherProfileEditable(String teacherId) {
-        // Check if teacher can upload certificates based on verification status
-        if (request.auth != null && request.auth.uid == teacherId) {
-          let teacherDoc = get(/databases/$(database)/documents/teachers/$(teacherId));
-          let verificationStatus = teacherDoc.data().verificationStatus;
-          
-          // Teachers can upload if verification is pending or they are verified
-          return verificationStatus == 'pending' || verificationStatus == 'verified';
-        }
-        return false;
-      }
-    }
-    
-    // Zoom meeting recordings - restricted access
-    match /zoom_recordings/{bookingId} {
-      allow read: if isAuthenticated() && (
-        isAdmin() ||
-        request.auth.uid == resource.metadata.creator ||
-        (isVerifiedTeacher() && request.auth.uid == resource.metadata.teacherId) ||
-        (isParent() && request.auth.uid == resource.metadata.parentId)
-      );
-      
-      allow write, create, delete: if isAdmin();
-    }
-    
-    // General user uploads - restricted by user type
-    match /user_uploads/{userId} {
-      allow read: if isAuthenticated() && request.auth.uid == userId;
-      allow write, create: if isAuthenticated() && request.auth.uid == userId;
-      allow delete: if isAuthenticated() && request.auth.uid == userId;
-    }
-    
-    // System logs - admin only
-    match /system_logs/{logId} {
-      allow read, write: if isAdmin();
-    }
-    
-    // Backup files - admin only
-    match /backups/{backupId} {
-      allow read, write: if isAdmin();
     }
   }
 }

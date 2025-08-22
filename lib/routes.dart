@@ -5,6 +5,7 @@ import 'presentation/auth/forgot_password_screen.dart';
 import 'presentation/auth/admin_login_screen.dart';
 import 'presentation/admin/admin_home_screen.dart';
 import 'presentation/admin/admin_quiz_upload_screen.dart';
+import 'presentation/admin/admin_lesson_upload_screen.dart';
 import 'presentation/student/student_home_screen.dart';
 import 'presentation/student/settings_screen.dart';
 import 'presentation/student/video_screen.dart';
@@ -23,6 +24,7 @@ class AppRoutes {
   static const String adminLogin = '/admin-login';
   static const String adminHome = '/admin-home';
   static const String adminQuizUpload = '/admin-quiz-upload';
+  static const String adminLessonUpload = '/admin-lesson-upload';
   static const String studentHome = '/student-home';
   static const String settings = '/settings';
   static const String parentHome = '/parent-home';
@@ -41,6 +43,7 @@ class AppRoutes {
     adminLogin: (context) => const AdminLoginScreen(),
     adminHome: (context) => const AdminHomeScreen(),
     adminQuizUpload: (context) => const AdminQuizUploadScreen(),
+    adminLessonUpload: (context) => const AdminLessonUploadScreen(),
     studentHome: (context) => const StudentHomeScreen(),
     settings: (context) => const SettingsScreen(),
     parentHome: (context) => const ParentMainScreen(),
@@ -48,12 +51,16 @@ class AppRoutes {
     video: (context) => const VideoScreen(selectedGrade: 'Grade 1'),
     quizChallenge: (context) => const QuizChallengeScreen(),
     findTeachers: (context) => const FindTeachersScreen(),
-    lessonDetail: (context) => const LessonDetailScreen(
-      subject: 'Mathematics',
-      grade: 'Grade 1',
-      icon: Icons.calculate,
-      progress: 0.5,
-    ),
+    lessonDetail: (context) {
+      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      return LessonDetailScreen(
+        subject: args['subject'] ?? 'Mathematics',
+        grade: args['grade'] ?? 'Grade 1',
+        icon: args['icon'] ?? Icons.calculate,
+        progress: args['progress'] ?? 0.5,
+        lessonId: args['lessonId'] ?? 'default_lesson',
+      );
+    },
     quizInterface: (context) {
       final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
       return QuizInterfaceScreen(

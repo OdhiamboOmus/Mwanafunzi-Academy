@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/file_picker_util.dart';
+import '../../../services/firebase/admin_lesson_service.dart';
 
 // JSON file picker widget following Flutter Lite rules (<150 lines)
 class JsonFilePickerWidget extends StatelessWidget {
@@ -30,7 +31,7 @@ class JsonFilePickerWidget extends StatelessWidget {
               const Icon(Icons.file_upload_outlined, color: Color(0xFF50E801), size: 20),
               const SizedBox(width: 8),
               const Expanded(
-                child: Text('Select JSON file with quiz questions', style: TextStyle(fontSize: 14)),
+                child: Text('Select JSON file with lesson content', style: TextStyle(fontSize: 14)),
               ),
             ],
           ),
@@ -57,15 +58,33 @@ class JsonFilePickerWidget extends StatelessWidget {
   }
 
   Future<void> _pickJsonFile(BuildContext context) async {
+    debugPrint('🔍 DEBUG: _pickJsonFile called');
     try {
       // Pick JSON file from device
+      debugPrint('🔍 DEBUG: Calling FilePickerUtil.pickJsonFile...');
       final jsonData = await FilePickerUtil.pickJsonFile(context);
+      debugPrint('🔍 DEBUG: FilePickerUtil returned ${jsonData.length} items');
       
-      // Validate JSON structure
-      final validJson = FilePickerUtil.validateQuizJson(jsonData);
+      if (jsonData.isEmpty) {
+        debugPrint('🔍 DEBUG: No valid JSON data returned');
+        onFileSelected([]);
+        return;
+      }
+
+      debugPrint('🔍 DEBUG: First item keys: ${jsonData.first.keys}');
+      debugPrint('🔍 DEBUG: First item content: ${jsonData.first.toString()}');
+
+      // Validate lesson JSON structure (use lesson validation instead of quiz validation)
+      debugPrint('🔍 DEBUG: Validating lesson JSON...');
+      final lesson = AdminLessonService.validateLessonJson(jsonData.first);
+      debugPrint('🔍 DEBUG: Lesson validation successful: ${lesson['title']}');
       
-      onFileSelected(validJson);
+      // Convert single lesson to list for compatibility
+      onFileSelected([lesson]);
     } catch (e) {
+      debugPrint('🔍 DEBUG: Error in _pickJsonFile: $e');
+      debugPrint('🔍 DEBUG: Error type: ${e.runtimeType}');
+      debugPrint('🔍 DEBUG: Error stack: ${e.toString()}');
       onFileSelected([]);
     }
   }

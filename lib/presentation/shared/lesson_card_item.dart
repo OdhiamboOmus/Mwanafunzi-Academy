@@ -9,6 +9,7 @@ class LessonCardData {
   final String duration;
   final double progress;
   final IconData icon;
+  final String lessonId;
 
   const LessonCardData({
     required this.subject,
@@ -17,6 +18,7 @@ class LessonCardData {
     required this.duration,
     required this.progress,
     required this.icon,
+    required this.lessonId,
   });
 }
 
@@ -214,6 +216,7 @@ class LessonCardItem extends StatelessWidget {
           grade: selectedGrade.isEmpty ? '5' : selectedGrade,
           icon: card.icon,
           progress: card.progress,
+          lessonId: card.lessonId,
         ),
       ),
     );

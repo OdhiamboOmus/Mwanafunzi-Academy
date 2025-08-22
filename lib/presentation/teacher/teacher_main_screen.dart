@@ -5,8 +5,6 @@ import 'teacher_profile_setup_screen.dart';
 import 'widgets/teacher_bottom_navigation.dart';
 import 'widgets/booking_card_widget.dart';
 import '../../data/models/booking_model.dart';
-import '../shared/lesson_card_item.dart';
-import '../shared/grade_selector_widget.dart';
 
 class TeacherMainScreen extends StatefulWidget {
   const TeacherMainScreen({super.key});

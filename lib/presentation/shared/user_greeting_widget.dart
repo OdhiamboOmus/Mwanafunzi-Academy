@@ -12,6 +12,7 @@ class UserGreetingWidget extends StatefulWidget {
   final UserService userService;
   final MotivationService motivationService;
   final int userPoints;
+  final String selectedGrade;
   final Function(String)? onGradeChanged;
 
   const UserGreetingWidget({
@@ -20,6 +21,7 @@ class UserGreetingWidget extends StatefulWidget {
     required this.userService,
     required this.motivationService,
     required this.userPoints,
+    required this.selectedGrade,
     this.onGradeChanged,
   });
 
@@ -47,6 +49,9 @@ class _UserGreetingWidgetState extends State<UserGreetingWidget>
     super.initState();
     _userService = widget.userService;
     _motivationService = widget.motivationService;
+    
+    // Initialize selected grade from widget
+    _selectedGrade = widget.selectedGrade;
     
     // Initialize animations first
     _animationController = AnimationController(
@@ -121,102 +126,155 @@ class _UserGreetingWidgetState extends State<UserGreetingWidget>
     // Use the existing GradeSelectorWidget
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.grade,
-                    color: const Color(0xFF50E801),
-                    size: 24,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Select Grade',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.grade,
+                      color: const Color(0xFF50E801),
+                      size: 24,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 300,
-                child: ListView.builder(
-                  itemCount: 12,
-                  physics: const BouncingScrollPhysics(),
-                  itemBuilder: (context, index) {
-                    final grade = (index + 1).toString();
-                    final isSelected = grade == _selectedGrade;
-                    
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isSelected ? const Color(0x1A50E801) : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected ? const Color(0xFF50E801) : const Color(0xFFE5E7EB),
-                          width: isSelected ? 2 : 1,
-                        ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Select Grade',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
                       ),
-                      child: ListTile(
-                        title: Text(
-                          'Grade $grade',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                            color: isSelected ? const Color(0xFF50E801) : Colors.black,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 300,
+                  child: ListView.builder(
+                    itemCount: 12,
+                    physics: const BouncingScrollPhysics(),
+                    itemBuilder: (context, index) {
+                      final grade = (index + 1).toString();
+                      final isSelected = grade == _selectedGrade;
+                      
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isSelected ? const Color(0x1A50E801) : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSelected ? const Color(0xFF50E801) : const Color(0xFFE5E7EB),
+                            width: isSelected ? 2 : 1,
                           ),
+                          boxShadow: isSelected ? [
+                            BoxShadow(
+                              color: const Color(0xFF50E801).withValues(alpha: 0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ] : null,
                         ),
-                        trailing: isSelected
-                            ? const Icon(
-                                Icons.check_circle,
-                                color: Color(0xFF50E801),
-                                size: 24,
-                              )
-                            : null,
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          setState(() {
-                            _selectedGrade = grade;
-                          });
-                          if (widget.onGradeChanged != null) {
-                            widget.onGradeChanged!(grade);
-                          }
-                          Navigator.pop(context);
-                        },
-                        selected: isSelected,
-                        selectedTileColor: Colors.transparent,
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w500,
+                        child: ListTile(
+                          title: Text(
+                            'Grade $grade',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                              color: isSelected ? const Color(0xFF50E801) : Colors.black,
+                            ),
+                          ),
+                          trailing: isSelected
+                              ? const Icon(
+                                  Icons.check_circle,
+                                  color: Color(0xFF50E801),
+                                  size: 24,
+                                )
+                              : null,
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            
+                            // Update the dialog state immediately
+                            setState(() {
+                              _selectedGrade = grade;
+                            });
+                            
+                            // Also update the parent widget state
+                            if (mounted) {
+                              this.setState(() {
+                                _selectedGrade = grade;
+                              });
+                            }
+                            
+                            // Call the callback if provided
+                            if (widget.onGradeChanged != null) {
+                              widget.onGradeChanged!(grade);
+                            }
+                            
+                            // Close the dialog after a brief delay to show the selection
+                            Future.delayed(const Duration(milliseconds: 200), () {
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                              }
+                            });
+                          },
+                          selected: isSelected,
+                          selectedTileColor: Colors.transparent,
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF50E801),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Select',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -443,6 +501,13 @@ class _UserGreetingWidgetState extends State<UserGreetingWidget>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.userId != widget.userId) {
       _loadGreetingAndMessage();
+    }
+    
+    // Update selected grade if it changed from parent
+    if (oldWidget.selectedGrade != widget.selectedGrade) {
+      setState(() {
+        _selectedGrade = widget.selectedGrade;
+      });
     }
   }
 }

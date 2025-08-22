@@ -178,13 +178,18 @@ class LessonListWidget extends StatelessWidget {
       );
 
   void _startLesson(BuildContext context, LessonData lesson) {
+    HapticFeedback.lightImpact();
+    
+    // Use the lessonId from Firebase if available, otherwise generate one
+    final lessonId = lesson.lessonId ?? 'lesson_${lesson.title.replaceAll(' ', '_').toLowerCase()}';
+    
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => LessonContentScreen(
           lessonTitle: lesson.title,
-          subject: 'Mathematics', // This could be passed from parent
-          lessonId: 'lesson_${lesson.title.replaceAll(' ', '_').toLowerCase()}', // Generate unique ID from title
+          subject: lesson.subject ?? 'Mathematics', // Use subject from Firebase or default
+          lessonId: lessonId,
           sectionId: 'section_1', // Default section ID
           currentStep: 3,
           totalSteps: lesson.steps,

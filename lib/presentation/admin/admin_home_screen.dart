@@ -3,6 +3,7 @@ import '../../core/constants.dart';
 import '../../data/repositories/user_repository.dart';
 import 'admin_performance_dashboard.dart';
 import 'admin_video_upload_screen.dart';
+import 'admin_lesson_upload_screen.dart';
 import 'verification_dashboard_screen.dart';
 
 // Admin home screen following Flutter Lite rules (<120 lines)
@@ -113,6 +114,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const AdminVideoUploadScreen()),
+        ),
+      ),
+      _buildDashboardCard(
+        title: 'Lesson Upload',
+        icon: Icons.upload_file,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminLessonUploadScreen()),
         ),
       ),
       _buildDashboardCard(

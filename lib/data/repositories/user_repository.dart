@@ -234,13 +234,13 @@ class UserRepository {
     }
   }
 
-  // Sign in admin
+  // Sign in admin - now uses the same authentication as regular users
   Future<User?> signInAdmin({
     required String email,
     required String password,
   }) async {
     try {
-      return await _authService.signInAdmin(
+      return await _authService.signInWithEmailAndPassword(
         email: email,
         password: password,
       );

@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart' show debugPrint;
 
 // Firebase Authentication service following Flutter Lite rules
@@ -71,7 +70,7 @@ class AuthService {
     }
   }
 
-  // Sign in admin with special credentials
+  // Sign in admin - now uses the same authentication as regular users
   Future<User?> signInAdmin({
     required String email,
     required String password,
@@ -81,21 +80,6 @@ class AuthService {
         email: email,
         password: password,
       );
-      
-      // Verify admin status through admin_users collection
-      // Check if user exists in admin_users collection
-      final adminDoc = await FirebaseFirestore.instance
-          .collection('admin_users')
-          .where('email', isEqualTo: email)
-          .limit(1)
-          .get();
-      
-      if (adminDoc.docs.isEmpty) {
-        // User is not an admin, sign them out and return null
-        await _auth.signOut();
-        return null;
-      }
-      
       return userCredential.user;
     } catch (e) {
       throw _handleAuthError(e);

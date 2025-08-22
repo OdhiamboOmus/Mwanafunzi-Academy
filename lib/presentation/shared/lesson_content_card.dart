@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 class LessonContentCard extends StatelessWidget {
   final String lessonTitle;
   final String subject;
+  final String lessonContent;
 
   const LessonContentCard({
     super.key,
     required this.lessonTitle,
     required this.subject,
+    required this.lessonContent,
   });
 
   @override
@@ -29,7 +31,7 @@ class LessonContentCard extends StatelessWidget {
     child: Column(
       mainAxisSize: MainAxisSize.min, // Add this to allow shrink-wrapping
       children: [
-        // Example badge
+        // Subject badge
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
@@ -43,7 +45,7 @@ class LessonContentCard extends StatelessWidget {
               const Icon(Icons.lightbulb, color: Color(0xFF50E801), size: 16),
               const SizedBox(width: 4),
               Text(
-                'EXAMPLE',
+                subject.toUpperCase(),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -57,10 +59,10 @@ class LessonContentCard extends StatelessWidget {
         const SizedBox(height: 24),
 
         // Lesson title
-        const Text(
-          'Counting with\nObjects',
+        Text(
+          lessonTitle,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
             color: Colors.black,
@@ -69,72 +71,97 @@ class LessonContentCard extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // Subtitle
-        const Text(
-          'Let\'s practice counting:',
-          style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)),
-        ),
-        const SizedBox(height: 32),
-
         // Content area
         Flexible(
           fit: FlexFit.loose, // Use Flexible instead of Expanded with loose fit
-          child: Column(
-            children: [
-              _buildCountingExample('🍎', '1 apple'),
-              const SizedBox(height: 16),
-              _buildCountingExample('🍎🍎', '2 apples'),
-              const SizedBox(height: 16),
-              _buildCountingExample('🍎🍎🍎', '3 apples'),
-              const SizedBox(height: 32),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildLessonContent(lessonContent),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFF6366F1).withValues(alpha: 0.1),
-                  ),
-                ),
-                child: const Text(
-                  'Can you count how many apples\nthere are in each group?',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFF374151),
-                    height: 1.4,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+  Widget _buildLessonContent(String content) {
+    // Split content by lines and format each section
+    final lines = content.split('\n');
+    final widgets = <Widget>[];
+    
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isEmpty) continue;
+      
+      if (line.startsWith('What are fractions?') ||
+          line.startsWith('Numerator and Denominator') ||
+          line.startsWith('Equivalent Fractions')) {
+        // Section title
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              line,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF374151),
               ),
-            ],
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-
-  Widget _buildCountingExample(String emoji, String text) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    decoration: BoxDecoration(
-      color: Colors.grey.shade50,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: Colors.grey.shade200),
-    ),
-    child: Row(
-      children: [
-        Text(emoji, style: const TextStyle(fontSize: 24)),
-        const SizedBox(width: 16),
-        Text(
-          '– $text',
-          style: const TextStyle(
-            fontSize: 18,
-            color: Color(0xFF374151),
-            fontWeight: FontWeight.w500,
+        );
+      } else if (line.startsWith('A fraction represents') ||
+                 line.startsWith('In a fraction like') ||
+                 line.startsWith('Equivalent fractions are')) {
+        // Section content
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Text(
+              line,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color(0xFF6B7280),
+                height: 1.4,
+              ),
+            ),
           ),
-        ),
-      ],
-    ),
-  );
+        );
+      } else if (line.startsWith('Which fraction represents') ||
+                 line.startsWith('In the fraction') ||
+                 line.startsWith('Which of the following')) {
+        // Question
+        widgets.add(
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6366F1).withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+              ),
+            ),
+            child: Text(
+              line,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color(0xFF374151),
+                height: 1.4,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        );
+      }
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: widgets,
+    );
+  }
 }

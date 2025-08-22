@@ -29,6 +29,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   int _selectedBottomNavIndex = 0;
   bool _isRefreshing = false;
   int _userPoints = 0;
+  String _selectedGrade = '5'; // Default to grade 5
 
   @override
   void initState() {
@@ -82,7 +83,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                         ),
                         child: Column(
                           children: [
-                            const LessonCardsWidget(selectedGrade: ''),
+                            LessonCardsWidget(selectedGrade: _selectedGrade),
                             const SizedBox(height: 32),
                             const CompetitionCardsWidget(),
                             const SizedBox(height: 32),
@@ -181,7 +182,13 @@ void _handleNavigation(int index) {
       userService: _userService,
       motivationService: _motivationService,
       userPoints: _userPoints,
+      selectedGrade: _selectedGrade,
       onGradeChanged: (grade) {
+        // Update the selected grade and refresh the UI
+        setState(() {
+          _selectedGrade = grade;
+        });
+        
         // Navigate to grade content when grade is selected
         Navigator.pushNamed(
           context,

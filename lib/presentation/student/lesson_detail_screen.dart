@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import '../shared/lesson_header_card.dart';
 import '../shared/lesson_list_widget.dart';
+import '../../services/firebase/student_lesson_service.dart';
 
 // Lesson detail screen following Flutter Lite rules (<150 lines)
-class LessonDetailScreen extends StatelessWidget {
+class LessonDetailScreen extends StatefulWidget {
   final String subject;
   final String grade;
   final IconData icon;
   final double progress;
+  final String lessonId;
 
   const LessonDetailScreen({
     super.key,
@@ -15,7 +17,41 @@ class LessonDetailScreen extends StatelessWidget {
     required this.grade,
     required this.icon,
     required this.progress,
+    required this.lessonId,
   });
+
+  @override
+  State<LessonDetailScreen> createState() => _LessonDetailScreenState();
+}
+
+class _LessonDetailScreenState extends State<LessonDetailScreen> {
+  final StudentLessonService _lessonService = StudentLessonService();
+  bool _isLoading = true;
+  List<LessonData> _lessons = [];
+  List<Map<String, dynamic>> _firebaseLessons = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLessons();
+    _loadFirebaseLesson();
+  }
+
+  Future<void> _loadFirebaseLesson() async {
+    try {
+      debugPrint('🔍 DEBUG: Loading Firebase lesson for: ${widget.lessonId}');
+      final lessonContent = await _lessonService.getLessonContent(widget.grade, widget.lessonId);
+      
+      if (lessonContent != null && mounted) {
+        setState(() {
+          _firebaseLessons.add(lessonContent);
+          debugPrint('🔍 DEBUG: Loaded Firebase lesson: ${lessonContent['title']}');
+        });
+      }
+    } catch (e) {
+      debugPrint('❌ ERROR: Failed to load Firebase lesson: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -28,7 +64,7 @@ class LessonDetailScreen extends StatelessWidget {
         onPressed: () => Navigator.pop(context),
       ),
       title: Text(
-        subject,
+        widget.subject,
         style: const TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
@@ -37,74 +73,130 @@ class LessonDetailScreen extends StatelessWidget {
       ),
       centerTitle: true,
     ),
-    body: SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Subject Header Card
-          LessonHeaderCard(
-            subject: subject,
-            grade: grade,
-            icon: icon,
-            progress: progress,
-            lessonCount: _getLessons().length,
-          ),
+    body: _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Subject Header Card
+                LessonHeaderCard(
+                  subject: widget.subject,
+                  grade: widget.grade,
+                  icon: widget.icon,
+                  progress: widget.progress,
+                  lessonCount: _lessons.length,
+                ),
 
-          // Lessons Section
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              'Lessons',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-              ),
+                // Lessons Section
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'Lessons',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Lessons List
+                _lessons.isEmpty
+                    ? const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                          'No lessons available for this grade.',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    : LessonListWidget(lessons: _lessons),
+
+                const SizedBox(height: 32),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-
-          // Lessons List
-          LessonListWidget(lessons: _getLessons()),
-
-          const SizedBox(height: 32),
-        ],
-      ),
-    ),
   );
 
-  List<LessonData> _getLessons() => [
-    const LessonData(
-      title: 'Numbers 1-10',
-      description: 'Learn to recognize, count, and write numbers from 1 to 10',
-      duration: '15-20 min',
-      steps: 5,
-    ),
-    const LessonData(
-      title: 'Simple Addition',
-      description: 'Learn to add numbers using objects and simple problems',
-      duration: '20-25 min',
-      steps: 6,
-    ),
-    const LessonData(
-      title: 'Shapes Around Us',
-      description: 'Identify and learn about basic shapes in everyday objects',
-      duration: '18-22 min',
-      steps: 4,
-    ),
-    const LessonData(
-      title: 'Counting to 20',
-      description: 'Extend counting skills from 11 to 20 with fun activities',
-      duration: '16-20 min',
-      steps: 5,
-    ),
-    const LessonData(
-      title: 'Simple Subtraction',
-      description: 'Learn basic subtraction using visual aids and practice',
-      duration: '22-28 min',
-      steps: 7,
-    ),
-  ];
+  Future<void> _loadLessons() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      // Fetch lessons from Firebase
+      final firebaseLessons = await _lessonService.getLessonsForGrade(widget.grade);
+      
+      if (mounted) {
+        setState(() {
+          _firebaseLessons = firebaseLessons;
+          _lessons = _convertFirebaseLessonsToLessonData(firebaseLessons);
+          _isLoading = false;
+        });
+
+        debugPrint('🔍 DEBUG: Loaded ${_lessons.length} lessons for grade ${widget.grade}');
+      }
+    } catch (e) {
+      debugPrint('❌ ERROR: Failed to load lessons: $e');
+      
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _lessons = _getFallbackLessons();
+        });
+      }
+    }
+  }
+
+  List<LessonData> _convertFirebaseLessonsToLessonData(List<Map<String, dynamic>> firebaseLessons) {
+    return firebaseLessons.map((lesson) {
+      return LessonData(
+        title: lesson['title'] ?? 'Untitled Lesson',
+        description: lesson['subject'] ?? 'No description available',
+        duration: _calculateDuration(lesson),
+        steps: _calculateSteps(lesson),
+        lessonId: lesson['id'],
+        subject: lesson['subject'],
+      );
+    }).toList();
+  }
+
+  String _calculateDuration(Map<String, dynamic> lesson) {
+    // Estimate duration based on number of sections
+    final sections = lesson['totalSections'] ?? 1;
+    final minutesPerSection = 5; // 5 minutes per section
+    final totalMinutes = sections * minutesPerSection;
+    
+    if (totalMinutes < 60) {
+      return '$totalMinutes min';
+    } else {
+      final hours = totalMinutes ~/ 60;
+      final minutes = totalMinutes % 60;
+      return hours > 1 ? '$hours hours $minutes min' : '$hours hour $minutes min';
+    }
+  }
+
+  int _calculateSteps(Map<String, dynamic> lesson) {
+    // Use number of sections as steps
+    return lesson['totalSections'] ?? 5;
+  }
+
+  List<LessonData> _getFallbackLessons() {
+    // Fallback lessons in case Firebase is unavailable
+    return [
+      const LessonData(
+        title: 'Loading Lessons...',
+        description: 'Please wait while we fetch your lessons',
+        duration: '',
+        steps: 0,
+      ),
+    ];
+  }
 }
 
 class LessonData {
@@ -112,11 +204,15 @@ class LessonData {
   final String description;
   final String duration;
   final int steps;
+  final String? lessonId;
+  final String? subject;
 
   const LessonData({
     required this.title,
     required this.description,
     required this.duration,
     required this.steps,
+    this.lessonId,
+    this.subject,
   });
 }
