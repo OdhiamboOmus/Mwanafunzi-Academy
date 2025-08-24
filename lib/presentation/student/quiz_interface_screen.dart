@@ -101,15 +101,26 @@ class _QuizInterfaceScreenState extends State<QuizInterfaceScreen>
     });
 
     try {
+      debugPrint('🔍 DEBUG: Loading quiz questions for grade: ${widget.grade}, subject: ${widget.subject}, topic: ${widget.topic}');
+      
       // Load questions from Firebase with 30-day caching
+      // Create quizId based on grade, subject, and topic - match uploaded format
+      final quizId = '${widget.subject.toLowerCase()}_grade${widget.grade}_${widget.topic.toLowerCase()}';
       _questions = await _quizService.getQuizQuestions(
         grade: widget.grade,
-        subject: widget.subject,
-        topic: widget.topic,
+        quizId: quizId,
       );
       
+      debugPrint('🔍 DEBUG: Loaded ${_questions.length} questions');
+      
       if (_questions.isEmpty) {
+        debugPrint('❌ ERROR: No questions found for this quiz');
         throw Exception('No questions found for this quiz');
+      }
+      
+      // Validate first question to ensure structure is correct
+      if (_questions.isNotEmpty) {
+        debugPrint('🔍 DEBUG: First question: ${_questions[0].toJson()}');
       }
       
       setState(() {
@@ -125,7 +136,7 @@ class _QuizInterfaceScreenState extends State<QuizInterfaceScreen>
         );
       });
     } catch (e) {
-      debugPrint('Error loading quiz questions: $e');
+      debugPrint('❌ ERROR: Error loading quiz questions: $e');
       setState(() {
         _isLoading = false;
         _hasError = true;
@@ -329,7 +340,7 @@ class _QuizInterfaceScreenState extends State<QuizInterfaceScreen>
       );
 
       // Record quiz attempt
-      await _quizService.batchRecordAttempts([attempt]);
+      await _quizService.recordQuizAttempt(attempt);
       debugPrint('Quiz attempt recorded successfully');
 
       // Update lesson progress with quiz completion data

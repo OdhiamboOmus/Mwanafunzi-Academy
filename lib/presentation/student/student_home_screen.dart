@@ -4,6 +4,7 @@ import 'package:mwanafunzi_academy/routes.dart';
 import 'package:mwanafunzi_academy/services/user_service.dart' show UserService;
 import 'package:mwanafunzi_academy/services/motivation_service.dart' show MotivationService;
 import 'package:mwanafunzi_academy/services/progress_service.dart' show ProgressService;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/repositories/user_repository.dart';
 import '../shared/lesson_cards_widget.dart';
 import '../shared/competition_cards_widget.dart';
@@ -104,11 +105,19 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 void _handleNavigation(int index) {
   debugPrint('🔍 DEBUG: Handling navigation for index: $index');
   if (index == 1) { // Quiz tab
-    debugPrint('🔍 DEBUG: Navigating to Quiz Challenge screen');
-    Navigator.pushNamed(context, AppRoutes.quizChallenge);
+    debugPrint('🔍 DEBUG: Navigating to Quiz Challenge screen with grade: $_selectedGrade');
+    Navigator.pushNamed(
+      context,
+      AppRoutes.quizChallenge,
+      arguments: {'grade': _selectedGrade},
+    );
   } else if (index == 2) { // Video tab
-    debugPrint('🔍 DEBUG: Navigating to Video screen');
-    Navigator.pushNamed(context, AppRoutes.video);
+    debugPrint('🔍 DEBUG: Navigating to Video screen with grade: $_selectedGrade');
+    Navigator.pushNamed(
+      context,
+      AppRoutes.video,
+      arguments: {'selectedGrade': _selectedGrade},
+    );
   } else if (index == 3) { // Teachers tab
     debugPrint('🔍 DEBUG: Navigating to Find Teachers screen');
     Navigator.pushNamed(context, AppRoutes.findTeachers);
@@ -125,6 +134,13 @@ void _handleNavigation(int index) {
       debugPrint('🔍 DEBUG: Loading user data...');
       final user = _userRepository.getCurrentUser();
       debugPrint('🔍 DEBUG: Current user from repository: ${user?.toString() ?? 'null'}');
+      
+      // Load selected grade from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final savedGrade = prefs.getString('selected_grade') ?? '5';
+      setState(() {
+        _selectedGrade = savedGrade;
+      });
       
       if (user != null) {
         debugPrint('🔍 DEBUG: Attempting to fetch dynamic user name from UserService...');
@@ -183,11 +199,17 @@ void _handleNavigation(int index) {
       motivationService: _motivationService,
       userPoints: _userPoints,
       selectedGrade: _selectedGrade,
-      onGradeChanged: (grade) {
-        // Update the selected grade and refresh the UI
+      onGradeChanged: (grade) async {
+        // Update the selected grade and save to SharedPreferences
         setState(() {
           _selectedGrade = grade;
         });
+        
+        // Save the selected grade to SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('selected_grade', grade);
+        
+        debugPrint('🔍 DEBUG: Selected grade saved: $grade');
         
         // Navigate to grade content when grade is selected
         Navigator.pushNamed(

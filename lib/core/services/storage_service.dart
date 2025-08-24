@@ -16,6 +16,7 @@ class StorageService {
       if (kDebugMode) {
         debugPrint('❌ StorageService.getValue error for $key: $e');
       }
+      // Return null instead of throwing to allow app to continue
       return null;
     }
   }
@@ -29,6 +30,7 @@ class StorageService {
       if (kDebugMode) {
         debugPrint('❌ StorageService.setValue error for $key: $e');
       }
+      // Return false instead of throwing to allow app to continue
       return false;
     }
   }
@@ -42,6 +44,7 @@ class StorageService {
       if (kDebugMode) {
         debugPrint('❌ StorageService.removeValue error for $key: $e');
       }
+      // Return false instead of throwing to allow app to continue
       return false;
     }
   }

@@ -48,35 +48,44 @@ class AppRoutes {
     settings: (context) => const SettingsScreen(),
     parentHome: (context) => const ParentMainScreen(),
     teacherHome: (context) => const TeacherMainScreen(),
-    video: (context) => const VideoScreen(selectedGrade: 'Grade 1'),
-    quizChallenge: (context) => const QuizChallengeScreen(),
+    video: (context) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      final grade = args?['selectedGrade'] ?? 'Grade 1';
+      return VideoScreen(selectedGrade: grade);
+    },
+    quizChallenge: (context) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      return QuizChallengeScreen(
+        selectedGrade: args?['grade'] ?? 'Grade 1',
+      );
+    },
     findTeachers: (context) => const FindTeachersScreen(),
     lessonDetail: (context) {
-      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       return LessonDetailScreen(
-        subject: args['subject'] ?? 'Mathematics',
-        grade: args['grade'] ?? 'Grade 1',
-        icon: args['icon'] ?? Icons.calculate,
-        progress: args['progress'] ?? 0.5,
-        lessonId: args['lessonId'] ?? 'default_lesson',
+        subject: args?['subject'] ?? 'Mathematics',
+        grade: args?['grade'] ?? 'Grade 1',
+        icon: args?['icon'] ?? Icons.calculate,
+        progress: args?['progress'] ?? 0.5,
+        lessonId: args?['lessonId'] ?? 'default_lesson',
       );
     },
     quizInterface: (context) {
-      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       return QuizInterfaceScreen(
-        subject: args['subject'],
-        quizTitle: args['quizTitle'],
-        grade: args['grade'],
-        topic: args['topic'],
+        subject: args?['subject'],
+        quizTitle: args?['quizTitle'],
+        grade: args?['grade'],
+        topic: args?['topic'],
       );
     },
     competitionQuiz: (context) {
-      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       return CompetitionQuizScreen(
-        competitionId: args['competitionId'],
-        studentId: args['studentId'],
-        questions: args['questions'],
-        challenge: args['challenge'],
+        competitionId: args?['competitionId'],
+        studentId: args?['studentId'],
+        questions: args?['questions'],
+        challenge: args?['challenge'],
       );
     },
   };

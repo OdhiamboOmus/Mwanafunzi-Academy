@@ -1,160 +1,126 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../../data/models/quiz_model.dart' as quiz;
+import '../../core/services/cost_monitoring_service.dart';
 import 'cost_optimized_cache_service.dart';
 import 'batch_operation_service.dart';
-import 'lru_cache_service.dart';
-import 'incremental_sync_service.dart';
-import 'offline_quiz_service.dart';
-import 'performance_optimization_service.dart';
 import 'retry_service.dart';
 
 class QuizService {
   
   final CostOptimizedCacheService _cacheService = CostOptimizedCacheService();
   final BatchOperationService _batchService = BatchOperationService();
-  final LRUCacheService _lruCacheService = LRUCacheService();
-  final IncrementalSyncService _syncService = IncrementalSyncService();
-  final OfflineQuizService _offlineService = OfflineQuizService();
-  final PerformanceOptimizationService _performanceService = PerformanceOptimizationService();
+  final CostMonitoringService _costMonitor = CostMonitoringService();
 
-  /// Get quiz questions with 30-day caching strategy using LRU cache and incremental sync
+  /// Get quiz questions from Firestore with caching
   Future<List<quiz.QuizQuestion>> getQuizQuestions({
     required String grade,
-    required String subject,
-    required String topic,
+    required String quizId,
   }) async {
-    return await RetryService.executeWithSmartRetry(
-      operation: () async {
-        return await _performanceService.executeWithPerformanceMonitoring(
-          operationId: 'get_quiz_questions_$grade/$subject/$topic',
-          operation: () async {
-            // Try LRU cache first for better performance
-            final cached = await _lruCacheService.getCachedQuizQuestions(
-              grade: grade,
-              subject: subject,
-              topic: topic,
-            );
-            
-            if (cached != null) {
-              debugPrint('Performance: LRU cache hit for $grade/$subject/$topic');
-              return cached;
-            }
-            
-            debugPrint('Performance: LRU cache miss for $grade/$subject/$topic, checking incremental sync');
-            
-            // Check if we need to sync before fetching
-            final needsSync = await _syncService.needsSync(
-              grade: grade,
-              subject: subject,
-              topic: topic,
-            );
-            
-            if (needsSync) {
-              debugPrint('Performance: Incremental sync needed for $grade/$subject/$topic');
-              await _syncService.forceSync();
-            }
-            
-            // Try cost optimized cache as fallback
-            final fallbackCached = await _cacheService.getCachedQuizQuestions(
-              grade: grade,
-              subject: subject,
-              topic: topic,
-            );
-            
-            if (fallbackCached != null) {
-              debugPrint('Performance: Fallback cache hit for $grade/$subject/$topic');
-              // Cache in LRU for future requests
-              await _lruCacheService.cacheQuizQuestions(
-                grade: grade,
-                subject: subject,
-                topic: topic,
-                questions: fallbackCached,
-              );
-              return fallbackCached;
-            }
-            
-            // Fetch from Firebase
-            final questions = await _fetchQuestionsFromFirebase(grade, subject, topic);
-            
-            // Cache in all services for optimal performance
-            await _lruCacheService.cacheQuizQuestions(
-              grade: grade,
-              subject: subject,
-              topic: topic,
-              questions: questions,
-            );
-            
-            await _cacheService.cacheQuizQuestions(
-              grade: grade,
-              subject: subject,
-              topic: topic,
-              questions: questions,
-            );
-            
-            // Cache for offline use
-            await _offlineService.cacheQuizQuestions(
-              grade: grade,
-              subject: subject,
-              topic: topic,
-              questions: questions,
-            );
-            
-            return questions;
-          },
-        );
-      },
-      operationName: 'get_quiz_questions_$grade/$subject/$topic',
-    );
+    try {
+      debugPrint('🔍 DEBUG: Fetching quiz questions for grade: $grade, quizId: $quizId');
+      
+      // Try to get from cache first
+      final cachedQuestions = await _cacheService.getCachedQuizQuestions(
+        grade: grade,
+        subject: 'quiz', // Default subject for quizzes
+        topic: quizId, // Use quizId as topic
+      );
+      
+      if (cachedQuestions != null) {
+        debugPrint('🔍 DEBUG: Using cached quiz questions for grade: $grade, quizId: $quizId');
+        return cachedQuestions;
+      }
+      
+      // Fetch from Firebase if cache is empty
+      final questions = await _fetchQuestionsFromFirebase(grade, quizId);
+      
+      // Cache the questions for future use
+      await _cacheService.cacheQuizQuestions(
+        grade: grade,
+        subject: 'quiz',
+        topic: quizId,
+        questions: questions,
+      );
+      
+      debugPrint('🔍 DEBUG: Successfully loaded and cached ${questions.length} questions');
+      return questions;
+    } catch (e) {
+      debugPrint('❌ ERROR: Error fetching quiz questions: $e');
+      throw Exception('Failed to load quiz questions: $e');
+    }
   }
 
   /// Fetch questions from Firestore
   Future<List<quiz.QuizQuestion>> _fetchQuestionsFromFirebase(
     String grade,
-    String subject,
-    String topic,
+    String quizId,
   ) async {
     try {
+      debugPrint('🔍 DEBUG: Fetching quiz from Firestore: $grade/$quizId');
+      
+      // Access quiz using the correct Firestore path: quizzes/{quizId} (matches uploader)
       final docRef = FirebaseFirestore.instance
           .collection('quizzes')
-          .doc(grade)
-          .collection(subject)
-          .doc(topic);
+          .doc(quizId);
+      
+      // Track the read operation for cost monitoring
+      await _costMonitor.trackReadOperation(
+        collection: 'quizzes',
+        documentId: quizId,
+        metadata: {'grade': grade, 'operation': 'get_quiz_questions'},
+      );
       
       final doc = await docRef.get();
       
       if (!doc.exists) {
-        throw Exception('No quiz found for $grade/$subject/$topic');
+        debugPrint('❌ ERROR: No quiz document found for $grade/$quizId');
+        throw Exception('No quiz found for $grade/$quizId');
       }
       
-      final data = doc.data()!;
-      final questionsData = data['questions'] as List;
+      final data = doc.data();
+      if (data == null) {
+        debugPrint('❌ ERROR: Quiz document data is null for $grade/$quizId');
+        throw Exception('Quiz document data is null');
+      }
       
-      return questionsData.map((q) => quiz.QuizQuestion.fromJson(q)).toList();
+      debugPrint('🔍 DEBUG: Quiz document data: $data');
+      
+      if (!data.containsKey('questions')) {
+        debugPrint('❌ ERROR: Quiz document missing "questions" field for $grade/$quizId');
+        throw Exception('Quiz document missing "questions" field');
+      }
+      
+      final questionsData = data['questions'] as List?;
+      if (questionsData == null) {
+        debugPrint('❌ ERROR: Questions data is null for $grade/$quizId');
+        throw Exception('Questions data is null');
+      }
+      
+      debugPrint('🔍 DEBUG: Found ${questionsData.length} questions for $grade/$quizId');
+      
+      return questionsData.map((q) {
+        debugPrint('🔍 DEBUG: Processing question: $q');
+        return quiz.QuizQuestion.fromJson(q);
+      }).toList();
     } catch (e) {
-      debugPrint('Error fetching quiz questions: $e');
+      debugPrint('❌ ERROR: Error fetching quiz questions: $e');
       throw Exception('Failed to load quiz questions: $e');
     }
   }
 
 
 
-  /// Clear cache for a specific topic using both cache services
+  /// Clear cache for a specific topic
   Future<void> clearTopicCache(String grade, String subject, String topic) async {
     try {
-      await _lruCacheService.clearTopicCache(
-        grade: grade,
-        subject: subject,
-        topic: topic,
-      );
-      
       await _cacheService.clearTopicCache(
         grade: grade,
         subject: subject,
         topic: topic,
       );
       
-      debugPrint('Both LRU and fallback cache cleared for $grade/$subject/$topic');
+      debugPrint('Cache cleared for $grade/$subject/$topic');
     } catch (e) {
       debugPrint('Error clearing topic cache: $e');
     }
@@ -170,16 +136,6 @@ class QuizService {
       // Clear the topic cache
       await clearTopicCache(grade, subject, topic);
       
-      // Update last sync timestamp for incremental sync
-      await _cacheService.updateLastSyncTimestamp(
-        grade: grade,
-        subject: subject,
-        topic: topic,
-      );
-      
-      // Force LRU cache cleanup to remove any expired items
-      await _lruCacheService.forceCacheCleanup();
-      
       debugPrint('Cache invalidated for admin update: $grade/$subject/$topic');
     } catch (e) {
       debugPrint('Error invalidating topic cache: $e');
@@ -190,69 +146,23 @@ class QuizService {
   Future<void> recordQuizAttempt(quiz.QuizAttempt attempt) async {
     await RetryService.executeWithSmartRetry(
       operation: () async {
-        await _performanceService.executeWithPerformanceMonitoring(
-          operationId: 'record_quiz_attempt_${attempt.studentId}',
-          operation: () async {
-            // Use BatchOperationService for background queuing and batching
-            await _batchService.queueQuizAttempt(attempt);
-            debugPrint('Performance: Quiz attempt queued for batch processing: ${attempt.studentId}');
-          },
+        // Track the write operation for cost monitoring
+        await _costMonitor.trackWriteOperation(
+          collection: 'quiz_attempts',
+          documentId: '${attempt.studentId}_${attempt.completedAt.millisecondsSinceEpoch}',
+          operationType: 'create',
+          metadata: {'studentId': attempt.studentId, 'grade': attempt.grade, 'subject': attempt.subject, 'topic': attempt.topic},
         );
+        
+        // Use BatchOperationService for background queuing and batching
+        await _batchService.queueQuizAttempt(attempt);
+        debugPrint('Quiz attempt queued for batch processing: ${attempt.studentId}');
       },
       operationName: 'record_quiz_attempt_${attempt.studentId}',
     );
   }
   
-  /// Queue quiz update for incremental sync (used by admin operations)
-  Future<void> queueQuizUpdate({
-    required String grade,
-    required String subject,
-    required String topic,
-    required List<quiz.QuizQuestion> questions,
-    required String operation, // 'create', 'update', 'delete'
-  }) async {
-    try {
-      await _syncService.queueQuizUpdate(
-        grade: grade,
-        subject: subject,
-        topic: topic,
-        questions: questions,
-        operation: operation,
-      );
-      debugPrint('Quiz update queued for incremental sync: $operation for $grade/$subject/$topic');
-    } catch (e) {
-      debugPrint('Error queuing quiz update: $e');
-      throw Exception('Failed to queue quiz update: $e');
-    }
-  }
   
-  /// Batch record quiz attempts for cost optimization (legacy method)
-  Future<void> batchRecordAttempts(List<quiz.QuizAttempt> attempts) async {
-    if (attempts.isEmpty) return;
-    
-    try {
-      // Use BatchOperationService for background queuing and batching
-      for (final attempt in attempts) {
-        await _batchService.queueQuizAttempt(attempt);
-      }
-      
-      debugPrint('Quiz attempts queued for batch processing: ${attempts.length}');
-    } catch (e) {
-      debugPrint('Error queuing quiz attempts: $e');
-      throw Exception('Failed to record quiz attempts: $e');
-    }
-  }
-  
-  /// Force immediate sync of pending quiz attempts
-  Future<void> forceSyncPendingAttempts() async {
-    try {
-      await _batchService.forceSync();
-      debugPrint('Pending quiz attempts synced');
-    } catch (e) {
-      debugPrint('Error syncing pending quiz attempts: $e');
-      throw Exception('Failed to sync quiz attempts: $e');
-    }
-  }
 
   /// Validate quiz question structure
   static bool validateQuizQuestion(Map<String, dynamic> questionData) {
@@ -292,13 +202,35 @@ class QuizService {
   /// Get all available quiz topics for a grade and subject
   Future<List<String>> getAvailableTopics(String grade, String subject) async {
     try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection('quizzes')
+      // Get all quizzes for this grade and subject from quizMeta
+      final metaSnapshot = await FirebaseFirestore.instance
+          .collection('quizMeta')
           .doc(grade)
-          .collection(subject)
           .get();
       
-      return snapshot.docs.map((doc) => doc.id).toList();
+      if (!metaSnapshot.exists) {
+        return [];
+      }
+      
+      final data = metaSnapshot.data();
+      if (data == null || !data.containsKey('quizzes')) {
+        return [];
+      }
+      
+      final quizzes = data['quizzes'] as List?;
+      if (quizzes == null) {
+        return [];
+      }
+      
+      // Extract unique topics from quizzes
+      final topics = <String>{};
+      for (final quiz in quizzes) {
+        if (quiz is Map && quiz.containsKey('topic')) {
+          topics.add(quiz['topic']);
+        }
+      }
+      
+      return topics.toList();
     } catch (e) {
       debugPrint('Error fetching available topics: $e');
       return [];
@@ -308,13 +240,35 @@ class QuizService {
   /// Get all available subjects for a grade
   Future<List<String>> getAvailableSubjects(String grade) async {
     try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection('quizzes')
+      // Get all quizzes for this grade from quizMeta
+      final metaSnapshot = await FirebaseFirestore.instance
+          .collection('quizMeta')
           .doc(grade)
-          .collection('subjects')
           .get();
       
-      return snapshot.docs.map((doc) => doc.id).toList();
+      if (!metaSnapshot.exists) {
+        return [];
+      }
+      
+      final data = metaSnapshot.data();
+      if (data == null || !data.containsKey('quizzes')) {
+        return [];
+      }
+      
+      final quizzes = data['quizzes'] as List?;
+      if (quizzes == null) {
+        return [];
+      }
+      
+      // Extract unique subjects from quizzes
+      final subjects = <String>{};
+      for (final quiz in quizzes) {
+        if (quiz is Map && quiz.containsKey('subject')) {
+          subjects.add(quiz['subject']);
+        }
+      }
+      
+      return subjects.toList();
     } catch (e) {
       debugPrint('Error fetching available subjects: $e');
       return [];
@@ -324,9 +278,6 @@ class QuizService {
   /// Clear all quiz cache (useful for admin updates)
   Future<void> clearAllQuizCache() async {
     try {
-      // Clear LRU cache
-      await _lruCacheService.clearAllQuizCaches();
-      
       // Clear cost optimized cache
       await _cacheService.clearAllQuizCaches();
       
@@ -336,111 +287,23 @@ class QuizService {
     }
   }
   
-  /// Get cache statistics for performance monitoring
+  /// Get cache statistics
   Future<Map<String, dynamic>> getCacheStats() async {
     try {
-      final lruStats = await _lruCacheService.getCacheStats();
-      final syncStats = _syncService.getSyncStats();
-      final offlineStats = await _offlineService.getOfflineStats();
-      final performanceStats = _performanceService.getPerformanceStats();
+      final hitRate = _cacheService.getCacheHitRate();
       
       return {
-        'lru_cache': lruStats,
         'cache_service': 'CostOptimizedCacheService',
-        'total_cache_layers': 2,
-        'incremental_sync': syncStats,
-        'offline_service': offlineStats,
-        'performance_monitoring': performanceStats,
+        'cache_hit_rate': hitRate,
+        'cache_status': 'active',
       };
     } catch (e) {
       debugPrint('Error getting cache stats: $e');
-      return {};
+      return {
+        'cache_service': 'CostOptimizedCacheService',
+        'cache_hit_rate': 0.0,
+        'cache_status': 'error',
+      };
     }
-  }
-  
-  /// Initialize incremental sync service
-  Future<void> initializeIncrementalSync() async {
-    try {
-      await _syncService.initialize();
-      debugPrint('Incremental sync service initialized');
-    } catch (e) {
-      debugPrint('Error initializing incremental sync: $e');
-    }
-  }
-  
-  /// Get sync statistics
-  Map<String, dynamic> getSyncStats() {
-    return _syncService.getSyncStats();
-  }
-  
-  /// Force sync of pending updates
-  Future<void> forceSync() async {
-    await RetryService.executeWithSmartRetry(
-      operation: () async {
-        await _performanceService.executeWithPerformanceMonitoring(
-          operationId: 'force_sync',
-          operation: () async {
-            await _syncService.forceSync();
-            debugPrint('Performance: Force sync completed');
-          },
-        );
-      },
-      operationName: 'force_sync',
-    );
-  }
-  
-  /// Sync pending offline attempts
-  Future<int> syncPendingOfflineAttempts() async {
-    try {
-      return await _offlineService.syncPendingOfflineAttempts();
-    } catch (e) {
-      debugPrint('Error syncing offline attempts: $e');
-      return 0;
-    }
-  }
-  
-  /// Get offline quiz statistics
-  Future<Map<String, dynamic>> getOfflineStats() async {
-    try {
-      return await _offlineService.getOfflineStats();
-    } catch (e) {
-      debugPrint('Error getting offline stats: $e');
-      return {};
-    }
-  }
-  
-  /// Preload quiz for offline use
-  Future<bool> preloadQuizForOffline({
-    required String grade,
-    required String subject,
-    required String topic,
-    required List<quiz.QuizQuestion> questions,
-  }) async {
-    return await RetryService.executeWithSmartRetry(
-      operation: () async {
-        return await _performanceService.executeWithPerformanceMonitoring(
-          operationId: 'preload_quiz_offline_$grade/$subject/$topic',
-          operation: () async {
-            return await _offlineService.preloadQuizForOffline(
-              grade: grade,
-              subject: subject,
-              topic: topic,
-              questions: questions,
-            );
-          },
-        );
-      },
-      operationName: 'preload_quiz_offline_$grade/$subject/$topic',
-    );
-  }
-  
-  /// Get performance statistics
-  Future<Map<String, dynamic>> getPerformanceStats() async {
-    return _performanceService.getPerformanceStats();
-  }
-  
-  /// Optimize memory usage
-  Future<void> optimizeMemoryUsage() async {
-    await _performanceService.optimizeMemoryUsage();
   }
 }

@@ -293,10 +293,11 @@ class StudentChallengeService {
     try {
       // Use existing QuizService to get questions
       final quizService = QuizService();
+      // Create quizId based on grade, subject, and topic - match uploaded format
+      final quizId = '${subject.toLowerCase()}_grade${grade}_${topic.toLowerCase()}';
       final allQuestions = await quizService.getQuizQuestions(
         grade: grade,
-        subject: subject,
-        topic: topic,
+        quizId: quizId,
       );
       
       if (allQuestions.isEmpty) {

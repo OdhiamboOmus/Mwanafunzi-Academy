@@ -5,20 +5,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../data/models/video_model.dart';
 import '../../data/models/video_metadata.dart';
-import '../../utils/youtube_utils.dart';
-import '../../utils/video_error_handler.dart';
-import '../../utils/video_performance_manager.dart';
+import '../../utils/video_utils.dart';
+import '../../core/services/error_handling_service.dart';
 
 /// Simple video service following Flutter Lite rules
 /// Maximum 150 lines per file, minimal dependencies
 class VideoService {
   static const String _videoCachePrefix = 'video_cache_';
   static const int _cacheTTLSeconds = 24 * 60 * 60; // 24 hours
-  final VideoPerformanceManager _performanceManager = VideoPerformanceManager.instance;
 
   /// Get videos by grade with optional subject filtering
   Future<List<VideoModel>> getVideosByGrade(String grade, {String? subject}) async {
-    final result = await VideoErrorHandler.handleFirestoreError<List<VideoModel>?>(
+    final result = await ErrorHandlingService().executeWithHandling<List<VideoModel>>(
       () async {
         // Try cache first
         final cached = await _getCachedVideos(grade, subject);
@@ -34,11 +32,11 @@ class VideoService {
         
         return videos;
       },
-      'getVideosByGrade',
-      defaultValue: [],
+      operationName: 'getVideosByGrade',
+      fallback: () => [],
     );
     
-    return result ?? [];
+    return result;
   }
 
   /// Get real-time stream of videos by grade with automatic refresh
@@ -188,9 +186,9 @@ class VideoService {
     }
   }
 
-  /// Get YouTube thumbnail URL
+  /// Get YouTube thumbnail URL using unified utils
   String getYouTubeThumbnailUrl(String videoId) {
-    return YouTubeUtils.getThumbnailUrl(videoId, quality: 'maxresdefault');
+    return VideoUtils.getOptimizedThumbnail(videoId, quality: 'maxresdefault');
   }
 
   /// Get available subjects for a grade
@@ -225,14 +223,14 @@ class VideoService {
     }
   }
 
-  /// Validate YouTube URL
+  /// Validate YouTube URL using unified utils
   bool isValidYouTubeUrl(String url) {
-    return YouTubeUtils.isValidYouTubeUrl(url);
+    return VideoUtils.isValidYouTubeUrl(url);
   }
 
-  /// Extract video ID from URL
+  /// Extract video ID from URL using unified utils
   String? extractVideoId(String url) {
-    return YouTubeUtils.extractVideoId(url);
+    return VideoUtils.extractVideoId(url);
   }
 
   /// Get cached videos
@@ -363,7 +361,7 @@ class VideoService {
     }
   }
 
-  /// Enhanced caching with LRU eviction
+  /// Enhanced caching with smart cleanup
   Future<void> _originalCacheVideos(List<VideoModel> videos, String grade, String? subject) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -380,8 +378,8 @@ class VideoService {
       
       await prefs.setString(cacheKey, jsonEncode(jsonData));
       
-      // Run LRU cleanup if cache is getting large
-      await _runCacheCleanup();
+      // Run smart cleanup if cache is getting large
+      await _runSmartCacheCleanup();
       
       debugPrint('Cached ${videos.length} videos for $grade/${subject ?? "all"}');
     } catch (e) {
@@ -389,32 +387,24 @@ class VideoService {
     }
   }
 
-  /// Run LRU cache cleanup to prevent excessive storage
-  Future<void> _runCacheCleanup() async {
+  /// Run smart cache cleanup to prevent excessive storage
+  Future<void> _runSmartCacheCleanup() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final allKeys = prefs.getKeys();
       final videoCacheKeys = allKeys.where((key) => key.startsWith(_videoCachePrefix)).toList();
       
-      if (videoCacheKeys.length > 20) { // Keep only 20 most recent caches
-        // Sort by cache timestamp (newest first)
-        videoCacheKeys.sort((a, b) {
-          final aTime = prefs.getInt('${a}_timestamp') ?? 0;
-          final bTime = prefs.getInt('${b}_timestamp') ?? 0;
-          return bTime.compareTo(aTime);
-        });
-        
+      if (videoCacheKeys.length > 15) { // Keep only 15 most recent caches
         // Remove oldest caches
-        final keysToRemove = videoCacheKeys.skip(20).take(10).toList();
+        final keysToRemove = videoCacheKeys.take(videoCacheKeys.length - 15).toList();
         for (final key in keysToRemove) {
           await prefs.remove(key);
-          await prefs.remove('${key}_timestamp');
         }
         
         debugPrint('Cleaned up ${keysToRemove.length} old video caches');
       }
     } catch (e) {
-      debugPrint('Error running cache cleanup: $e');
+      debugPrint('Error running smart cache cleanup: $e');
     }
   }
 
@@ -449,10 +439,14 @@ class VideoService {
         'totalCachedVideos': totalVideos,
         'totalCacheSizeBytes': totalSize,
         'cacheTTLSeconds': _cacheTTLSeconds,
+        'cache_status': 'active',
       };
     } catch (e) {
       debugPrint('Error getting cache stats: $e');
-      return {};
+      return {
+        'cache_status': 'error',
+        'error': e.toString(),
+      };
     }
   }
 

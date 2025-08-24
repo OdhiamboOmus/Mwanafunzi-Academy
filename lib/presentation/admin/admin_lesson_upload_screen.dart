@@ -132,7 +132,6 @@ class _AdminLessonUploadScreenState extends State<AdminLessonUploadScreen> {
   }
 
   void _handleGradeSelected(String grade) {
-    print('🔍 CONSOLE: Grade selected: $grade'); // Using print instead of debugPrint
     debugPrint('🔍 DEBUG: Grade selected: $grade');
     setState(() {
       _selectedGrade = grade;
@@ -239,7 +238,6 @@ class _AdminLessonUploadScreenState extends State<AdminLessonUploadScreen> {
   );
 
   void _handleFileSelected(List<Map<String, dynamic>> jsonData) {
-    print('🔍 CONSOLE: _handleFileSelected called with ${jsonData.length} items'); // Using print
     debugPrint('DEBUG: _handleFileSelected called with ${jsonData.length} items');
     
     if (jsonData.isEmpty) {
@@ -253,7 +251,6 @@ class _AdminLessonUploadScreenState extends State<AdminLessonUploadScreen> {
     try {
       // Validate lesson content
       final lesson = AdminLessonService.validateLessonJson(jsonData.first);
-      print('🔍 CONSOLE: Lesson validated successfully: ${lesson['title']}'); // Using print
       debugPrint('DEBUG: Lesson validated successfully: ${lesson['title']}');
       
       setState(() {
@@ -261,7 +258,6 @@ class _AdminLessonUploadScreenState extends State<AdminLessonUploadScreen> {
         _message = 'Validated lesson: ${lesson['title']}';
       });
     } catch (e) {
-      print('🔍 CONSOLE: Lesson validation failed: $e'); // Using print
       debugPrint('DEBUG: Lesson validation failed: $e');
       setState(() {
         _message = 'Error: ${e.toString()}';
@@ -271,11 +267,8 @@ class _AdminLessonUploadScreenState extends State<AdminLessonUploadScreen> {
   }
 
   Future<void> _uploadLessonContent() async {
-    print('🔍 CONSOLE: _uploadLessonContent called'); // Using print
     debugPrint('DEBUG: _uploadLessonContent called');
-    print('🔍 CONSOLE: Selected grade: $_selectedGrade'); // Using print
     debugPrint('DEBUG: Selected grade: $_selectedGrade');
-    print('🔍 CONSOLE: Preview lesson: ${_previewLesson != null ? _previewLesson!['title'] : "null"}'); // Using print
     debugPrint('DEBUG: Preview lesson: ${_previewLesson != null ? _previewLesson!['title'] : "null"}');
     
     if (_previewLesson == null) {
@@ -290,13 +283,11 @@ class _AdminLessonUploadScreenState extends State<AdminLessonUploadScreen> {
 
     try {
       // Use AdminLessonService for upload
-      print('🔍 CONSOLE: Starting upload process...'); // Using print
       debugPrint('DEBUG: Starting upload process...');
       await AdminLessonService.uploadLessonContent(
         grade: _selectedGrade,
         lesson: _previewLesson!,
       );
-      print('🔍 CONSOLE: Upload completed successfully'); // Using print
       debugPrint('DEBUG: Upload completed successfully');
       
       setState(() {
@@ -309,7 +300,6 @@ class _AdminLessonUploadScreenState extends State<AdminLessonUploadScreen> {
         if (mounted) setState(() => _message = '');
       });
     } catch (e) {
-      print('🔍 CONSOLE: Upload failed: $e'); // Using print
       debugPrint('DEBUG: Upload failed: $e');
       setState(() {
         _isUploading = false;

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
@@ -6,160 +5,108 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 // Admin lesson service following Flutter Lite rules (<150 lines)
 class AdminLessonService {
-  // Admin credentials
-  static const String _adminEmail = 'official.poa.labs@gmail.com';
-  static const String _adminPassword = 'thy_will_be_done';
-  
   /// Upload lesson content to Firestore with proper authentication
   static Future<void> uploadLessonContent({
     required String grade,
     required Map<String, dynamic> lesson,
   }) async {
     try {
-      print('🔍 CONSOLE: AdminLessonService.uploadLessonContent started'); // Using print
       debugPrint('🔍 DEBUG: AdminLessonService.uploadLessonContent started');
-      print('🔍 CONSOLE: Target grade: $grade'); // Using print
       debugPrint('🔍 DEBUG: Target grade: $grade');
-      print('🔍 CONSOLE: Lesson ID: ${lesson['lessonId']}'); // Using print
       debugPrint('🔍 DEBUG: Lesson ID: ${lesson['lessonId']}');
-      print('🔍 CONSOLE: Lesson title: ${lesson['title']}'); // Using print
       debugPrint('🔍 DEBUG: Lesson title: ${lesson['title']}');
       
-      // Authenticate admin user first
-      print('🔐 CONSOLE: Authenticating admin user...'); // Using print
-      debugPrint('🔐 DEBUG: Authenticating admin user...');
-      final user = await _authenticateAdmin();
-      print('🔐 CONSOLE: Authentication successful for user: ${user?.email}'); // Using print
-      debugPrint('🔐 DEBUG: Authentication successful for user: ${user?.email}');
+      // Check if user is authenticated
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated. Please sign in first.');
+      }
       
-      // Compress lesson content with gzip
-      final compressedContent = _compressLessonContent(lesson);
-      print('🔍 CONSOLE: Content compressed to ${compressedContent.length} bytes'); // Using print
-      debugPrint('🔍 DEBUG: Content compressed to ${compressedContent.length} bytes');
+      debugPrint('🔐 DEBUG: User authenticated: ${user.email}');
       
-      // Store in Firestore with 30-day cache headers simulation
-      final lessonPath = 'lessons/$grade/${lesson['lessonId']}.json.gz';
-      print('🔍 CONSOLE: Firestore path: $lessonPath'); // Using print
-      debugPrint('🔍 DEBUG: Firestore path: $lessonPath');
-      
-      // Create lesson document in Firestore
+      // Store lesson directly in Firestore (matching script structure)
       final lessonDoc = FirebaseFirestore.instance
           .collection('lessons')
-          .doc(grade)
-          .collection('lesson_files')
           .doc(lesson['lessonId']);
       
-      print('🔍 CONSOLE: Writing to Firestore document...'); // Using print
-      debugPrint('🔍 DEBUG: Writing to Firestore document...');
-      await lessonDoc.set({
-        'content': base64Encode(compressedContent),
-        'contentType': 'application/gzip',
-        'cacheControl': 'public, max-age=2592000', // 30 days in seconds
-        'sizeBytes': compressedContent.length,
-        'uploadedAt': FieldValue.serverTimestamp(),
-      });
-      print('🔍 CONSOLE: Firestore document written successfully'); // Using print
-      debugPrint('🔍 DEBUG: Firestore document written successfully');
+      debugPrint('🔍 DEBUG: Writing lesson to Firestore...');
       
-      // Create lessonsMeta document
-      print('🔍 CONSOLE: Creating lessons metadata...'); // Using print
-      debugPrint('🔍 DEBUG: Creating lessons metadata...');
-      await _createLessonMetaDocument(grade, lesson, lessonPath);
-      print('🔍 CONSOLE: Lessons metadata created successfully'); // Using print
-      debugPrint('🔍 DEBUG: Lessons metadata created successfully');
+      await lessonDoc.set({
+        'lessonId': lesson['lessonId'],
+        'title': lesson['title'],
+        'subject': lesson['subject'],
+        'topic': lesson['topic'] ?? lesson['title'],
+        'grade': grade,
+        'sections': lesson['sections'],
+        'totalSections': lesson['sections'].length,
+        'hasQuestions': (lesson['sections'] as List).any((s) => s['type'] == 'question'),
+        'createdAt': FieldValue.serverTimestamp(),
+        'lastUpdated': FieldValue.serverTimestamp(),
+        'version': 1,
+        'uploadedBy': user.email,
+      });
+      
+      debugPrint('🔍 DEBUG: Lesson document written successfully');
+      
+      // Update lessonsMeta document
+      await _updateLessonsMeta(grade, lesson);
       
       // Clear cache for this grade
-      print('🔍 CONSOLE: Clearing cache for grade $grade...'); // Using print
-      debugPrint('🔍 DEBUG: Clearing cache for grade $grade...');
       await _clearGradeCache(grade);
-      print('🔍 CONSOLE: Cache cleared successfully'); // Using print
-      debugPrint('🔍 DEBUG: Cache cleared successfully');
       
-      print('🔍 CONSOLE: Upload completed successfully - lesson should be available to users'); // Using print
-      debugPrint('🔍 DEBUG: Upload completed successfully - lesson should be available to users');
+      debugPrint('🔍 DEBUG: Upload completed successfully');
     } catch (e) {
-      print('🔍 CONSOLE: Upload failed with error: $e'); // Using print
-      debugPrint('🔍 DEBUG: Upload failed with error: $e');
+      debugPrint('🔍 DEBUG: Upload failed: $e');
       throw Exception('Failed to upload lesson content: $e');
     }
   }
   
-  /// Authenticate admin user
-  static Future<User?> _authenticateAdmin() async {
+  /// Update lessons metadata
+  static Future<void> _updateLessonsMeta(String grade, Map<String, dynamic> lesson) async {
     try {
-      // Check if already authenticated
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser != null && currentUser.email == _adminEmail) {
-        print('🔐 CONSOLE: Already authenticated as admin'); // Using print
-        debugPrint('🔐 DEBUG: Already authenticated as admin');
-        return currentUser;
-      }
+      debugPrint('🔍 DEBUG: Updating lessons metadata for grade $grade');
       
-      // Sign in with admin credentials
-      print('🔐 CONSOLE: Signing in as admin...'); // Using print
-      debugPrint('🔐 DEBUG: Signing in as admin...');
-      
-      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _adminEmail,
-        password: _adminPassword,
-      );
-      
-      print('🔐 CONSOLE: Admin authentication successful'); // Using print
-      debugPrint('🔐 DEBUG: Admin authentication successful');
-      return credential.user;
-    } catch (e) {
-      print('🔐 CONSOLE: Admin authentication failed: $e'); // Using print
-      debugPrint('🔐 DEBUG: Admin authentication failed: $e');
-      throw Exception('Admin authentication failed: $e');
-    }
-  }
-
-  /// "Compress" lesson content using base64 encoding (simplified approach)
-  static List<int> _compressLessonContent(Map<String, dynamic> lesson) {
-    final jsonString = jsonEncode(lesson);
-    final bytes = utf8.encode(jsonString);
-    
-    // For Flutter Lite compliance, we'll use base64 encoding instead of external compression
-    // This avoids adding the archive package dependency
-    return bytes;
-  }
-
-  /// Create lessonsMeta document
-  static Future<void> _createLessonMetaDocument(
-    String grade,
-    Map<String, dynamic> lesson,
-    String lessonPath,
-  ) async {
-    try {
-      debugPrint('🔍 DEBUG: Creating meta document for grade $grade');
       final metaDoc = FirebaseFirestore.instance
           .collection('lessonsMeta')
           .doc(grade);
-    
+      
+      // Get existing lessons
+      final snapshot = await metaDoc.get();
+      List<Map<String, dynamic>> existingLessons = [];
+      
+      if (snapshot.exists && snapshot.data()?['lessons'] != null) {
+        existingLessons = List<Map<String, dynamic>>.from(snapshot.data()!['lessons']);
+      }
+      
+      // Remove existing lesson with same ID
+      existingLessons.removeWhere((l) => l['id'] == lesson['lessonId']);
+      
+      // Add new lesson metadata
       final lessonMeta = {
         'id': lesson['lessonId'],
         'title': lesson['title'],
         'subject': lesson['subject'],
-        'topic': lesson['topic'],
-        'sizeBytes': lesson.toString().length,
-        'contentPath': lessonPath,
-        'version': 1,
-        'totalSections': (lesson['sections'] as List).length,
+        'topic': lesson['topic'] ?? lesson['title'],
+        'totalSections': lesson['sections'].length,
         'hasQuestions': (lesson['sections'] as List).any((s) => s['type'] == 'question'),
         'lastUpdated': FieldValue.serverTimestamp(),
       };
       
-      debugPrint('🔍 DEBUG: Meta data: ${lessonMeta.toString()}');
+      existingLessons.add(lessonMeta);
       
-      await metaDoc.update({
-        'lessons': FieldValue.arrayUnion([lessonMeta])
+      await metaDoc.set({
+        'grade': grade,
+        'lessons': existingLessons,
+        'lastUpdated': FieldValue.serverTimestamp(),
       });
-      debugPrint('🔍 DEBUG: Meta document updated successfully');
+      
+      debugPrint('🔍 DEBUG: Lessons metadata updated successfully');
     } catch (e) {
-      debugPrint('🔍 DEBUG: Failed to create lesson meta document: $e');
-      throw Exception('Failed to create lesson meta document: $e');
+      debugPrint('🔍 DEBUG: Failed to update lessons metadata: $e');
+      throw Exception('Failed to update lessons metadata: $e');
     }
   }
+
 
   /// Validate lesson JSON structure
   static Map<String, dynamic> validateLessonJson(Map<String, dynamic> jsonData) {
@@ -317,15 +264,19 @@ class AdminLessonService {
       final prefs = await SharedPreferences.getInstance();
       final cacheKey = 'lessons_meta_$grade';
       
-      debugPrint('🔍 DEBUG: Clearing cache with key: $cacheKey');
+      debugPrint('🔍 DEBUG: Clearing cache for grade $grade');
       
       // Clear cached lessons meta
       await prefs.remove(cacheKey);
       await prefs.remove('${cacheKey}_timestamp');
       
+      // Clear lesson content cache
+      final lessonCacheKey = 'lesson_content_$grade';
+      await prefs.remove(lessonCacheKey);
+      await prefs.remove('${lessonCacheKey}_timestamp');
+      
       debugPrint('🔍 DEBUG: Cache cleared successfully for grade $grade');
     } catch (e) {
-      // Don't throw exception for cache clearing failures
       debugPrint('🔍 DEBUG: Warning: Failed to clear cache for grade $grade: $e');
     }
   }

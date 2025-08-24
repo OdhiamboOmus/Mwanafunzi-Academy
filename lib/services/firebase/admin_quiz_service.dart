@@ -1,71 +1,116 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../data/models/quiz_model.dart';
-import 'incremental_sync_service.dart';
-import 'performance_optimization_service.dart';
 import 'retry_service.dart';
 
 // Simplified admin quiz service following Flutter Lite rules
 class AdminQuizService {
-  static final IncrementalSyncService _syncService = IncrementalSyncService();
-  static final PerformanceOptimizationService _performanceService = PerformanceOptimizationService();
   
-  /// Upload quiz content to Firebase with batch operations and incremental sync
+  /// Upload quiz content to Firebase with proper structure
   static Future<void> uploadQuizContent({
     required String grade,
     required String subject,
     required String topic,
     required List<QuizQuestion> questions,
   }) async {
-    await RetryService.executeWithSmartRetry(
-      operation: () async {
-        await _performanceService.executeWithPerformanceMonitoring(
-          operationId: 'upload_quiz_content_$grade/$subject/$topic',
-          operation: () async {
-            // Create quiz data structure
-            final quizData = {
-              'questions': questions.map((q) => q.toJson()).toList(),
-              'metadata': {
-                'totalQuestions': questions.length,
-                'lastUpdated': DateTime.now().toIso8601String(),
-                'grade': grade,
-                'subject': subject,
-                'topic': topic,
-              },
-            };
-
-            // Upload to Firebase using batch operation for cost optimization
-            final batch = FirebaseFirestore.instance.batch();
-            
-            // Create document reference
-            final docRef = FirebaseFirestore.instance
-                .collection('quizzes')
-                .doc(grade)
-                .collection(subject)
-                .doc(topic);
-            
-            // Add to batch
-            batch.set(docRef, quizData);
-            
-            // Commit batch operation
-            await batch.commit();
-            
-            // Queue update for incremental sync
-            await _syncService.queueQuizUpdate(
-              grade: grade,
-              subject: subject,
-              topic: topic,
-              questions: questions,
-              operation: 'update',
-            );
-            
-            debugPrint('Performance: Quiz content uploaded and queued for sync: $grade/$subject/$topic');
-          },
-        );
-      },
-      operationName: 'upload_quiz_content_$grade/$subject/$topic',
-    );
+    try {
+      debugPrint('🔍 DEBUG: AdminQuizService.uploadQuizContent started');
+      debugPrint('🔍 DEBUG: Grade: $grade, Subject: $subject, Topic: $topic');
+      debugPrint('🔍 DEBUG: Questions count: ${questions.length}');
+      
+      // Check if user is authenticated
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated. Please sign in first.');
+      }
+      
+      debugPrint('🔐 DEBUG: User authenticated: ${user.email}');
+      
+      // Generate quiz ID from topic and grade
+      final quizId = '${subject.toLowerCase().replaceAll(' ', '_')}_grade${grade}_${topic.toLowerCase().replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}';
+      
+      // Create quiz document directly (matching script structure)
+      final quizDoc = FirebaseFirestore.instance
+          .collection('quizzes')
+          .doc(quizId);
+      
+      debugPrint('🔍 DEBUG: Writing quiz to Firestore...');
+      
+      await quizDoc.set({
+        'quizId': quizId,
+        'title': '$subject - $topic Quiz',
+        'subject': subject,
+        'topic': topic,
+        'grade': grade,
+        'description': '$subject quiz on $topic for grade $grade',
+        'questions': questions.map((q) => q.toJson()).toList(),
+        'totalQuestions': questions.length,
+        'createdAt': FieldValue.serverTimestamp(),
+        'lastUpdated': FieldValue.serverTimestamp(),
+        'version': 1,
+        'uploadedBy': user.email,
+      });
+      
+      debugPrint('🔍 DEBUG: Quiz document written successfully');
+      
+      // Update quiz metadata
+      await _updateQuizMeta(grade, subject, topic, questions, quizId);
+      
+      // Clear cache for this quiz
+      await _clearQuizCache(grade, subject, topic);
+      
+      debugPrint('🔍 DEBUG: Upload completed successfully');
+    } catch (e) {
+      debugPrint('🔍 DEBUG: Upload failed: $e');
+      throw Exception('Failed to upload quiz content: $e');
+    }
+  }
+  
+  /// Update quiz metadata
+  static Future<void> _updateQuizMeta(String grade, String subject, String topic, List<QuizQuestion> questions, String quizId) async {
+    try {
+      debugPrint('🔍 DEBUG: Updating quiz metadata for $grade/$subject/$topic');
+      
+      final metaDoc = FirebaseFirestore.instance
+          .collection('quizMeta')
+          .doc(grade);
+      
+      // Get existing quizzes
+      final snapshot = await metaDoc.get();
+      List<Map<String, dynamic>> existingQuizzes = [];
+      
+      if (snapshot.exists && snapshot.data()?['quizzes'] != null) {
+        existingQuizzes = List<Map<String, dynamic>>.from(snapshot.data()!['quizzes']);
+      }
+      
+      // Remove existing quiz with same topic
+      existingQuizzes.removeWhere((q) => q['topic'] == topic);
+      
+      // Add new quiz metadata
+      final quizMeta = {
+        'id': quizId,
+        'title': '$subject - $topic Quiz',
+        'subject': subject,
+        'topic': topic,
+        'totalQuestions': questions.length,
+        'lastUpdated': FieldValue.serverTimestamp(),
+      };
+      
+      existingQuizzes.add(quizMeta);
+      
+      await metaDoc.set({
+        'grade': grade,
+        'quizzes': existingQuizzes,
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+      
+      debugPrint('🔍 DEBUG: Quiz metadata updated successfully');
+    } catch (e) {
+      debugPrint('🔍 DEBUG: Failed to update quiz metadata: $e');
+      throw Exception('Failed to update quiz metadata: $e');
+    }
   }
 
   /// Validate quiz JSON structure
@@ -132,34 +177,50 @@ class AdminQuizService {
     required String subject,
     required String topic,
   }) async {
-    await RetryService.executeWithSmartRetry(
-      operation: () async {
-        await _performanceService.executeWithPerformanceMonitoring(
-          operationId: 'delete_quiz_content_$grade/$subject/$topic',
-          operation: () async {
-            final docRef = FirebaseFirestore.instance
-                .collection('quizzes')
-                .doc(grade)
-                .collection(subject)
-                .doc(topic);
-            
-            await docRef.delete();
-            
-            // Queue deletion for incremental sync
-            await _syncService.queueQuizUpdate(
-              grade: grade,
-              subject: subject,
-              topic: topic,
-              questions: [],
-              operation: 'delete',
-            );
-            
-            debugPrint('Performance: Quiz content deleted and queued for sync: $grade/$subject/$topic');
-          },
-        );
-      },
-      operationName: 'delete_quiz_content_$grade/$subject/$topic',
-    );
+    try {
+      debugPrint('🔍 DEBUG: Deleting quiz content for $grade/$subject/$topic');
+      
+      // Find quiz ID from metadata
+      final metaSnapshot = await FirebaseFirestore.instance
+          .collection('quizMeta')
+          .doc(grade)
+          .get();
+      
+      if (metaSnapshot.exists && metaSnapshot.data()?['quizzes'] != null) {
+        final quizzes = List<Map<String, dynamic>>.from(metaSnapshot.data()!['quizzes']);
+        final quiz = quizzes.firstWhere((q) => q['topic'] == topic, orElse: () => {});
+        
+        if (quiz.isNotEmpty) {
+          final quizId = quiz['id'];
+          
+          // Delete quiz document
+          final quizDoc = FirebaseFirestore.instance
+              .collection('quizzes')
+              .doc(quizId);
+          
+          await quizDoc.delete();
+          
+          // Update metadata
+          quizzes.removeWhere((q) => q['topic'] == topic);
+          final metaDoc = FirebaseFirestore.instance
+              .collection('quizMeta')
+              .doc(grade);
+          
+          await metaDoc.update({
+            'quizzes': quizzes,
+            'lastUpdated': FieldValue.serverTimestamp(),
+          });
+          
+          // Clear cache
+          await _clearQuizCache(grade, subject, topic);
+          
+          debugPrint('🔍 DEBUG: Quiz content deleted successfully');
+        }
+      }
+    } catch (e) {
+      debugPrint('🔍 DEBUG: Failed to delete quiz content: $e');
+      throw Exception('Failed to delete quiz content: $e');
+    }
   }
 
   /// Update quiz content
@@ -180,31 +241,6 @@ class AdminQuizService {
       throw Exception('Failed to update quiz content: $e');
     }
   }
-  
-  /// Get sync statistics for admin monitoring
-  static Map<String, dynamic> getSyncStats() {
-    return _syncService.getSyncStats();
-  }
-  
-  /// Force sync of pending updates
-  static Future<void> forceSync() async {
-    await RetryService.executeWithSmartRetry(
-      operation: () async {
-        await _performanceService.executeWithPerformanceMonitoring(
-          operationId: 'admin_force_sync',
-          operation: () async {
-            await _syncService.forceSync();
-          },
-        );
-      },
-      operationName: 'admin_force_sync',
-    );
-  }
-  
-  /// Get performance statistics
-  static Map<String, dynamic> getPerformanceStats() {
-    return _performanceService.getPerformanceStats();
-  }
 
   /// Clear cache for a specific quiz topic
   static Future<void> clearTopicCache({
@@ -222,11 +258,26 @@ class AdminQuizService {
       
       // Clear metadata cache
       await prefs.remove('quiz_metadata_${grade}_$subject');
+      
+      debugPrint('🔍 DEBUG: Cache cleared for $grade/$subject/$topic');
     } catch (e) {
-      // Don't throw exception for cache clearing failures
-      if (kDebugMode) {
-        print('Warning: Failed to clear cache for $topic: $e');
-      }
+      debugPrint('🔍 DEBUG: Warning: Failed to clear cache for $topic: $e');
+    }
+  }
+  
+  /// Clear quiz cache for a specific grade, subject, and topic
+  static Future<void> _clearQuizCache(String grade, String subject, String topic) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cacheKey = 'quiz_${grade}_${subject}_$topic';
+      
+      // Clear cached questions
+      await prefs.remove(cacheKey);
+      await prefs.remove('${cacheKey}_timestamp');
+      
+      debugPrint('🔍 DEBUG: Quiz cache cleared for $grade/$subject/$topic');
+    } catch (e) {
+      debugPrint('🔍 DEBUG: Warning: Failed to clear quiz cache: $e');
     }
   }
 }

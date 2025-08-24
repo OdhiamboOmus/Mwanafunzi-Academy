@@ -27,7 +27,7 @@ service cloud.firestore {
     }
     
     // Quizzes collection - temporarily open for testing
-    match /quizzes/{grade}/{quizId} {
+    match /quizzes/{quizId} {
       allow read, write: if true;
     }
     

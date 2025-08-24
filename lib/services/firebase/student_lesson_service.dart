@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
+import '../../core/services/cost_monitoring_service.dart';
 
 // Student lesson service following Flutter Lite rules (<150 lines)
 class StudentLessonService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final CostMonitoringService _costMonitor = CostMonitoringService();
   
   /// Get lessons for a specific grade from Firestore
   Future<List<Map<String, dynamic>>> getLessonsForGrade(String grade) async {
@@ -23,6 +25,12 @@ class StudentLessonService {
         final cachedLessons = await _getCachedLessons(grade);
         if (cachedLessons.isNotEmpty) {
           debugPrint('🔍 DEBUG: Using cached lessons for grade: $grade');
+          // Record cache hit for performance monitoring
+          await _costMonitor.trackReadOperation(
+            collection: 'cache',
+            documentId: 'lessons_meta_$grade',
+            metadata: {'grade': grade, 'operation': 'cache_hit'},
+          );
           return cachedLessons;
         }
       } catch (e) {
@@ -30,6 +38,13 @@ class StudentLessonService {
       }
       
       // Fetch from Firestore if cache is empty or invalid
+      // Track the read operation for cost monitoring
+      await _costMonitor.trackReadOperation(
+        collection: 'lessonsMeta',
+        documentId: grade,
+        metadata: {'grade': grade, 'operation': 'get_lessons_for_grade'},
+      );
+      
       final metaDoc = _firestore.collection('lessonsMeta').doc(grade);
       final snapshot = await metaDoc.get();
       
@@ -47,6 +62,13 @@ class StudentLessonService {
         
         // Cache the lessons for offline access
         await _cacheLessons(grade, validLessons);
+        
+        // Record cache miss for performance monitoring
+        await _costMonitor.trackReadOperation(
+          collection: 'cache',
+          documentId: 'lessons_meta_$grade',
+          metadata: {'grade': grade, 'operation': 'cache_miss'},
+        );
         
         return validLessons;
       }
@@ -71,6 +93,13 @@ class StudentLessonService {
       }
       
       // Fetch lesson content directly from lessons collection
+      // Track the read operation for cost monitoring
+      await _costMonitor.trackReadOperation(
+        collection: 'lessons',
+        documentId: lessonId,
+        metadata: {'grade': grade, 'lessonId': lessonId, 'operation': 'get_lesson_content'},
+      );
+      
       final lessonDoc = _firestore.collection('lessons').doc(lessonId);
       final snapshot = await lessonDoc.get();
       
@@ -120,6 +149,7 @@ class StudentLessonService {
       }
     } catch (e) {
       debugPrint('❌ WARNING: Failed to cache lessons for grade $grade: $e');
+      // Don't throw - continue without caching
     }
   }
   
@@ -156,6 +186,7 @@ class StudentLessonService {
       }
     } catch (e) {
       debugPrint('❌ WARNING: Failed to get cached lessons for grade $grade: $e');
+      // Return empty list instead of throwing to allow app to continue
       return [];
     }
   }
@@ -176,6 +207,12 @@ class StudentLessonService {
         final cachedQuizzes = await _getCachedQuizzes(grade);
         if (cachedQuizzes.isNotEmpty) {
           debugPrint('🔍 DEBUG: Using cached quizzes for grade: $grade');
+          // Record cache hit for performance monitoring
+          await _costMonitor.trackReadOperation(
+            collection: 'cache',
+            documentId: 'quiz_meta_$grade',
+            metadata: {'grade': grade, 'operation': 'cache_hit'},
+          );
           return cachedQuizzes;
         }
       } catch (e) {
@@ -183,6 +220,13 @@ class StudentLessonService {
       }
       
       // Fetch from Firestore if cache is empty or invalid
+      // Track the read operation for cost monitoring
+      await _costMonitor.trackReadOperation(
+        collection: 'quizMeta',
+        documentId: grade,
+        metadata: {'grade': grade, 'operation': 'get_quizzes_for_grade'},
+      );
+      
       final metaDoc = _firestore.collection('quizMeta').doc(grade);
       final snapshot = await metaDoc.get();
       
@@ -224,6 +268,13 @@ class StudentLessonService {
       }
       
       // Fetch quiz content directly from quizzes collection
+      // Track the read operation for cost monitoring
+      await _costMonitor.trackReadOperation(
+        collection: 'quizzes',
+        documentId: quizId,
+        metadata: {'grade': grade, 'quizId': quizId, 'operation': 'get_quiz_content'},
+      );
+      
       final quizDoc = _firestore.collection('quizzes').doc(quizId);
       final snapshot = await quizDoc.get();
       
@@ -273,6 +324,7 @@ class StudentLessonService {
       }
     } catch (e) {
       debugPrint('❌ WARNING: Failed to cache quizzes for grade $grade: $e');
+      // Don't throw - continue without caching
     }
   }
   
@@ -309,6 +361,7 @@ class StudentLessonService {
       }
     } catch (e) {
       debugPrint('❌ WARNING: Failed to get cached quizzes for grade $grade: $e');
+      // Return empty list instead of throwing to allow app to continue
       return [];
     }
   }

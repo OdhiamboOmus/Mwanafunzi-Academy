@@ -1,4 +1,6 @@
 
+import 'package:flutter/foundation.dart';
+
 /// Represents a single quiz question
 class QuizQuestion {
   final String id;
@@ -17,13 +19,33 @@ class QuizQuestion {
 
   /// Create from JSON
   factory QuizQuestion.fromJson(Map<String, dynamic> json) {
-    return QuizQuestion(
-      id: json['id'] ?? '',
-      question: json['question'] ?? '',
-      options: List<String>.from(json['options'] ?? []),
-      correctAnswerIndex: json['correctAnswerIndex'] ?? 0,
-      explanation: json['explanation'] ?? '',
-    );
+    debugPrint('🔍 DEBUG: Creating QuizQuestion from JSON: $json');
+    
+    try {
+      final id = json['id'];
+      final question = json['question'];
+      final options = json['options'];
+      final correctAnswerIndex = json['correctAnswerIndex'];
+      final explanation = json['explanation'];
+      
+      debugPrint('🔍 DEBUG: Parsed values - id: $id, question: $question, options: $options, correctAnswerIndex: $correctAnswerIndex, explanation: $explanation');
+      
+      if (id == null || question == null || options == null || correctAnswerIndex == null || explanation == null) {
+        debugPrint('❌ ERROR: Missing required fields in JSON: $json');
+        throw Exception('Missing required fields in quiz question');
+      }
+      
+      return QuizQuestion(
+        id: id,
+        question: question,
+        options: List<String>.from(options),
+        correctAnswerIndex: correctAnswerIndex,
+        explanation: explanation,
+      );
+    } catch (e) {
+      debugPrint('❌ ERROR: Failed to create QuizQuestion from JSON: $e');
+      rethrow;
+    }
   }
 
   /// Convert to JSON

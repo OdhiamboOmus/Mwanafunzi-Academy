@@ -5,7 +5,12 @@ import 'widgets/quiz_challenge_section.dart';
 import 'widgets/quiz_competitions_section.dart';
 
 class QuizChallengeScreen extends StatefulWidget {
-  const QuizChallengeScreen({super.key});
+  final String selectedGrade;
+
+  const QuizChallengeScreen({
+    super.key,
+    required this.selectedGrade,
+  });
 
   @override
   State<QuizChallengeScreen> createState() => _QuizChallengeScreenState();
@@ -53,7 +58,11 @@ class _QuizChallengeScreenState extends State<QuizChallengeScreen> {
           Navigator.popUntil(context, (route) => route.isFirst);
         } else if (index == 2) { // Video tab
           Navigator.popUntil(context, (route) => route.isFirst);
-          Navigator.pushNamed(context, AppRoutes.video);
+          Navigator.pushNamed(
+            context,
+            AppRoutes.video,
+            arguments: {'selectedGrade': widget.selectedGrade},
+          );
         } else if (index == 3) { // Teachers tab
           Navigator.popUntil(context, (route) => route.isFirst);
           Navigator.pushNamed(context, AppRoutes.findTeachers);
@@ -71,6 +80,7 @@ class _QuizChallengeScreenState extends State<QuizChallengeScreen> {
             pageController: _pageController,
             currentPage: _currentPage,
             onPageChanged: (index) => setState(() => _currentPage = index),
+            selectedGrade: widget.selectedGrade,
           ),
           const SizedBox(height: 32),
           QuizCompetitionsSection(

@@ -82,7 +82,11 @@ class _VideoScreenState extends State<VideoScreen> {
           Navigator.popUntil(context, (route) => route.isFirst);
         } else if (index == 1) { // Quiz tab
           Navigator.popUntil(context, (route) => route.isFirst);
-          Navigator.pushNamed(context, AppRoutes.quizChallenge);
+          Navigator.pushNamed(
+            context,
+            AppRoutes.quizChallenge,
+            arguments: {'grade': widget.selectedGrade},
+          );
         } else if (index == 3) { // Teachers tab
           Navigator.popUntil(context, (route) => route.isFirst);
           Navigator.pushNamed(context, AppRoutes.findTeachers);

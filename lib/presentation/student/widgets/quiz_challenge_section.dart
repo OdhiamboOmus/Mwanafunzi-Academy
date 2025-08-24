@@ -4,107 +4,308 @@ import '../../../routes.dart';
 import 'quiz_card_widget.dart';
 import 'subject_indicator_widget.dart';
 import '../../../services/firebase/student_challenge_service.dart';
+import '../../../services/firebase/student_lesson_service.dart';
 
-class QuizChallengeSection extends StatelessWidget {
+// QuizCardData class definition moved to the top
+class QuizCardData {
+  final String title;
+  final String description;
+  final int questionCount;
+  final String duration;
+  final int bestScore;
+  final IconData icon;
+  final String? quizId;
+  final String? subject;
+  final String? grade;
+  final bool? isChallenge;
+
+  const QuizCardData({
+    required this.title,
+    required this.description,
+    required this.questionCount,
+    required this.duration,
+    required this.bestScore,
+    required this.icon,
+    this.quizId,
+    this.subject,
+    this.grade,
+    this.isChallenge = false,
+  });
+}
+
+class QuizChallengeSection extends StatefulWidget {
   final PageController pageController;
   final int currentPage;
   final Function(int) onPageChanged;
+  final String selectedGrade;
 
   const QuizChallengeSection({
     super.key,
     required this.pageController,
     required this.currentPage,
     required this.onPageChanged,
+    required this.selectedGrade,
   });
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  State<QuizChallengeSection> createState() => _QuizChallengeSectionState();
+}
+
+class _QuizChallengeSectionState extends State<QuizChallengeSection> {
+  final StudentLessonService _lessonService = StudentLessonService();
+  
+  List<QuizCardData> _quizCards = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadQuizzes();
+  }
+
+  @override
+  void didUpdateWidget(QuizChallengeSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedGrade != widget.selectedGrade) {
+      _loadQuizzes();
+    }
+  }
+
+  Future<void> _loadQuizzes() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      // Normalize grade format - remove "grade" prefix if present
+      String grade = widget.selectedGrade;
+      grade = grade.replaceFirst('grade', '');
+
+      debugPrint('🔍 DEBUG: Loading quizzes for grade: $grade');
+
+      // Fetch quizzes from Firebase
+      final quizzes = await _lessonService.getQuizzesForGrade(grade);
+      
+      // Convert Firebase quiz data to QuizCardData format
+      final dynamicCards = quizzes.map((quiz) {
+        return QuizCardData(
+          title: quiz['title'] ?? 'Untitled Quiz',
+          description: quiz['subject'] ?? quiz['topic'] ?? 'No description',
+          questionCount: quiz['totalQuestions'] ?? 10,
+          duration: _formatDuration(quiz['estimatedDuration']),
+          bestScore: 0, // Will implement score tracking later
+          icon: _getSubjectIcon(quiz['subject'] ?? 'General'),
+          quizId: quiz['id'],
+          subject: quiz['subject'],
+          grade: grade,
+        );
+      }).toList();
+
+      // Add the "Challenge Random Student" card as the first item
+      dynamicCards.insert(0, const QuizCardData(
+        title: 'Challenge Random Student',
+        description: 'Compete with other students in real-time quiz battles',
+        questionCount: 10,
+        duration: 'Unlimited',
+        bestScore: 0,
+        icon: Icons.sports_esports,
+        isChallenge: true,
+      ));
+
+      if (mounted) {
+        setState(() {
+          _quizCards = dynamicCards;
+          _isLoading = false;
+        });
+        
+        debugPrint('🔍 DEBUG: Loaded ${_quizCards.length} quiz cards for grade: $grade');
+      }
+    } catch (e) {
+      debugPrint('❌ ERROR: Failed to load quizzes: $e');
+      
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          // Fallback to hardcoded cards if Firebase fails
+          _quizCards = _getFallbackQuizCards();
+        });
+      }
+    }
+  }
+
+  String _formatDuration(dynamic duration) {
+    if (duration == null) return 'N/A';
+    if (duration is String) return duration;
+    if (duration is num) {
+      final minutes = duration.toInt();
+      if (minutes < 60) {
+        return '$minutes min';
+      } else {
+        final hours = minutes ~/ 60;
+        final mins = minutes % 60;
+        return hours > 1 ? '$hours hours $mins min' : '$hours $mins min';
+      }
+    }
+    return 'N/A';
+  }
+
+  IconData _getSubjectIcon(String subject) {
+    final lowerSubject = subject.toLowerCase();
+    if (lowerSubject.contains('math') || lowerSubject.contains('arith')) {
+      return Icons.calculate;
+    } else if (lowerSubject.contains('sci')) {
+      return Icons.science;
+    } else if (lowerSubject.contains('kiswahili') || lowerSubject.contains('swahili')) {
+      return Icons.translate;
+    } else if (lowerSubject.contains('english')) {
+      return Icons.menu_book;
+    } else if (lowerSubject.contains('social') || lowerSubject.contains('stud')) {
+      return Icons.public;
+    } else {
+      return Icons.quiz;
+    }
+  }
+
+  List<QuizCardData> _getFallbackQuizCards() {
+    return [
+      const QuizCardData(
+        title: 'Challenge Random Student',
+        description: 'Compete with other students in real-time quiz battles',
+        questionCount: 10,
+        duration: 'Unlimited',
+        bestScore: 0,
+        icon: Icons.sports_esports,
+        isChallenge: true,
+      ),
+      const QuizCardData(
+        title: 'Kiswahili Quiz',
+        description: 'Test your knowledge with interactive questions and instant feedback',
+        questionCount: 15,
+        duration: '5 mins',
+        bestScore: 85,
+        icon: Icons.translate,
+      ),
+      const QuizCardData(
+        title: 'Mathematics Quiz',
+        description: 'Challenge yourself with algebra, geometry and arithmetic problems',
+        questionCount: 20,
+        duration: '8 mins',
+        bestScore: 92,
+        icon: Icons.calculate,
+      ),
+      const QuizCardData(
+        title: 'Science Quiz',
+        description: 'Explore physics, chemistry and biology concepts through fun quizzes',
+        questionCount: 18,
+        duration: '7 mins',
+        bestScore: 78,
+        icon: Icons.science,
+      ),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const SizedBox(
+        height: 200,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Choose Your Challenge',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+              Row(
+                children: List.generate(
+                  _quizCards.length > 3 ? 3 : _quizCards.length,
+                  (index) => Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: index == widget.currentPage % 3
+                          ? const Color(0xFF50E801)
+                          : const Color(0xFFE5E7EB),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Stack(
           children: [
-            const Text(
-              'Choose Your Challenge',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: 80,
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: const Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    SubjectIndicatorWidget(subject: 'CHEM', isActive: true),
+                    SubjectIndicatorWidget(subject: 'PHYS', isActive: false),
+                    SubjectIndicatorWidget(subject: 'BIO', isActive: false),
+                  ],
+                ),
               ),
             ),
-            Row(
-              children: List.generate(
-                _getQuizCards().length > 3 ? 3 : _getQuizCards().length,
-                (index) => Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: index == currentPage % 3
-                        ? const Color(0xFF50E801)
-                        : const Color(0xFFE5E7EB),
-                    shape: BoxShape.circle,
-                  ),
+            Container(
+              margin: const EdgeInsets.only(left: 80),
+              height: 200,
+              child: PageView.builder(
+                controller: widget.pageController,
+                onPageChanged: widget.onPageChanged,
+                itemCount: _quizCards.length,
+                itemBuilder: (context, index) => QuizCardWidget(
+                  card: _quizCards[index],
+                  onTap: () => _navigateToQuiz(context, _quizCards[index]),
                 ),
               ),
             ),
           ],
         ),
-      ),
-      const SizedBox(height: 16),
-      Stack(
-        children: [
-          Positioned(
-            left: 0,
-            top: 0,
-            bottom: 0,
-            child: Container(
-              width: 80,
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: const Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  SubjectIndicatorWidget(subject: 'CHEM', isActive: true),
-                  SubjectIndicatorWidget(subject: 'PHYS', isActive: false),
-                  SubjectIndicatorWidget(subject: 'BIO', isActive: false),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 80),
-            height: 200,
-            child: PageView.builder(
-              controller: pageController,
-              onPageChanged: onPageChanged,
-              itemCount: _getQuizCards().length,
-              itemBuilder: (context, index) => QuizCardWidget(
-                card: _getQuizCards()[index],
-                onTap: () => _navigateToQuiz(context, _getQuizCards()[index]),
-              ),
-            ),
-          ),
-        ],
-      ),
-    ],
-  );
+      ],
+    );
+  }
 
   void _navigateToQuiz(BuildContext context, QuizCardData card) {
     // Check if this is a competition challenge
-    if (card.title == 'Challenge Random Student') {
+    if (card.isChallenge ?? false) {
       _showChallengeDialog(context);
     } else {
+      // Normalize grade format for navigation
+      String grade = widget.selectedGrade;
+      grade = grade.replaceFirst('grade', '');
+      
       // Use named route instead of push to avoid back arrow
       Navigator.pushNamed(
         context,
         AppRoutes.quizInterface,
         arguments: {
-          'subject': card.title.replaceAll(' Quiz', ''),
+          'subject': card.subject ?? card.title.replaceAll(' Quiz', ''),
           'quizTitle': card.title,
-          'grade': 'Grade 1', // Default grade, should be selected by user
-          'topic': card.title.replaceAll(' Quiz', ''), // Use subject as topic for now
+          'grade': grade,
+          'topic': card.subject ?? card.title.replaceAll(' Quiz', ''), // Use subject as topic for now
+          'quizId': card.quizId,
         },
       );
     }
@@ -231,11 +432,11 @@ class QuizChallengeSection extends StatelessWidget {
       // Show success message
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Challenge sent! Waiting for opponent to accept.'),
-          backgroundColor: Color(0xFF50E801),
-        ),
-      );
+          const SnackBar(
+            content: Text('Challenge sent! Waiting for opponent to accept.'),
+            backgroundColor: Color(0xFF50E801),
+          ),
+        );
       }
 
       // Navigate to challenge tracking screen (to be implemented)
@@ -250,76 +451,19 @@ class QuizChallengeSection extends StatelessWidget {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-          title: const Text('Challenge Failed'),
-          content: Text(e.toString().contains('No opponents')
-              ? 'No opponents available for challenge. Please try again later.'
-              : 'Failed to create challenge. Please try again.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
+            title: const Text('Challenge Failed'),
+            content: Text(e.toString().contains('No opponents')
+                ? 'No opponents available for challenge. Please try again later.'
+                : 'Failed to create challenge. Please try again.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
       }
     }
   }
-
-  List<QuizCardData> _getQuizCards() => [
-    const QuizCardData(
-      title: 'Challenge Random Student',
-      description:
-          'Compete with other students in real-time quiz battles',
-      questionCount: 10,
-      duration: 'Unlimited',
-      bestScore: 0,
-      icon: Icons.sports_esports,
-    ),
-    const QuizCardData(
-      title: 'Kiswahili Quiz',
-      description:
-          'Test your knowledge with interactive questions and instant feedback',
-      questionCount: 15,
-      duration: '5 mins',
-      bestScore: 85,
-      icon: Icons.translate,
-    ),
-    const QuizCardData(
-      title: 'Mathematics Quiz',
-      description:
-          'Challenge yourself with algebra, geometry and arithmetic problems',
-      questionCount: 20,
-      duration: '8 mins',
-      bestScore: 92,
-      icon: Icons.calculate,
-    ),
-    const QuizCardData(
-      title: 'Science Quiz',
-      description:
-          'Explore physics, chemistry and biology concepts through fun quizzes',
-      questionCount: 18,
-      duration: '7 mins',
-      bestScore: 78,
-      icon: Icons.science,
-    ),
-  ];
-}
-
-class QuizCardData {
-  final String title;
-  final String description;
-  final int questionCount;
-  final String duration;
-  final int bestScore;
-  final IconData icon;
-
-  const QuizCardData({
-    required this.title,
-    required this.description,
-    required this.questionCount,
-    required this.duration,
-    required this.bestScore,
-    required this.icon,
-  });
 }
